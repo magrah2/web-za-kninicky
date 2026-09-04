@@ -1,0 +1,487 @@
+---
+import { getCollection, render } from 'astro:content';
+import Zaklad from '../../layouts/Zaklad.astro';
+import KartaKandidata from '../../components/KartaKandidata.astro';
+import Portret from '../../components/Portret.astro';
+import { fotkaKandidata } from '../../lib/portrety';
+import { POCET_SLOVY, OBEC_Z, ZASTUPITELSTVO } from '../../lib/strana';
+
+const kandidati = (await getCollection('kandidati')).sort((a, b) => a.data.poradi - b.data.poradi);
+
+const sObsahem = await Promise.all(
+  kandidati.map(async (clovek) => {
+    const { Content } = await render(clovek);
+    // Vygenerovaná šablona obsahuje jen HTML komentář s pokyny. Než ji někdo
+    // vyplní, je tělo prakticky prázdné — a prázdný panel vypadá rozbitě,
+    // takže se místo něj ukáže poctivá poznámka.
+    const telo = (clovek.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim();
+    return { ...clovek, Obsah: Content, maTelo: telo.length > 0 };
+  }),
+);
+---
+
+<Zaklad
+  titulek="Naši kandidáti"
+  popis={`Lidé ${OBEC_Z}, kteří kandidují do ${ZASTUPITELSTVO}. Architektka, lékař, ekonomka, technik, studentka i jednatelé firem.`}
+>
+  <div class="pruh">
+    <p class="nadtitulek">Naši kandidáti</p>
+    <h1>{POCET_SLOVY.charAt(0).toUpperCase() + POCET_SLOVY.slice(1)} lidí, kteří tady žijí</h1>
+    <p class="perex uvod">
+      Kliknutím na kohokoliv se dozvíte víc. <strong>Placeholder:</strong> medailonky
+      i fotky teprve doplňujeme.
+    </p>
+
+    {/* ---------- Mřížka ---------- */}
+    <div class="mrizka" id="kandidatka">
+      {
+        kandidati.map((clovek) => (
+          <KartaKandidata
+            poradi={clovek.data.poradi}
+            jmeno={clovek.data.jmeno}
+            vek={clovek.data.vek}
+            povolani={clovek.data.povolani}
+            foto={fotkaKandidata(clovek.id)}
+          />
+        ))
+      }
+    </div>
+  </div>
+
+  {/* ---------- Medailonky ----------
+      Všechny jsou v HTML a schované. Otevírá je CSS přes `:target`, takže
+      to funguje i bez JavaScriptu — adresa s kotvou prostě ukáže ten správný.
+      Skript pak přebírá kliknutí, aby stránka neodskočila, a přidává
+      zavírání Escapem a procházení mezi lidmi. */}
+  <div class="medailonky" data-medailonky>
+    {
+      sObsahem.map((clovek, index) => {
+        const predchozi = sObsahem[index - 1];
+        const dalsi = sObsahem[index + 1];
+        const foto = fotkaKandidata(clovek.id);
+        return (
+          <article class="medailonek" id={`medailonek-${clovek.data.poradi}`} aria-labelledby={`jmeno-${clovek.data.poradi}`}>
+            <a class="medailonek-podklad" href="#kandidatka" tabindex="-1" aria-label="Zavřít medailonek" />
+
+            <div class="medailonek-panel" role="dialog" aria-modal="true" aria-labelledby={`jmeno-${clovek.data.poradi}`}>
+              <a class="medailonek-zavrit" href="#kandidatka" data-zavrit>
+                <span aria-hidden="true">×</span>
+                <span class="jen-pro-ctecky">Zavřít</span>
+              </a>
+
+              <div class="medailonek-obsah">
+                <div class="medailonek-portret">
+                  <Portret foto={foto} jmeno={clovek.data.jmeno} velikost="detail" />
+                  <span class="medailonek-cislo">{clovek.data.poradi}</span>
+                </div>
+
+                <div class="medailonek-text">
+                  <h2 id={`jmeno-${clovek.data.poradi}`}>{clovek.data.jmeno}</h2>
+
+                  <p class="medailonek-meta">
+                    {clovek.data.vek ? `${clovek.data.vek} let · ` : ''}{clovek.data.povolani}
+                    {clovek.data.pusobeni ? ` · ${clovek.data.pusobeni}` : ''}
+                  </p>
+
+                  {clovek.data.prislusnost && (
+                    <p class="medailonek-prislusnost">{clovek.data.prislusnost}</p>
+                  )}
+
+                  {clovek.data.citace && <blockquote class="medailonek-citace">{clovek.data.citace}</blockquote>}
+
+                  {
+                    clovek.maTelo ? (
+                      <div class="medailonek-telo">
+                        <clovek.Obsah />
+                      </div>
+                    ) : (
+                      <p class="medailonek-chybi">Medailonek zatím doplňujeme.</p>
+                    )
+                  }
+                </div>
+              </div>
+
+              <nav class="medailonek-sousede" aria-label="Další kandidáti">
+                {predchozi ? (
+                  <a href={`#medailonek-${predchozi.data.poradi}`} data-medailonek={predchozi.data.poradi} data-smer="predchozi">
+                    ← {predchozi.data.jmeno}
+                  </a>
+                ) : (
+                  <span />
+                )}
+                {dalsi && (
+                  <a href={`#medailonek-${dalsi.data.poradi}`} data-medailonek={dalsi.data.poradi} data-smer="dalsi">
+                    {dalsi.data.jmeno} →
+                  </a>
+                )}
+              </nav>
+            </div>
+          </article>
+        );
+      })
+    }
+  </div>
+</Zaklad>
+
+<style>
+  .uvod {
+    margin-top: 1rem;
+  }
+
+  /* ---------- Mřížka ---------- */
+
+  .mrizka {
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.25rem) clamp(1rem, 2.5vw, 1.75rem);
+    margin-top: clamp(1.5rem, 3vw, 2rem);
+    grid-template-columns: repeat(2, 1fr);
+    scroll-margin-top: 6rem;
+  }
+
+  @media (min-width: 560px) {
+    .mrizka {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (min-width: 860px) {
+    .mrizka {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  @media (min-width: 1080px) {
+    .mrizka {
+      grid-template-columns: repeat(5, 1fr);
+    }
+  }
+
+  /* ---------- Medailonek ---------- */
+
+  .medailonek {
+    display: none;
+  }
+
+  /* Bez JavaScriptu otevírá `:target`, s ním třída. Obojí vede na stejný stav. */
+  .medailonek:target,
+  .medailonek.je-otevreny {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: grid;
+    place-items: center;
+    padding: clamp(0.75rem, 3vw, 2rem);
+  }
+
+  .medailonek-podklad {
+    position: absolute;
+    inset: 0;
+    background: rgb(11 32 50 / 0.55);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+  }
+
+  .medailonek-panel {
+    position: relative;
+    width: min(940px, 100%);
+    max-height: min(88vh, 900px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: clamp(1.25rem, 3vw, 2.25rem);
+    background: var(--plocha);
+    border-radius: var(--radius);
+    box-shadow: 0 24px 70px rgb(11 32 50 / 0.35);
+    animation: prijezd 0.26s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  @keyframes prijezd {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
+  .medailonek-zavrit {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    display: grid;
+    place-items: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 999px;
+    background: var(--papir);
+    color: var(--inkoust);
+    font-size: 1.4rem;
+    line-height: 1;
+    text-decoration: none;
+    transition: background var(--prechod);
+  }
+
+  .medailonek-zavrit:hover {
+    background: var(--modra-jemna);
+    color: var(--modra-text);
+  }
+
+  .medailonek-obsah {
+    display: grid;
+    gap: clamp(1.25rem, 3vw, 2rem);
+  }
+
+  @media (min-width: 700px) {
+    .medailonek-obsah {
+      grid-template-columns: 260px 1fr;
+      align-items: start;
+    }
+  }
+
+  .medailonek-portret {
+    position: relative;
+    max-width: 260px;
+  }
+
+  .medailonek-cislo {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    display: grid;
+    place-items: center;
+    min-width: 2.6rem;
+    height: 2.6rem;
+    padding-inline: 0.5rem;
+    border-radius: 999px;
+    background: var(--modra);
+    color: #fff;
+    font-size: var(--text-zakladni);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .medailonek-text h2 {
+    max-width: 22ch;
+    padding-right: 2.5rem;
+  }
+
+  .medailonek-meta {
+    margin: 0.55rem 0 0;
+    font-size: var(--text-maly);
+    color: var(--inkoust-tlum);
+  }
+
+  .medailonek-prislusnost {
+    margin: 0.2rem 0 0;
+    font-size: var(--text-drobny);
+    color: var(--zelena-text);
+    font-weight: 500;
+  }
+
+  .medailonek-citace {
+    margin: 1.25rem 0 0;
+    padding-left: 1rem;
+    border-left: 3px solid var(--zelena);
+    font-size: var(--text-velky);
+    line-height: 1.45;
+    letter-spacing: -0.015em;
+  }
+
+  .medailonek-telo {
+    margin-top: 1.25rem;
+    max-width: var(--sirka-textu);
+    font-size: var(--text-maly);
+  }
+
+  .medailonek-telo:empty {
+    display: none;
+  }
+
+  .medailonek-chybi {
+    margin: 1.25rem 0 0;
+    font-size: var(--text-maly);
+    font-style: italic;
+    color: var(--inkoust-tlum);
+  }
+
+  .medailonek-sousede {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.75rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--linka);
+    font-size: var(--text-drobny);
+  }
+
+  .medailonek-sousede a {
+    color: var(--inkoust-tlum);
+    text-decoration: none;
+  }
+
+  .medailonek-sousede a:hover {
+    color: var(--modra-text);
+    text-decoration: underline;
+  }
+
+  /* Když je medailonek otevřený, stránka pod ním se nesmí posouvat. */
+  :global(body.medailonek-otevren) {
+    overflow: hidden;
+  }
+</style>
+
+<script>
+  const obalMedailonku = document.querySelector<HTMLElement>('[data-medailonky]');
+
+  if (!obalMedailonku) throw new Error('Kandidátka: chybí medailonky');
+
+  /* ------------------------------------------------------------------ *
+   *  Medailonek                                                         *
+   * ------------------------------------------------------------------ */
+
+  let posledniSpoustec: HTMLElement | null = null;
+
+  /** Vložili jsme do historie záznam, ze kterého se dá vrátit zpět? */
+  let mameZaznamVHistorii = false;
+
+  const KOTVA = /^#medailonek-(\d+)$/;
+
+  /** Jen přepne, co je vidět. S historií nedělá nic — o tu se stará volající. */
+  function ukaz(poradi: string, zeSpoustece?: HTMLElement) {
+    const cil = document.getElementById(`medailonek-${poradi}`);
+    if (!cil) return false;
+
+    const uzOtevreny = obalMedailonku!.querySelector<HTMLElement>('.je-otevreny');
+    if (uzOtevreny === cil) return true;
+    uzOtevreny?.classList.remove('je-otevreny');
+
+    if (zeSpoustece) posledniSpoustec = zeSpoustece;
+
+    cil.classList.add('je-otevreny');
+    document.body.classList.add('medailonek-otevren');
+    cil.querySelector<HTMLElement>('[data-zavrit]')?.focus();
+    return true;
+  }
+
+  function skryj(vratitZamereni = true) {
+    const otevreny = obalMedailonku!.querySelector<HTMLElement>('.je-otevreny');
+    if (!otevreny) return;
+    otevreny.classList.remove('je-otevreny');
+    document.body.classList.remove('medailonek-otevren');
+    if (vratitZamereni && posledniSpoustec) {
+      posledniSpoustec.focus();
+      posledniSpoustec = null;
+    }
+  }
+
+  /**
+   * Otevření kliknutím.
+   *
+   * Klíčové je, že **přeskok na dalšího člověka historii nenafukuje**.
+   * Kdyby každý skok přidal záznam, křížek (který dělá krok zpět) by
+   * procházel zpátky přes všechny, koho si člověk otevřel, místo aby panel
+   * zavřel — a při delším listování by se zdálo, že zavřít vůbec nejde.
+   */
+  function otevriKliknutim(poradi: string, spoustec?: HTMLElement) {
+    const uzBylOtevreny = !!obalMedailonku!.querySelector('.je-otevreny');
+    if (!ukaz(poradi, spoustec)) return;
+
+    const adresa = `#medailonek-${poradi}`;
+    if (uzBylOtevreny && mameZaznamVHistorii) {
+      history.replaceState({ medailonek: poradi }, '', adresa);
+    } else {
+      history.pushState({ medailonek: poradi }, '', adresa);
+      mameZaznamVHistorii = true;
+    }
+  }
+
+  function zavriKliknutim() {
+    if (mameZaznamVHistorii) {
+      history.back(); // zbytek dořeší popstate níž
+    } else {
+      skryj();
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+  }
+
+  // Klik na kartu i na odkazy „předchozí / další" uvnitř panelu
+  document.addEventListener('click', (e) => {
+    const odkaz = (e.target as HTMLElement).closest<HTMLElement>('[data-medailonek]');
+    if (odkaz) {
+      e.preventDefault();
+      otevriKliknutim(odkaz.dataset.medailonek!, odkaz);
+      return;
+    }
+
+    const zaviraci = (e.target as HTMLElement).closest('[data-zavrit], .medailonek-podklad');
+    if (zaviraci) {
+      e.preventDefault();
+      zavriKliknutim();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    const otevreny = obalMedailonku!.querySelector<HTMLElement>('.je-otevreny');
+    if (!otevreny) return;
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      zavriKliknutim();
+      return;
+    }
+
+    // Šipky přeskakují na dalšího/předchozího kandidáta — ale ne uvnitř
+    // textu medailonku, kde by tím šlo psát/označovat (např. selectbox).
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      const zamerene = e.target as HTMLElement;
+      if (zamerene.closest('input, textarea, select, [contenteditable="true"]')) return;
+
+      const smer = e.key === 'ArrowLeft' ? 'predchozi' : 'dalsi';
+      const odkaz = otevreny.querySelector<HTMLElement>(`[data-smer="${smer}"]`);
+      if (odkaz) {
+        e.preventDefault();
+        otevriKliknutim(odkaz.dataset.medailonek!, odkaz);
+      }
+      return;
+    }
+
+    // Zaměření nesmí utéct za panel — pod ním je celá stránka a člověk,
+    // který se pohybuje tabulátorem, by se v ní ztratil.
+    if (e.key === 'Tab') {
+      const zameritelne = otevreny.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (!zameritelne.length) return;
+      const prvni = zameritelne[0];
+      const posledni = zameritelne[zameritelne.length - 1];
+
+      if (e.shiftKey && document.activeElement === prvni) {
+        e.preventDefault();
+        posledni.focus();
+      } else if (!e.shiftKey && document.activeElement === posledni) {
+        e.preventDefault();
+        prvni.focus();
+      }
+    }
+  });
+
+  // Zpětné tlačítko i vlastní volání history.back() končí tady.
+  window.addEventListener('popstate', () => {
+    const shoda = location.hash.match(KOTVA);
+    if (shoda) {
+      ukaz(shoda[1]);
+      mameZaznamVHistorii = true;
+    } else {
+      skryj();
+      mameZaznamVHistorii = false;
+    }
+  });
+
+  // Příchod rovnou na konkrétního člověka — třeba ze šestice na úvodní stránce.
+  // Historii je potřeba srovnat: pod otevřený panel se vloží záznam bez kotvy,
+  // aby bylo kam zavírat. Jinak by křížek neměl co udělat.
+  const naStartu = location.hash.match(KOTVA);
+  if (naStartu && ukaz(naStartu[1])) {
+    const kotva = location.hash; // po replaceState už bude prázdná
+    history.replaceState(null, '', location.pathname + location.search);
+    history.pushState({ medailonek: naStartu[1] }, '', kotva);
+    mameZaznamVHistorii = true;
+  }
+</script>

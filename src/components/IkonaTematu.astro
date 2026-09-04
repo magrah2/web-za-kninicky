@@ -1,0 +1,152 @@
+---
+/**
+ * Ikona programové oblasti.
+ *
+ * Kreslené dvěma vrstvami: obrys tahem a k němu jedna plocha ve stejné barvě,
+ * jen tlumená. Samotný obrys vypadal placatě jako klipart — plocha dá ikoně
+ * hloubku, a protože je to pořád jedna barva (`currentColor` = barva oblasti),
+ * nerozpadne se z toho paleta.
+ *
+ * Společná soustava, aby to byla sada a ne sbírka:
+ *   - mřížka 24 × 24, tah 1,75, zakulacené konce a spoje,
+ *   - plocha nikdy nepřetéká přes obrys,
+ *   - geometricky jednoduché: co nejde poznat na 20 pixelech, sem nepatří.
+ *
+ * Dvě ikony jsou vybrané podle toho, co program říká, ne podle toho, co se
+ * u té oblasti kreslí obvykle:
+ *   - Doprava je kolo, ne auto — program mluví o bezpečném pohybu pěších
+ *     a cyklistů, ne o průjezdnosti.
+ *   - Bezpečnost je lampa, ne štít. Štít znamená obranu a dohled, kdežto
+ *     program stojí na prevenci: „Bezpečí nevytváří jen kamery a dohled."
+ *     Lampa navíc sedí na osvětlení problémových lokalit, které v programu je.
+ */
+
+import type { Tema } from '../lib/temata';
+
+interface Props {
+  tema: Tema;
+  class?: string;
+}
+
+const { tema, class: trida } = Astro.props;
+
+/** `t` = obrys tahem, `p` = tlumená plocha pod ním. */
+const TVARY: Record<Tema, { t: string[]; p?: string[] }> = {
+  // Sloupce nad osou. Prostřední je plný — je to ten, na který se člověk dívá.
+  'Hospodaření': {
+    t: ['M4.4 19.8h15.2', 'M7.8 19.8v-6.6', 'M16.2 19.8v-9'],
+    p: ['M10.4 8.6h3.2v11.2h-3.2z'],
+  },
+  // Dům se dveřmi.
+  'Bydlení': {
+    t: ['M3.6 11.6 12 4.4l8.4 7.2', 'M6.2 11.8V19.8h11.6V11.8'],
+    p: ['M10.2 19.8v-4.6h3.6v4.6z'],
+  },
+  // List a pod ním kapka — oblast se jmenuje Zeleň a voda, tak ať je tam obojí.
+  // Obrys je souměrný podle úhlopříčky od špičky (18.8; 5.2) k řapíku
+  // (8.6; 15.4) a žilka leží přesně na ní. V první verzi vedla vedle osy
+  // a list z toho vypadal zprohýbaně.
+  'Zeleň a voda': {
+    t: [
+      'M18.8 5.2C12.4 5.8 8.6 9.6 8.6 15.4c5.8 0 9.6-3.8 10.2-10.2z',
+      'M17.2 6.8 10 14',
+    ],
+    p: ['M4.6 14.8c1.6 2 2.5 3.3 2.5 4a2.5 2.5 0 0 1-5 0c0-.7.9-2 2.5-4z'],
+  },
+  // Kolo. Plný je střed pohonu, aby rám nebyl jen drátek.
+  //
+  // Sedlo i řídítka musí trčet nad rámem aspoň o víc, než je šířka tahu.
+  // Když ležely jen 1,7 jednotky nad ním, splynuly s horní trubkou v jednu
+  // čáru a kolo vypadalo, že řídítka nemá.
+  'Doprava': {
+    t: [
+      'M6.4 18.6a3.2 3.2 0 1 0 0-6.4a3.2 3.2 0 0 0 0 6.4',
+      'M17.6 18.6a3.2 3.2 0 1 0 0-6.4a3.2 3.2 0 0 0 0 6.4',
+      'M6.4 15.4 11 9.4h4.2l2.4 6',
+      'M11 9.4V7.2',
+      'M9.4 7.2h2.6',
+      'M15.2 9.4V6.4',
+      'M13.4 6.4h2.6',
+    ],
+    p: ['M12 16.7a1.3 1.3 0 1 1 0-2.6a1.3 1.3 0 0 1 0 2.6z'],
+  },
+  // Otevřená kniha, jedna strana plná.
+  'Školství': {
+    t: [
+      'M12 7.4v11.2',
+      'M12 7.4C10.3 6 7.9 5.4 4.4 5.6v11c3.5-.2 5.9.4 7.6 1.8 1.7-1.4 4.1-2 7.6-1.8v-11c-3.5-.2-5.9.4-7.6 1.8',
+    ],
+    p: ['M12 7.4c1.7-1.4 4.1-2 7.6-1.8v11c-3.5-.2-5.9.4-7.6 1.8z'],
+  },
+  // Vstupenka. Plný je utržený díl za perforací — ta vede přesně středem,
+  // aby se lístek trhal na půl. U kraje z utrženého dílu zbyl proužek.
+  'Kultura': {
+    t: [
+      'M4.6 9.8V7.4h14.8v2.4a2.2 2.2 0 0 0 0 4.4v2.4H4.6v-2.4a2.2 2.2 0 0 0 0-4.4',
+      'M12 9.7v1.5',
+      'M12 12.8v1.5',
+    ],
+    p: ['M12 7.4h7.4v2.4a2.2 2.2 0 0 0 0 4.4v2.4H12z'],
+  },
+  // Krám s markýzou — drobná provozovna v ulici, ne montovna na poli.
+  'Podnikání': {
+    t: ['M5.4 10.4V19.8h13.2V10.4', 'M10.2 19.8v-5.4h3.6v5.4'],
+    p: ['M3.6 10.4 5.4 5.8h13.2l1.8 4.6z'],
+  },
+  // Pouliční lampa, ne štít — viz komentář nahoře. Musí mít stožár, rameno
+  // a svítidlo dolů; svítidlo posazené na sloupku vypadalo jako lampička
+  // na stůl.
+  'Bezpečnost': {
+    t: [
+      'M6.8 20.4V8.6',
+      'M4.8 20.4h4',
+      'M6.8 8.6c0-2.7 2-4.6 4.8-4.6 2.8 0 4.6 1.8 4.6 4.2',
+      'M14.6 14.4l-1 1.8',
+      'M18.8 14.4l1 1.8',
+    ],
+    p: ['M13.6 8.2h6l-1.7 4.4h-2.6z'],
+  },
+};
+
+const tvar = TVARY[tema];
+if (!tvar) {
+  throw new Error(
+    `Oblast „${tema}" nemá ikonu. Doplňte ji do src/components/IkonaTematu.astro — ` +
+      'jinak by na dlaždici zůstalo prázdno a nikdo by si toho nevšiml.',
+  );
+}
+---
+
+<svg
+  class:list={['ikona-tematu', trida]}
+  viewBox="0 0 24 24"
+  aria-hidden="true"
+  focusable="false"
+>
+  {tvar.p?.map((d) => <path class="ikona-plocha" d={d} />)}
+  {tvar.t.map((d) => <path d={d} />)}
+</svg>
+
+<style>
+  .ikona-tematu {
+    display: block;
+    width: 1.35rem;
+    height: 1.35rem;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Plocha je táž barva, jen ztlumená — proto se dá obarvit jedním
+     `currentColor` a nikde se nezadává druhý odstín. */
+  .ikona-plocha {
+    fill: currentColor;
+    fill-opacity: 0.18;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linejoin: round;
+  }
+</style>

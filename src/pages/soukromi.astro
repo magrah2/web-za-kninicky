@@ -1,0 +1,94 @@
+---
+import Zaklad from '../layouts/Zaklad.astro';
+import { NAZEV_UPLNY, EMAIL } from '../lib/strana';
+
+/**
+ * Zásady ochrany osobních údajů. Krátké schválně — web sám o sobě žádná
+ * data nesbírá, takže není o čem psát odstavce.
+ *
+ * PLACEHOLDER: jméno odpovědné osoby zatím nemáme. Bez něj stránka svou
+ * povinnost neplní, takže se musí doplnit dřív, než web půjde naostro.
+ */
+const ODPOVEDNA_OSOBA = 'Placeholder — doplnit jméno';
+---
+
+<Zaklad
+  titulek="Ochrana osobních údajů"
+  popis="Jak nakládáme s osobními údaji. Tento web nesbírá žádná data o návštěvnících, nemá cookies ani měřicí kódy."
+>
+  <div class="pruh text">
+    <p class="nadtitulek">Ochrana osobních údajů</p>
+    <h1>Co o vás víme</h1>
+
+    <p class="perex uvod">Nic. A není to řečnický obrat.</p>
+
+    <h2>Tento web o vás nesbírá žádné údaje</h2>
+    <p>
+      Web nemá měřicí kódy, analytiku, reklamní skripty ani přihlašování. Neukládá vám
+      do prohlížeče cookies. Nenačítá písma ani obrázky z cizích serverů, takže o vaší
+      návštěvě neví žádná třetí strana — ani Google.
+    </p>
+    <p>
+      Proto tu není žádná cookie lišta. Nemáme totiž k čemu vás žádat o souhlas.
+    </p>
+
+    <h2>Co ukládá váš vlastní prohlížeč</h2>
+    <p>
+      Nic, co bychom my viděli. Adresa stránky si pamatuje, kterého kandidáta jste si
+      otevřeli a jaký filtr jste použili — to je součást adresy, zůstává to u vás
+      v prohlížeči a nikam se to neodesílá.
+    </p>
+
+    <h2>Údaje kandidátů</h2>
+    <p>
+      Na webu zveřejňujeme jména, věk, povolání, fotografie a texty našich kandidátů.
+      Tyto údaje zveřejňujeme s jejich souhlasem; jméno, věk a povolání jsou navíc
+      součástí kandidátní listiny, která je ze zákona veřejná.
+    </p>
+    <p>
+      Pokud jste náš kandidát a chcete své údaje na webu upravit nebo odstranit, napište
+      nám na <a href={`mailto:${EMAIL}`}>{EMAIL}</a> a vyřídíme to.
+    </p>
+
+    <h2>Když nám napíšete</h2>
+    <p>
+      E-mail, který nám pošlete, si přečteme a odpovíme na něj. Vaši adresu nikomu
+      nepředáváme, nezařazujeme ji do žádné databáze ani rozesílky.
+    </p>
+
+    <h2>Správce údajů</h2>
+    <p>
+      Správcem osobních údajů je volební strana <strong>{NAZEV_UPLNY}</strong>.
+      Za jejich zpracování odpovídá <strong>{ODPOVEDNA_OSOBA}</strong>,
+      zastihnete ji na <a href={`mailto:${EMAIL}`}>{EMAIL}</a>.
+    </p>
+
+    <h2>Vaše práva</h2>
+    <p>
+      Podle nařízení GDPR máte právo se nás zeptat, jaké údaje o vás zpracováváme, žádat
+      jejich opravu nebo výmaz a podat stížnost u Úřadu pro ochranu osobních údajů.
+      U tohohle webu ovšem platí, že o běžném návštěvníkovi nezpracováváme nic.
+    </p>
+  </div>
+</Zaklad>
+
+<style>
+  .text {
+    max-width: 42rem;
+  }
+
+  .uvod {
+    margin-top: 1rem;
+  }
+
+  .text h2 {
+    margin-top: clamp(2rem, 4vw, 2.75rem);
+    margin-bottom: 0.7rem;
+    font-size: var(--text-nadpis-3);
+  }
+
+  .text p {
+    font-size: var(--text-maly);
+  }
+
+</style>

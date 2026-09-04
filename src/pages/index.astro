@@ -1,0 +1,663 @@
+---
+import { getCollection, render } from 'astro:content';
+import Zaklad from '../layouts/Zaklad.astro';
+import KartaKandidata from '../components/KartaKandidata.astro';
+import { odkaz } from '../lib/odkaz';
+import IkonaTematu from '../components/IkonaTematu.astro';
+import { BARVA_TEMATU } from '../lib/temata';
+import type { Tema } from '../lib/temata';
+import { fotkaKandidata } from '../lib/portrety';
+import {
+  NAZEV,
+  HESLO,
+  OBEC_Z,
+  ZASTUPITELSTVO,
+  POCET_ZASTUPITELU,
+  POCET_SLOVY,
+  DATUM_VOLEB,
+  ZACATEK_VOLEB,
+  KONEC_VOLEB,
+} from '../lib/strana';
+import { odpocet } from '../lib/odpocet';
+
+/** Spočítá se při sestavení, aby stránka měla správný text i bez JavaScriptu.
+    Skript na stránce si to pak přepočítá, aby číslo nezestárlo mezi nasazeními. */
+const stavVoleb = odpocet(ZACATEK_VOLEB, KONEC_VOLEB);
+
+const program = (await getCollection('program')).sort((a, b) => a.data.poradi - b.data.poradi);
+
+// Podrobný rozpis nemá každá oblast, takže tlačítko „Chci vědět víc" se
+// v panelu ukáže jen tam, kde je kam kliknout.
+const detailOblasti = new Map(
+  (await getCollection('programDetail')).map((d) => [d.data.oblast, d.id]),
+);
+
+const programSObsahem = await Promise.all(
+  program.map(async (oblast) => ({
+    ...oblast,
+    Obsah: (await render(oblast)).Content,
+    detail: detailOblasti.get(oblast.id) ?? null,
+  })),
+);
+
+const kandidati = (await getCollection('kandidati')).sort((a, b) => a.data.poradi - b.data.poradi);
+
+// Na úvodní stránce je jen ochutnávka — přesně jedna řada mřížky. Zbytek
+// je za odkazem „Všech 9". Kdyby jich tu bylo devět, druhá řada by zůstala
+// ze tří čtvrtin prázdná a vypadalo by to jako chyba sazby, ne jako záměr.
+const prvni = kandidati.slice(0, 6);
+---
+
+<Zaklad
+  titulek={NAZEV}
+  popis={`Nezávislí kandidáti do ${ZASTUPITELSTVO}. Volby ${DATUM_VOLEB}.`}
+  bezOdsazeni
+>
+  {/* ---------- Hero ---------- */}
+  <section class="hero">
+
+    <div class="pruh hero-vnitrek">
+      <div class="hero-text">
+        <h1 class="hero-claim">{HESLO}</h1>
+
+        <p class="hero-perex">
+          <strong>Placeholder.</strong> Sem přijde odstavec, který řekne, kdo jsme a proč
+          kandidujeme. Zatím tu drží místo, aby bylo vidět, kolik textu se sem vejde.
+        </p>
+
+        <div class="hero-tlacitka">
+          <a class="tlacitko tlacitko-hlavni" href={odkaz('/program/')}>Náš program</a>
+          <a class="tlacitko tlacitko-vedlejsi" href={odkaz('/jak-volit/')}>Jak volit →</a>
+        </div>
+      </div>
+
+      {/* Značka stojí vedle claimu, ne nad ním — vyplní pravou půlku, kterou
+          by jinak zabírala jen prázdná plocha. Popisek je prázdný schválně:
+          totéž logo je v hlavičce a čtečka by ho jinak přečetla dvakrát. */}
+      <img
+        class="hero-logo"
+        src={odkaz('/logo.svg')}
+        alt=""
+        width="1200"
+        height="300"
+        fetchpriority="high"
+      />
+    </div>
+
+    <p class="pruh hero-volby">
+      <span class="hero-volby-datum">Volby do {ZASTUPITELSTVO}</span>
+      <span class="hero-volby-oddel" aria-hidden="true">·</span>
+      <span>{DATUM_VOLEB}</span>
+      <span class="hero-volby-oddel" aria-hidden="true">·</span>
+      <span data-odpocet-od={ZACATEK_VOLEB} data-odpocet-do={KONEC_VOLEB}>
+        {stavVoleb.text}
+      </span>
+    </p>
+  </section>
+
+  {/* ---------- Kdo jsme ---------- */}
+  <section class="sekce">
+    <div class="pruh dvojice">
+      <div>
+        <p class="nadtitulek">Kdo jsme</p>
+        <h2>{POCET_SLOVY.charAt(0).toUpperCase() + POCET_SLOVY.slice(1)} lidí, kteří tady žijí</h2>
+      </div>
+      <div class="dvojice-text">
+        <p>
+          <strong>Placeholder.</strong> Sem přijdou dva odstavce o tom, kdo kandidátku tvoří
+          a co nás spojuje. Text zatím nemáme.
+        </p>
+        <p>
+          Architektka, lékař, ekonomka, technik, studentka i jednatelé firem — všichni
+          {' '}{OBEC_Z}. Zbytek doplníme.
+        </p>
+        <p>
+          <a href={odkaz('/lide/')}>Poznejte všech {POCET_ZASTUPITELU} →</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  {/* ---------- Program ---------- */}
+  <section class="sekce program" id="program">
+    <div class="pruh">
+      <p class="nadtitulek">Náš program</p>
+      <h2 class="program-nadpis">Co chceme v Kníničkách změnit</h2>
+
+      <div class="program-mrizka">
+        {
+          programSObsahem.map((oblast) => (
+            <a
+              class="dlazdice"
+              href={`#oblast-${oblast.id}`}
+              data-dlazdice={oblast.id}
+              style={`--barva-oblasti: ${BARVA_TEMATU[oblast.data.tema as Tema]}`}
+            >
+              <span class="dlazdice-nadpis">
+                <IkonaTematu
+                  tema={oblast.data.tema as Tema}
+                  class="dlazdice-ikona"
+                />
+                <span class="dlazdice-nazev">{oblast.data.nazev}</span>
+                <span class="dlazdice-znak" aria-hidden="true">→</span>
+              </span>
+              <span class="dlazdice-shrnuti">{oblast.data.shrnuti}</span>
+            </a>
+          ))
+        }
+      </div>
+
+      {/* ---------- Sdílený panel ----------
+          Jen jeden na stránce, přes celou šířku, pod mřížkou. Otevírá ho
+          CSS `:target` (funguje i bez JavaScriptu), takže se dlaždice
+          nikdy samy nerozbalují a mřížka se nehýbe — ať je otevřené
+          cokoliv, ostatní dlaždice zůstávají přesně tam, kde byly. */}
+      <div class="program-panely" data-program-panely>
+        {
+          programSObsahem.map((oblast) => (
+            <div class="program-panel" id={`oblast-${oblast.id}`} data-panel={oblast.id}>
+              <a class="program-panel-zavrit" href="#program" data-zavrit>
+                <span aria-hidden="true">×</span>
+                <span class="jen-pro-ctecky">Zavřít</span>
+              </a>
+              <p class="program-panel-nadtitulek">{oblast.data.nazev}</p>
+              <h3 class="program-panel-nadpis">{oblast.data.nadpis ?? oblast.data.nazev}</h3>
+              <div class="dlazdice-obsah">
+                <oblast.Obsah />
+              </div>
+              {
+                oblast.detail && (
+                  <p class="program-panel-vic">
+                    <a
+                      class="tlacitko tlacitko-hlavni"
+                      href={odkaz(`/program/${oblast.detail}/`)}
+                    >
+                      Chci vědět víc
+                      <span class="jen-pro-ctecky">o oblasti {oblast.data.nazev}</span>
+                      <span aria-hidden="true">→</span>
+                    </a>
+                  </p>
+                )
+              }
+            </div>
+          ))
+        }
+      </div>
+
+      <p class="program-odkaz">
+        <a class="tlacitko tlacitko-vedlejsi" href={odkaz('/program/')}>Celý program</a>
+      </p>
+    </div>
+  </section>
+
+  {/* ---------- Mapa záměrů ---------- */}
+  <section class="sekce pas-noc zamery">
+    <div class="pruh zamery-vnitrek">
+      <div>
+        <p class="nadtitulek">Mapa záměrů</p>
+        <h2>Program není seznam přání. Jsou to&nbsp;místa, která denně míjíte.</h2>
+        <p class="perex">
+          <strong>Placeholder.</strong> Mapa Kníniček je připravená, body na ni teprve
+          doplníme — každý bude konkrétní místo a konkrétní věc, kterou tam chceme udělat.
+        </p>
+        <p class="zamery-tlacitko">
+          <a class="tlacitko tlacitko-hlavni" href={odkaz('/mapa/')}>Otevřít mapu</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  {/* ---------- Lidé ---------- */}
+  <section class="sekce lide">
+    <div class="pruh">
+      <div class="lide-hlava">
+        <div>
+          <p class="nadtitulek">Komu dáte hlas</p>
+          <h2>Naši kandidáti</h2>
+        </div>
+        <a class="tlacitko tlacitko-vedlejsi" href={odkaz('/lide/')}>Všech {POCET_ZASTUPITELU} →</a>
+      </div>
+
+      <div class="lide-mrizka">
+        {
+          prvni.map((clovek) => (
+            <KartaKandidata
+              poradi={clovek.data.poradi}
+              jmeno={clovek.data.jmeno}
+              vek={clovek.data.vek}
+              povolani={clovek.data.povolani}
+              foto={fotkaKandidata(clovek.id)}
+            />
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  {/* ---------- Jak volit ---------- */}
+  <section class="sekce pas-noc jak-volit">
+    <div class="pruh jak-volit-vnitrek">
+      <div>
+        <p class="nadtitulek">Jak volit</p>
+        <h2>Do zastupitelstva máte {POCET_ZASTUPITELU} křížků. Věděli jste to?</h2>
+        <p class="perex">
+          Komunální volby fungují jinak než všechny ostatní a většina lidí to neví.
+          Můžete dát hlas celé kandidátce, vybírat jednotlivce napříč stranami, nebo obojí
+          zkombinovat. Ukážeme vám to na hlasovacím lístku, který si můžete vyzkoušet.
+        </p>
+        <p class="jak-volit-tlacitko">
+          <a class="tlacitko tlacitko-hlavni" href={odkaz('/jak-volit/')}>Vyzkoušet lístek</a>
+        </p>
+      </div>
+    </div>
+  </section>
+</Zaklad>
+
+<style>
+  /* ---------- Hero ---------- */
+
+  .hero {
+    position: relative;
+    overflow: hidden;
+    padding-block: clamp(3rem, 7vw, 5.5rem) clamp(2rem, 4vw, 3.25rem);
+  }
+
+  .hero-vnitrek {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: clamp(2rem, 5vw, 3rem);
+    /* Logo lícuje s horní hranou claimu, ne se středem sloupce. */
+    align-items: start;
+  }
+
+  /* Na širokém displeji stojí značka vedle claimu a vyplní pravou půlku.
+     Na úzkém se logo posune nad text, protože vedle sebe by se obojí
+     zmenšilo na nečitelnou míru. */
+  @media (min-width: 900px) {
+    .hero-vnitrek {
+      grid-template-columns: 1.1fr 0.9fr;
+    }
+  }
+
+  @media (max-width: 899px) {
+    .hero-vnitrek {
+      gap: clamp(1.5rem, 5vw, 2.25rem);
+    }
+    .hero-text {
+      order: 2;
+    }
+    .hero-logo {
+      order: 1;
+      justify-self: start;
+    }
+  }
+
+  /* Křivka z loga jako podklad — velká, přetéká přes pravý okraj.
+     Má se dát vytušit, ne přečíst, proto tak nízká sytost v tokenech. */
+
+  /* Pod 900 px se logo stěhuje nad text a pravá strana volná není,
+     takže se stopa schová — jinak by ležela pod odstavcem. */
+  @media (max-width: 899px) {
+  }
+
+  /* Na úzkém displeji je text přes celou šířku, takže by křivka ležela
+     přímo pod odstavcem. Odsuneme ji nahoru a za okraj, ať jen prosvítá. */
+  @media (max-width: 720px) {
+  }
+
+  .hero-logo {
+    width: 100%;
+    max-width: 520px;
+    height: auto;
+    justify-self: end;
+  }
+
+  @media (max-width: 899px) {
+    .hero-logo {
+      max-width: min(360px, 78vw);
+    }
+  }
+
+  .hero-claim {
+    max-width: 14ch;
+    margin: 0;
+    font-size: var(--text-hero);
+    font-weight: 650;
+    line-height: 0.95;
+    letter-spacing: -0.042em;
+    color: var(--modra-text);
+  }
+
+  .hero-perex {
+    max-width: 42ch;
+    margin: clamp(1.4rem, 3vw, 2rem) 0 0;
+    font-size: var(--text-velky);
+    line-height: 1.55;
+    color: var(--inkoust-tlum);
+  }
+
+  .hero-tlacitka {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin-top: clamp(1.6rem, 3vw, 2.2rem);
+  }
+
+  .hero-volby {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.6rem;
+    /* Jen margin-top, ne zkrácený zápis: `margin: X 0 0` by přebilo
+       `margin-inline: auto` ze třídy `.pruh` a pruh by se přestal zarovnávat. */
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--linka);
+    font-size: var(--text-maly);
+    color: var(--inkoust-tlum);
+  }
+
+  .hero-volby-datum {
+    font-weight: 600;
+    color: var(--inkoust);
+  }
+
+  .hero-volby-oddel {
+    color: var(--linka-vyrazna);
+  }
+
+  /* Na mobilu se řádek stejně zalomí a oddělovač by zůstal viset
+     na konci řádku jako překlep. Radši ho schováme a dáme řádkům odstup. */
+  @media (max-width: 620px) {
+    .hero-volby {
+      display: grid;
+      gap: 0.15rem;
+      justify-items: start;
+    }
+    .hero-volby-oddel {
+      display: none;
+    }
+  }
+
+  /* ---------- Dvousloupcová sekce ---------- */
+
+  .dvojice {
+    display: grid;
+    gap: 1.5rem 3rem;
+  }
+
+  @media (min-width: 820px) {
+    .dvojice {
+      grid-template-columns: 1fr 1.15fr;
+      gap: 3.5rem;
+    }
+  }
+
+  .dvojice-text {
+    max-width: var(--sirka-textu);
+  }
+
+  /* ---------- Program ---------- */
+
+  .program-nadpis {
+    max-width: 20ch;
+    margin-bottom: clamp(2rem, 4vw, 3rem);
+  }
+
+  .program-mrizka {
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 620px) {
+    .program-mrizka {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1000px) {
+    .program-mrizka {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  /* Dlaždice sama nic nerozbaluje — jen odkazuje na svůj panel níž.
+     Díky tomu se nikdy nemění výška mřížky, ať je otevřené cokoliv. */
+  .dlazdice {
+    display: block;
+    background: var(--plocha);
+    border: 1px solid var(--linka);
+    border-radius: var(--radius);
+    box-shadow: var(--stin);
+    padding: 1.15rem 1.25rem;
+    color: inherit;
+    text-decoration: none;
+    transition: box-shadow var(--prechod), border-color var(--prechod);
+  }
+
+  .dlazdice:hover {
+    border-color: var(--linka-vyrazna);
+    box-shadow: var(--stin-zvednuty);
+  }
+
+  .dlazdice.je-aktivni {
+    border-color: var(--modra);
+  }
+
+  /* Ikona a název drží vedle sebe, šipku odstrčí doprava `margin` u názvu.
+     `space-between` tu být nemůže — rozhodilo by to ikonu od názvu. */
+  .dlazdice-nadpis {
+    display: flex;
+    align-items: start;
+    gap: 0.55rem;
+  }
+
+  /* Ikona nese barvu své oblasti — stejný odstín pak má ta oblast
+     i na `/program/` a její body na mapě záměrů. */
+  .dlazdice :global(.dlazdice-ikona) {
+    /* Odsazení srovná ikonu s prvním řádkem názvu. U dvouřádkového názvu
+       by se jinak zarovnala na střed obou řádků a vypadala nakřivo. */
+    margin-top: 0.15rem;
+    color: var(--barva-oblasti);
+  }
+
+  .dlazdice-nazev {
+    margin-right: auto;
+    font-size: var(--text-nadpis-3);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+
+  .dlazdice-znak {
+    flex: none;
+    color: var(--modra);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity var(--prechod), transform var(--prechod);
+  }
+
+  .dlazdice:hover .dlazdice-znak,
+  .dlazdice.je-aktivni .dlazdice-znak {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .dlazdice-shrnuti {
+    display: block;
+    margin-top: 0.45rem;
+    font-size: var(--text-maly);
+    line-height: 1.5;
+    color: var(--inkoust-tlum);
+  }
+
+  /* ---------- Sdílený panel ----------
+     Beze všeho otevřeného nezabírá vůbec žádné místo — každý panel má
+     `display: none` a zviditelní ho, spolu s odsazením, teprve `:target`. */
+  .program-panel {
+    display: none;
+  }
+
+  .program-panel:target {
+    position: relative;
+    display: block;
+    margin-top: 1.25rem;
+    padding: clamp(1.5rem, 3vw, 2.25rem);
+    background: var(--plocha);
+    border: 1px solid var(--linka);
+    border-radius: var(--radius);
+    box-shadow: var(--stin-zvednuty);
+    scroll-margin-top: 6rem;
+    animation: panel-nahoru 0.22s ease-out;
+  }
+
+  @keyframes panel-nahoru {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
+  .program-panel-zavrit {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    display: grid;
+    place-items: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 999px;
+    background: var(--papir);
+    color: var(--inkoust);
+    font-size: 1.3rem;
+    line-height: 1;
+    text-decoration: none;
+    transition: background var(--prechod);
+  }
+
+  .program-panel-zavrit:hover {
+    background: var(--modra-jemna);
+    color: var(--modra-text);
+  }
+
+  .program-panel-nadtitulek {
+    margin: 0;
+    max-width: calc(100% - 3rem);
+  }
+
+  .program-panel-nadpis {
+    margin: 0.3rem 0 0;
+    max-width: 40ch;
+  }
+
+  .program-panel .dlazdice-obsah {
+    margin-top: 1.25rem;
+    max-width: var(--sirka-textu);
+    font-size: var(--text-zakladni);
+  }
+
+  .dlazdice-obsah :global(ul) {
+    margin: 0;
+    padding-left: 1.1em;
+  }
+
+  .dlazdice-obsah :global(li) {
+    margin-bottom: 0.5em;
+  }
+
+  .dlazdice-obsah :global(li)::marker {
+    color: var(--zelena);
+  }
+
+  .program-panel-vic {
+    margin: 1.4rem 0 0;
+  }
+
+  .program-odkaz {
+    margin: clamp(1.75rem, 3vw, 2.5rem) 0 0;
+  }
+
+  /* ---------- Lidé ---------- */
+
+  .lide-hlava {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    margin-bottom: clamp(1.75rem, 3.5vw, 2.75rem);
+  }
+
+  .lide-mrizka {
+    display: grid;
+    gap: clamp(1.25rem, 3vw, 2rem) clamp(1rem, 2.5vw, 1.75rem);
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 620px) {
+    .lide-mrizka {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (min-width: 940px) {
+    .lide-mrizka {
+      grid-template-columns: repeat(6, 1fr);
+    }
+  }
+
+  /* ---------- Mapa záměrů ---------- */
+
+  .zamery h2 {
+    max-width: 22ch;
+    margin-bottom: 1.1rem;
+  }
+
+  .zamery-tlacitko {
+    margin: 1.75rem 0 0;
+  }
+
+  /* ---------- Jak volit ---------- */
+
+  .jak-volit h2 {
+    max-width: 20ch;
+    margin-bottom: 1.1rem;
+  }
+
+  .jak-volit-tlacitko {
+    margin: 1.75rem 0 0;
+  }
+</style>
+
+<script>
+  // Odpočet se přepočítá v prohlížeči. Kdyby se počítal jen při sestavení,
+  // po týdnu bez nasazení by na webu svítilo staré číslo.
+  //
+  // Text skládá `odpocet()` ze `src/lib/odpocet.ts` — tentýž kód, jaký běží
+  // při sestavení. Opsaný na dvou místech by se rozešel.
+  import { odpocet } from '../lib/odpocet';
+
+  const prvek = document.querySelector<HTMLElement>('[data-odpocet-od]');
+  const od = prvek?.dataset.odpocetOd;
+  const doKdy = prvek?.dataset.odpocetDo;
+  if (prvek && od && doKdy) {
+    prvek.textContent = odpocet(od, doKdy).text;
+  }
+</script>
+
+<script>
+  // Zvýraznění dlaždice, jejíž panel je zrovna otevřený. Čistě kosmetické —
+  // panel se otevírá i zavírá přes CSS `:target`, tohle jen dokresluje,
+  // odkud otevřený obsah pochází.
+  const dlazdice = [...document.querySelectorAll<HTMLAnchorElement>('.dlazdice')];
+
+  function oznacAktivni() {
+    const aktualni = location.hash.match(/^#oblast-(.+)$/)?.[1];
+    for (const d of dlazdice) {
+      d.classList.toggle('je-aktivni', !!aktualni && d.dataset.dlazdice === aktualni);
+    }
+  }
+
+  window.addEventListener('hashchange', oznacAktivni);
+  oznacAktivni();
+</script>

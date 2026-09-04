@@ -1,0 +1,23 @@
+# Nastaveni serveru pro ostry web. Lezi v `public/`, Astro ho zkopiruje do
+# `dist/` a nasazeni nahraje s webem. Souvislosti jsou v README.
+#
+# Cely soubor je bez diakritiky zamerne: cte ho server, ne clovek, a na tomhle
+# hostingu bezi LiteSpeed. Ceske znaky v nem nemame overene a kdyz parser
+# narazi na neco, cemu nerozumi, umi preskocit cely soubor.
+
+# Stoji schvalne prvni: kdyby server o kus niz zakopl a prestal cist, tahle
+# direktiva uz plati.
+ErrorDocument 404 /404.html
+
+# HTML se musi pokazde overit, protoze se jmenuje porad stejne. Soubory
+# z `_astro/` maji v nazvu otisk obsahu, takze stejne jmeno znamena stejny
+# obsah a smi lezet rok. Vzor miri na ten otisk pred priponou, protoze
+# `FilesMatch` vidi jmeno souboru, ne cestu.
+<IfModule mod_headers.c>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  <FilesMatch "\.[A-Za-z0-9_-]{8,}\.(css|js|webp|avif|png|jpe?g|svg|woff2?)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>

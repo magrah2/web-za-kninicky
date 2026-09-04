@@ -1,0 +1,48 @@
+# Co do gitu nepatri.
+#
+# Vsechno nize si npm nebo Astro vyrobi samo pri sestaveni, takze by to
+# v repozitari jen zabiralo misto a delalo zbytecne konflikty.
+#
+# Vyjimka je package-lock.json: npm ho sice taky generuje, ale v gitu
+# ZUSTAVA schvalne. Drzi presne verze balicku, aby se web sestavil stejne
+# u vas i na GitHubu, a nasazeni ho primo vyzaduje (npm ci bez nej spadne).
+
+# sestaveny web
+dist/
+
+# typy, ktere si Astro generuje z dat
+.astro/
+
+# stazene balicky
+node_modules/
+
+# zaznamy o chybach
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# tajne hodnoty - do gitu nikdy
+.env
+.env.production
+
+# smeti od macOS
+.DS_Store
+
+# nastaveni editoru JetBrains
+.idea/
+
+# stazena data OpenStreetMap - mezipamet generatoru mapy
+nastroje/.mapa-data-*.json
+
+# stazene rezy Interu - mezipamet generatoru loga
+nastroje/.pisma/
+
+# puvodni fotky kandidatu v plne velikosti (desitky MB) - do gitu jde jen
+# zmensena verze v src/assets/portrety/, kterou z nich vyrobi
+# nastroje/zmensit-fotky.mjs
+#
+# Ignoruje se OBSAH slozky, ne slozka sama. Kdyby se ignorovala cela, po
+# stazeni repozitare by neexistovala a nikdo by nepoznal, kam fotky patri.
+/fotky-original/*
+!/fotky-original/.gitkeep

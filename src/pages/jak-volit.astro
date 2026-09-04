@@ -1,0 +1,376 @@
+---
+import Zaklad from '../layouts/Zaklad.astro';
+import VolebniListek from '../components/VolebniListek.astro';
+import { odkaz } from '../lib/odkaz';
+import {
+  POCET_ZASTUPITELU,
+  ZASTUPITELSTVO,
+  DATUM_VOLEB,
+  HODINY_VOLEB,
+} from '../lib/strana';
+
+/**
+ * Pravidla jsou ověřená proti zákonu č. 491/2001 Sb. a shodně je popisuje
+ * Ministerstvo vnitra. Interaktivní lístek je pod textem, ale pravidla musí
+ * být čitelná i bez něj — proto jsou tady napsaná obyčejným textem.
+ *
+ * Všechna čísla se berou z `POCET_ZASTUPITELU`. V Kníničkách je to devět,
+ * ne dvacet sedm jako v šabloně, ze které web vznikl, a kdyby tu zůstalo
+ * jediné natvrdo zapsané číslo, učili bychom lidi volit špatně.
+ */
+
+const ZPUSOBY = [
+  {
+    cislo: '1',
+    nazev: 'Celou kandidátku',
+    popis:
+      'Uděláte jeden křížek do rámečku u názvu volební strany. Hlas dostanou všichni její kandidáti v pořadí, v jakém jsou na listině.',
+    detail: 'Nejjednodušší způsob. Označit můžete jen jednu stranu.',
+  },
+  {
+    cislo: '2',
+    nazev: 'Jednotlivé lidi',
+    popis: `Křížkujete konkrétní jména, klidně napříč oběma kandidátkami. Můžete označit nejvýš ${POCET_ZASTUPITELU} lidí — tolik, kolik má knínické zastupitelstvo členů.`,
+    detail: `Nemusíte využít všech ${POCET_ZASTUPITELU} křížků. Klidně dejte hlas jen třem lidem.`,
+  },
+  {
+    cislo: '3',
+    nazev: 'Obojí zároveň',
+    popis: `Označíte jednu stranu a k tomu jednotlivce z té druhé kandidátky. Nejdřív se započítají vaši jednotlivci a zbytek z ${POCET_ZASTUPITELU} hlasů dostanou kandidáti označené strany odshora dolů.`,
+    detail: 'Tuhle možnost skoro nikdo nezná, přitom je nejužitečnější.',
+  },
+];
+
+const NEPLATNY = [
+  'Označíte víc než jednu volební stranu.',
+  `Zakřížkujete víc než ${POCET_ZASTUPITELU} jednotlivých kandidátů.`,
+  'Lístek přeškrtáte, dopíšete do něj jméno nebo ho jinak upravíte.',
+];
+
+/**
+ * Kde a kdy se volí.
+ *
+ * Šablona na tohle měla vlastní stránku s vyhledávačem podle adresy — byla
+ * psaná pro obec s dvaceti okrsky, kde by člověk ten svůj jinak nenašel.
+ * Kníničky mají jediný okrsek, takže vyhledávač by všem odpověděl stejně
+ * a stránka navíc by jen odváděla pozornost. Adresa proto stojí rovnou tady.
+ *
+ * PLACEHOLDER: adresu je nutné opsat z veřejné vyhlášky starosty, než web
+ * půjde naostro. Poslat člověka do špatné místnosti je horší než neříct nic.
+ */
+const MISTNOST = {
+  nazev: 'Placeholder — doplnit podle vyhlášky',
+  adresa: 'Placeholder — doplnit podle vyhlášky',
+};
+---
+
+<Zaklad
+  titulek="Jak volit"
+  popis={`Do ${ZASTUPITELSTVO} máte ${POCET_ZASTUPITELU} hlasů. Vysvětlujeme tři způsoby, jak hlasovací lístek upravit, a čím ho naopak zneplatníte.`}
+>
+  <div class="pruh">
+    <p class="nadtitulek">Jak volit</p>
+    <h1 class="nadpis">Do zastupitelstva máte {POCET_ZASTUPITELU}&nbsp;křížků. Věděli jste to?</h1>
+    <p class="perex uvod">
+      Komunální volby fungují jinak než všechny ostatní a spousta lidí kvůli tomu odevzdá
+      neplatný lístek nebo nevyužije, co jim zákon dává. Tady je to celé — bez právničiny.
+    </p>
+
+    <p class="poznamka-krouzky">
+      Mimochodem: <strong>v komunálních volbách se křížkuje, ne kroužkuje.</strong>{' '}
+      Kroužky patří do sněmovních voleb.
+    </p>
+
+    {/* ---------- Tři způsoby ---------- */}
+    <h2 class="podnadpis">Tři způsoby, jak lístek upravit</h2>
+
+    <ol class="zpusoby">
+      {
+        ZPUSOBY.map((zpusob) => (
+          <li class="zpusob">
+            <span class="zpusob-cislo" aria-hidden="true">{zpusob.cislo}</span>
+            <div>
+              <h3>{zpusob.nazev}</h3>
+              <p>{zpusob.popis}</p>
+              <p class="zpusob-detail">{zpusob.detail}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+
+    {/* ---------- Past u třetího způsobu ---------- */}
+    <section class="past">
+      <h2>Kde to lidi nejčastěji zaskočí</h2>
+      <p>
+        Když zaškrtnete stranu <em>a zároveň</em> jednotlivce, hlasy se nesčítají navíc — pořád
+        jich rozdáváte přesně {POCET_ZASTUPITELU}. Nejdřív dostanou hlas lidé, které jste
+        označili jménem, a teprve zbytek se rozdělí kandidátům označené strany odshora.
+      </p>
+      <p class="past-priklad">
+        <strong>Příklad:</strong> označíte naši kandidátku a k tomu tři lidi z druhé kandidátky.
+        Ti tři dostanou hlas a zbylých {POCET_ZASTUPITELU - 3} hlasů půjde našim kandidátům
+        číslo 1 až {POCET_ZASTUPITELU - 3}. Kandidáti na posledních třech místech od vás
+        hlas nedostanou.
+      </p>
+
+      <h3 class="past-druha">A co když zakřížkuju stranu i její vlastní lidi?</h3>
+      <p>
+        Pak se <strong>ty křížky u jmen nepočítají</strong>. Lístek zůstává platný a hlas dostane
+        celá kandidátka tak jako tak — jen jste nikoho z ní dopředu neposunuli. Křížkovat
+        jednotlivce má proto smysl jedině u lidí z <em>druhé</em> kandidátky.
+      </p>
+    </section>
+
+    {/* ---------- Kde a kdy ---------- */}
+    <section class="kde">
+      <h2>Kde a kdy se v Kníničkách volí</h2>
+      <p>
+        Kníničky mají <strong>jediný volební okrsek</strong>, takže všichni voliči jdou
+        na stejné místo. Adresu najdete i na obálce, která vám přijde do schránky.
+      </p>
+      <dl class="kde-udaje">
+        <div>
+          <dt>Volební místnost</dt>
+          <dd>{MISTNOST.nazev}<br />{MISTNOST.adresa}</dd>
+        </div>
+        <div>
+          <dt>Kdy</dt>
+          <dd>
+            pátek {HODINY_VOLEB.patek}<br />
+            sobota {HODINY_VOLEB.sobota}
+          </dd>
+        </div>
+        <div>
+          <dt>Co s sebou</dt>
+          <dd>Občanský průkaz nebo cestovní pas. Bez dokladu vás volit nepustí.</dd>
+        </div>
+      </dl>
+      <p class="kde-pozn">Volby jsou {DATUM_VOLEB}.</p>
+    </section>
+
+    {/* ---------- Neplatný lístek ---------- */}
+    <section class="neplatny">
+      <h2>Čím lístek zneplatníte</h2>
+      <ul>
+        {NEPLATNY.map((duvod) => <li>{duvod}</li>)}
+      </ul>
+    </section>
+
+    {/* ---------- Lístek na zkoušku ---------- */}
+    <section class="zkouska" id="zkouska">
+      <h2>Vyzkoušejte si to nanečisto</h2>
+      <p class="perex zkouska-uvod">
+        Tohle je hlasovací lístek na zkoušku. Klikejte do rámečků a dole uvidíte živě,
+        komu váš hlas skutečně připadne a jestli by lístek platil. Nic se nikam neodesílá.
+      </p>
+
+      <VolebniListek />
+    </section>
+
+    <p class="dal">
+      <a class="tlacitko tlacitko-hlavni" href={odkaz('/lide/')}>Podívat se na naše kandidáty</a>
+    </p>
+  </div>
+</Zaklad>
+
+<style>
+  .nadpis {
+    max-width: 18ch;
+  }
+
+  .uvod {
+    margin-top: 1rem;
+  }
+
+  .poznamka-krouzky {
+    max-width: var(--sirka-textu);
+    margin-top: 1.5rem;
+    padding: 0.85rem 1.1rem;
+    background: var(--zelena-jemna);
+    border-left: 3px solid var(--zelena);
+    border-radius: 0 var(--radius-maly) var(--radius-maly) 0;
+    font-size: var(--text-maly);
+  }
+
+  .podnadpis {
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .past-druha {
+    margin-top: 1.5rem;
+  }
+
+  .zpusoby {
+    display: grid;
+    gap: 0.85rem;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 880px) {
+    .zpusoby {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .zpusob {
+    display: flex;
+    align-items: start;
+    gap: 0.9rem;
+    padding: 1.25rem;
+    background: var(--plocha);
+    border: 1px solid var(--linka);
+    border-radius: var(--radius);
+    box-shadow: var(--stin);
+  }
+
+  .zpusob-cislo {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 999px;
+    background: var(--modra);
+    color: #fff;
+    font-size: var(--text-maly);
+    font-weight: 700;
+  }
+
+  .zpusob h3 {
+    margin-bottom: 0.4rem;
+  }
+
+  .zpusob p {
+    margin: 0;
+    font-size: var(--text-maly);
+    line-height: 1.55;
+  }
+
+  .zpusob-detail {
+    margin-top: 0.55rem !important;
+    color: var(--inkoust-tlum);
+    font-size: var(--text-drobny) !important;
+  }
+
+  /* ---------- Past ---------- */
+
+  .past {
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+    padding: clamp(1.25rem, 3vw, 2rem);
+    background: var(--noc);
+    color: var(--na-noci);
+    border-radius: var(--radius);
+  }
+
+  .past h2 {
+    color: var(--na-noci);
+    margin-bottom: 0.9rem;
+  }
+
+  .past p {
+    max-width: var(--sirka-textu);
+    font-size: var(--text-maly);
+    color: var(--na-noci-tlum);
+  }
+
+  .past-priklad {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--linka-na-noci);
+  }
+
+  .past strong,
+  .past em {
+    color: var(--na-noci);
+  }
+
+  /* ---------- Neplatný lístek ---------- */
+
+  /* Údaje o místnosti stojí ve třech sloupcích na širokém displeji a pod
+     sebou na úzkém. Je to `dl`, protože jde o dvojice pojem–hodnota,
+     ne o tabulku. */
+  .kde {
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .kde p {
+    max-width: var(--sirka-textu);
+    margin-top: 0.9rem;
+    font-size: var(--text-maly);
+  }
+
+  .kde-udaje {
+    display: grid;
+    gap: 1rem;
+    margin: 1.5rem 0 0;
+    padding: 0;
+  }
+
+  @media (min-width: 720px) {
+    .kde-udaje {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .kde-udaje > div {
+    padding: 1rem 1.15rem;
+    background: var(--plocha);
+    border: 1px solid var(--linka);
+    border-radius: var(--radius);
+  }
+
+  .kde-udaje dt {
+    font-size: var(--text-drobny);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--inkoust-tlum);
+  }
+
+  .kde-udaje dd {
+    margin: 0.4rem 0 0;
+    font-size: var(--text-maly);
+    line-height: 1.5;
+  }
+
+  .kde-pozn {
+    color: var(--inkoust-tlum);
+  }
+
+  .neplatny {
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+  }
+
+  .neplatny ul {
+    max-width: var(--sirka-textu);
+    margin-top: 1rem;
+    padding-left: 1.15em;
+    font-size: var(--text-maly);
+  }
+
+  .neplatny li {
+    margin-bottom: 0.5em;
+  }
+
+  .neplatny li::marker {
+    color: var(--varovani);
+  }
+
+  /* ---------- Lístek na zkoušku ---------- */
+
+  .zkouska {
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+    scroll-margin-top: 6rem;
+  }
+
+  .zkouska-uvod {
+    margin-top: 0.9rem;
+  }
+
+  .dal {
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+  }
+</style>

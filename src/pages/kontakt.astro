@@ -1,0 +1,270 @@
+---
+import Zaklad from '../layouts/Zaklad.astro';
+import {
+  NAZEV,
+  EMAIL,
+  ZASTUPITELSTVO,
+  POCET_ZASTUPITELU,
+  DATUM_VOLEB,
+  HODINY_VOLEB,
+} from '../lib/strana';
+
+/**
+ * Profily na sociálních sítích. Prázdná adresa se nevykreslí, aby na webu
+ * nikdy nebylo tlačítko, které nikam nevede — proto tu obě adresy zatím
+ * stojí prázdné a sekce se prostě neukáže. Až profily vzniknou, stačí
+ * doplnit adresu.
+ *
+ * Instagramová adresa se píše bez `?igsi=…`. Ten přívěsek přidává aplikace,
+ * když se odkaz sdílí, a označuje, odkud sdílení přišlo — na webu nemá co
+ * dělat a bez něj odkaz vede na totéž.
+ *
+ * Znaky sítí jsou jedinou výjimkou z pravidla „jeden grafický motiv" —
+ * nejsou to ozdoby, ale to, podle čeho člověk odkaz pozná dřív, než si ho
+ * přečte. Jsou nakreslené přímo tady jako SVG, ne stažené odjinud: web
+ * nesmí posílat požadavky na cizí servery.
+ */
+const SITE = [
+  { nazev: 'Facebook', znak: 'facebook', adresa: '' },
+  { nazev: 'Instagram', znak: 'instagram', adresa: '' },
+].filter((s) => s.adresa);
+---
+
+<Zaklad
+  titulek="Kontakt"
+  popis={`Napište nám. ${NAZEV} — nezávislí kandidáti do ${ZASTUPITELSTVO}.`}
+>
+  <div class="pruh kontakt">
+    <div>
+      <p class="nadtitulek">Kontakt</p>
+      <h1>Ozvěte se nám</h1>
+      <p class="perex uvod">
+        Máte dotaz, nápad, nebo vás něco v Kníničkách štve? Napište nám.
+      </p>
+      <a class="velky-email" href={`mailto:${EMAIL}`} data-kopirovat={EMAIL}>
+        {EMAIL}
+        <span class="kopirovat" hidden>Zkopírovat</span>
+      </a>
+
+      <p class="doplnek">
+        <strong>Placeholder:</strong> tahle adresa je zástupná, skutečnou zatím nemáme.
+      </p>
+
+      {
+        SITE.length > 0 && (
+          <div class="site">
+            <p class="site-nadpis">Najdete nás i na sítích</p>
+            <ul class="site-odkazy">
+              {SITE.map((sit) => (
+                <li>
+                  <a href={sit.adresa} rel="noopener">
+                    {sit.znak === 'facebook' ? (
+                      <svg class="site-znak" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <rect x="3" y="3" width="18" height="18" rx="5" />
+                        <path d="M15.2 7.6h-1.6a2.2 2.2 0 0 0-2.2 2.2V21" />
+                        <path d="M9.6 12.8h5" />
+                      </svg>
+                    ) : (
+                      <svg class="site-znak" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <rect x="3" y="3" width="18" height="18" rx="5" />
+                        <circle cx="12" cy="12" r="4" />
+                        <circle class="site-znak-tecka" cx="17.1" cy="6.9" r="1.2" />
+                      </svg>
+                    )}
+                    {sit.nazev}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      }
+    </div>
+
+    {/* Bez značky: samotná zelená stopa z loga tu působila jako utržený
+        kousek a celé logo by se pár centimetrů pod hlavičkou opakovalo.
+        Okénko má říct datum a hodiny, na to značku nepotřebuje. */}
+    <aside class="volby">
+      <h2>Volby do zastupitelstva</h2>
+      <p class="volby-datum">{DATUM_VOLEB}</p>
+      <p class="volby-hodiny">
+        pátek {HODINY_VOLEB.patek}<br />
+        sobota {HODINY_VOLEB.sobota}
+      </p>
+      <p class="volby-pozn">
+        Volí se {POCET_ZASTUPITELU} zastupitelů Kníniček, takže máte {POCET_ZASTUPITELU} hlasů.
+      </p>
+    </aside>
+  </div>
+</Zaklad>
+
+<style>
+  .kontakt {
+    display: grid;
+    gap: clamp(2rem, 5vw, 3.5rem);
+  }
+
+  @media (min-width: 860px) {
+    .kontakt {
+      grid-template-columns: 1.4fr 1fr;
+      align-items: start;
+    }
+  }
+
+  .uvod {
+    margin-top: 1rem;
+  }
+
+  .velky-email {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: clamp(1.75rem, 3.5vw, 2.5rem);
+    font-size: clamp(1.2rem, 3.4vw, 1.9rem);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: var(--inkoust);
+    text-decoration: none;
+    border-bottom: 2px solid var(--zelena);
+    padding-bottom: 0.15rem;
+    transition: color var(--prechod);
+  }
+
+  .velky-email:hover {
+    color: var(--modra-text);
+  }
+
+  .site {
+    margin-top: clamp(2rem, 4vw, 3rem);
+  }
+
+  .site-nadpis {
+    font-size: var(--text-maly);
+    color: var(--inkoust-tlum);
+  }
+
+  .site-odkazy {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin: 0.6rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .site-odkazy a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--linka);
+    border-radius: var(--radius-maly);
+    background: var(--plocha);
+    font-size: var(--text-maly);
+    font-weight: 600;
+    color: var(--inkoust);
+    text-decoration: none;
+    transition: border-color var(--prechod), color var(--prechod);
+  }
+
+  .site-odkazy a:hover {
+    border-color: var(--modra);
+    color: var(--modra-text);
+  }
+
+  /* Znak kreslený tahem, aby držel váhu textu vedle sebe. Barvu bere
+     z textu, takže se při přejetí přebarví spolu s ním. */
+  .site-znak {
+    flex: none;
+    width: 1.15rem;
+    height: 1.15rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .site-znak-tecka {
+    fill: currentColor;
+    stroke: none;
+  }
+
+  .kopirovat {
+    padding: 0.15rem 0.55rem;
+    border: 1px solid var(--linka-vyrazna);
+    border-radius: 999px;
+    font-size: var(--text-drobny);
+    font-weight: 500;
+    color: var(--inkoust-tlum);
+    letter-spacing: 0;
+  }
+
+  .doplnek {
+    max-width: var(--sirka-textu);
+    margin-top: 1.5rem;
+    font-size: var(--text-maly);
+    color: var(--inkoust-tlum);
+  }
+
+  .volby {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(1.5rem, 3vw, 2rem);
+    background: var(--plocha);
+    border: 1px solid var(--linka);
+    border-radius: var(--radius);
+    box-shadow: var(--stin);
+  }
+
+  .volby h2 {
+    font-size: var(--text-nadpis-3);
+  }
+
+  .volby-datum {
+    margin: 0.35rem 0 0;
+    font-size: var(--text-nadpis-2);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+
+  .volby-hodiny {
+    margin: 0.75rem 0 0;
+    font-size: var(--text-maly);
+    color: var(--inkoust-tlum);
+  }
+
+  .volby-pozn {
+    margin: 1.1rem 0 0;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--linka);
+    font-size: var(--text-drobny);
+    color: var(--inkoust-tlum);
+  }
+</style>
+
+<script>
+  // Stejné chování jako v patičce: klik zkopíruje adresu, mailto: zůstane
+  // funkční pro případ, že prohlížeč schránku nepovolí.
+  const email = document.querySelector<HTMLAnchorElement>('.velky-email');
+  const znacka = email?.querySelector<HTMLElement>('.kopirovat');
+
+  if (email && znacka && navigator.clipboard) {
+    znacka.hidden = false;
+    email.addEventListener('click', async (e) => {
+      const text = email.dataset.kopirovat;
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        return;
+      }
+      e.preventDefault();
+      znacka.textContent = 'Zkopírováno';
+      setTimeout(() => {
+        znacka.textContent = 'Zkopírovat';
+      }, 1600);
+    });
+  }
+</script>

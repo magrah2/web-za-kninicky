@@ -1,0 +1,944 @@
+---
+/**
+ * Mapa záměrů — co a kde chceme v Kníničkách udělat.
+ *
+ * Podklad je vlastní SVG vygenerované jednou z dat OpenStreetMap
+ * (nastroje/mapa.mjs). Není to vložená mapová služba, takže web při
+ * zobrazení neposílá jediný požadavek ven a nikdo návštěvníky nesleduje.
+ *
+ * Detail se rozbaluje v seznamu vedle mapy, ne v překryvném okně.
+ */
+
+import { getCollection, render } from 'astro:content';
+import { BARVA_TEMATU, temaDoAdresy } from '../lib/temata';
+import type { Tema } from '../lib/temata';
+import { naMape, jeVeVyrezu, ROZMER } from '../lib/mapa';
+import podklad from '../../public/mapa-kninicky.svg?raw';
+
+// Pořadí i čísla na odznacích vycházejí z názvů souborů. V datech žádné
+// číslo není — jinak by se při každém přidání bodu muselo přečíslovat vše.
+const vsechny = (await getCollection('zamery'))
+  .sort((a, b) => a.id.localeCompare(b.id, 'cs'))
+  .map((zamer, i) => ({ ...zamer, cislo: i + 1 }));
+
+// Bod mimo výřez by se vykreslil někde za okrajem mapy, kde ho nikdo neuvidí.
+// Radši o tom hlasitě řekneme při sestavení, než aby zmizel potichu.
+const mimoMapu = vsechny.filter((z) => !jeVeVyrezu(z.data.lat, z.data.lon));
+if (mimoMapu.length) {
+  throw new Error(
+    'Tyhle záměry leží mimo výřez mapy a nebylo by je vidět: ' +
+      mimoMapu.map((z) => `${z.data.nazev} (${z.data.lat}, ${z.data.lon})`).join(', ') +
+      '. Buď opravte souřadnice, nebo rozšiřte výřez v nastroje/mapa.mjs.',
+  );
+}
+
+// Odznaky sedí přesně na svém místě a můžou se překrývat. Dřív se
+// rozestrkávaly, aby se neslepily, ale u bodů blízko sebe to posouvalo
+// značku o stovky metrů, tedy mimo místo, které označuje. Přesná poloha je
+// důležitější než mezera mezi odznaky: kdo chce mít mezi nimi místo,
+// přiblíží si mapu, a vybraný bod se stejně vytáhne dopředu.
+const polohy = vsechny.map((z) => naMape(z.data.lat, z.data.lon));
+const zamery = vsechny.map((zamer, i) => ({ ...zamer, poloha: polohy[i] }));
+
+const sObsahem = await Promise.all(
+  zamery.map(async (zamer) => ({ ...zamer, Obsah: (await render(zamer)).Content })),
+);
+
+/** Nabízí se jen to, co je na mapě skutečně zastoupené. */
+const pouziteTemata = [...new Set(zamery.map((z) => z.data.tema))] as Tema[];
+
+const jsouNavrhy = zamery.some((z) => z.data.stav === 'navrh');
+---
+
+<section class="mapa-sekce pas-noc" id="zamery">
+  <div class="pruh">
+    <p class="nadtitulek">Mapa záměrů</p>
+    <h2 class="mapa-nadpis">Program není seznam přání. Jsou to&nbsp;místa, která denně míjíte.</h2>
+    <p class="perex mapa-perex">
+      {
+        zamery.length > 0
+          ? 'Každý bod je konkrétní místo v Kníničkách a konkrétní věc, kterou tam chceme udělat. Klikněte na bod v mapě nebo na položku v seznamu.'
+          : 'Podklad mapy je hotový, body na něj teprve doplníme. Každý bude konkrétní místo v Kníničkách a konkrétní věc, kterou tam chceme udělat.'
+      }
+    </p>
+
+    {
+      jsouNavrhy && (
+        <p class="mapa-vystraha">
+          <strong>Pracovní verze.</strong> Body označené „návrh" jsou podklad k diskuzi —
+          polohy jsou skutečné, texty čekají na potvrzení týmem.
+        </p>
+      )
+    }
+
+    {/* Filtry jsou skryté a odkrývá je až skript — bez JavaScriptu by to byla
+        mrtvá tlačítka. Seznam pod mapou zůstane čitelný tak jako tak.
+        Při jediné oblasti se nevykreslí vůbec: přepínač mezi „Vše" a jednou
+        položkou nic nefiltruje, jen zabírá místo. */}
+    {
+      pouziteTemata.length > 1 && (
+        <div class="mapa-filtry" data-mapa-filtry hidden>
+          <button type="button" class="filtr je-aktivni" data-tema="">Vše</button>
+          {pouziteTemata.map((tema) => (
+            <button
+              type="button"
+              class="filtr"
+              data-tema={temaDoAdresy(tema)}
+              style={`--barva: ${BARVA_TEMATU[tema]}`}
+            >
+              {tema}
+            </button>
+          ))}
+        </div>
+      )
+    }
+
+    <div class="mapa-rozvrzeni">
+      <div class="mapa-obal">
+        <div class="mapa-plocha" data-mapa style={`aspect-ratio: ${ROZMER.sirka} / ${ROZMER.vyska}`}>
+          {/* Mapa se zvětšuje `viewBox`em, ne `transform: scale()`. Se `scale()`
+              si prohlížeč SVG jednou vykreslí do bitmapy a tu pak natahuje,
+              takže z přiblížené mapy byly kostičky. Odznaky jsou HTML nad
+              mapou a polohu si po každé změně přepočítají podle výřezu —
+              proto u sebe nesou `data-mx` a `data-my` v jednotkách mapy.
+              Zapsané `left`/`top` platí pro nepřiblíženou mapu, takže bez
+              JavaScriptu body sedí tam, kde mají. */}
+          <div class="mapa-vnitrek" data-mapa-vnitrek>
+            <Fragment set:html={podklad} />
+
+            {/* Body leží v překryvné vrstvě nad podkladem, ne uvnitř SVG —
+                jsou to skutečná tlačítka, takže je najde klávesnice i čtečka. */}
+            <div class="mapa-body">
+              {
+                zamery.map((zamer) => (
+                  <button
+                    type="button"
+                    class="mapa-bod"
+                    data-bod={zamer.cislo}
+                    data-tema={temaDoAdresy(zamer.data.tema)}
+                    data-mx={(zamer.poloha.x / 100) * ROZMER.sirka}
+                    data-my={(zamer.poloha.y / 100) * ROZMER.vyska}
+                    style={`left: ${zamer.poloha.x}%; top: ${zamer.poloha.y}%; --barva: ${BARVA_TEMATU[zamer.data.tema]}`}
+                    aria-label={`${zamer.cislo}. ${zamer.data.nazev}`}
+                  >
+                    <span aria-hidden="true">{zamer.cislo}</span>
+                  </button>
+                ))
+              }
+            </div>
+          </div>
+
+          {/* Ovládání je v HTML skryté a odkrývá ho až skript — bez JavaScriptu
+              se mapa zvětšovat nedá a mrtvá tlačítka tu nechceme. */}
+          <div class="mapa-ovladani" data-mapa-ovladani hidden>
+            <button type="button" data-zoom="ven" aria-label="Oddálit mapu">−</button>
+            <button type="button" data-zoom="dovnitr" aria-label="Přiblížit mapu">+</button>
+            <button type="button" data-zoom="reset" aria-label="Zobrazit celé Kníničky">Celé Kníničky</button>
+          </div>
+        </div>
+
+        {/* Uvedení zdroje dat je podmínka licence ODbL, pod kterou
+            OpenStreetMap svá data poskytuje. */}
+        <p class="mapa-zdroj">Podklad: data&nbsp;© přispěvatelé OpenStreetMap</p>
+      </div>
+
+      {
+        zamery.length === 0 && (
+          <p class="mapa-prazdno">
+            <strong>Placeholder.</strong> Body na mapě zatím nemáme. Přidávají se po
+            jednom souboru do <code>src/content/zamery/</code> — jak na to, je
+            popsané v <code>_SABLONA.md</code> vedle nich.
+          </p>
+        )
+      }
+
+      <ol class="mapa-seznam" data-mapa-seznam>
+        {
+          sObsahem.map((zamer) => (
+            <li
+              class="zamer"
+              data-polozka={zamer.cislo}
+              data-tema={temaDoAdresy(zamer.data.tema)}
+            >
+              <details>
+                <summary>
+                  <span class="zamer-cislo" style={`--barva: ${BARVA_TEMATU[zamer.data.tema]}`}>
+                    {zamer.cislo}
+                  </span>
+                  <span class="zamer-hlava">
+                    <span class="zamer-nazev">{zamer.data.nazev}</span>
+                    <span class="zamer-stitky">
+                      <span class="zamer-tema" style={`--barva: ${BARVA_TEMATU[zamer.data.tema]}`}>
+                        {zamer.data.tema}
+                      </span>
+                      {zamer.data.stav === 'navrh' && <span class="zamer-navrh">návrh</span>}
+                    </span>
+                  </span>
+                </summary>
+                <div class="zamer-text">
+                  <zamer.Obsah />
+                </div>
+              </details>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Sekce si nese vlastní odsazení, protože ji stránka vkládá hned pod
+     hlavičku — bez tohohle by nadtitulek lepil na logo. */
+  .mapa-sekce {
+    padding-block: var(--mezera-sekce);
+  }
+
+  .mapa-nadpis {
+    max-width: 22ch;
+  }
+
+  .mapa-perex {
+    margin-top: 0.9rem;
+  }
+
+  /* Stejný jazyk jako `.mapa-vystraha`, jen v tlumené barvě — není to
+     varování, jen sdělení, že tu zatím nic není. */
+  .mapa-prazdno {
+    margin: 0 0 1.25rem;
+    padding: 0.75rem 1rem;
+    border-left: 3px solid var(--linka-vyrazna);
+    border-radius: 0 var(--radius-maly) var(--radius-maly) 0;
+    background: rgb(255 255 255 / 0.06);
+    font-size: var(--text-maly);
+    color: var(--na-noci);
+  }
+
+  .mapa-vystraha {
+    max-width: var(--sirka-textu);
+    margin: 1.25rem 0 0;
+    padding: 0.75rem 1rem;
+    border-left: 3px solid var(--navrh);
+    border-radius: 0 var(--radius-maly) var(--radius-maly) 0;
+    background: rgb(160 90 0 / 0.18);
+    font-size: var(--text-maly);
+    color: var(--na-noci);
+  }
+
+  /* ---------- Filtry ---------- */
+
+  .mapa-filtry {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: clamp(1.5rem, 3vw, 2rem);
+  }
+
+  .mapa-filtry[hidden] {
+    display: none;
+  }
+
+  .mapa-filtry .filtr {
+    padding: 0.35rem 0.8rem;
+    border: 1px solid var(--linka-na-noci);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--na-noci);
+    font: inherit;
+    font-size: var(--text-drobny);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--prechod), border-color var(--prechod);
+  }
+
+  .mapa-filtry .filtr:hover {
+    border-color: var(--na-noci-tlum);
+    background: var(--noc-svetlejsi);
+  }
+
+  .mapa-filtry .filtr.je-aktivni {
+    background: var(--barva, var(--modra));
+    border-color: var(--barva, var(--modra));
+    color: #fff;
+  }
+
+  /* ---------- Rozvržení ---------- */
+
+  .mapa-rozvrzeni {
+    display: grid;
+    gap: clamp(1.25rem, 3vw, 2rem);
+    margin-top: clamp(1.25rem, 3vw, 1.75rem);
+  }
+
+  @media (min-width: 900px) {
+    .mapa-rozvrzeni {
+      grid-template-columns: 1.55fr 1fr;
+      align-items: start;
+    }
+    /* Mapa zůstane na očích, i když člověk projíždí seznam. */
+    .mapa-obal {
+      position: sticky;
+      top: 5.5rem;
+    }
+  }
+
+  .mapa-plocha {
+    position: relative;
+    border-radius: var(--radius);
+    overflow: hidden;
+    /* Tmavší než noční pruh okolo, aby na podkladu svítily světlé prvky.
+       Je to zároveň barva míst, o kterých OpenStreetMap nic neříká. */
+    background: #071722;
+    border: 1px solid var(--linka-na-noci);
+  }
+
+  /* Dvěma prsty se přibližuje mapa, jedním se roluje stránka.
+     `pan-y` je tu nutné: bez něj si prohlížeč vezme štípnutí sám a přiblíží
+     celou stránku, takže mapa se dvěma prsty vůbec zvětšit nedá. Úplné
+     `none` se zapíná teprve u přiblížené mapy, kde má jeden prst posouvat
+     mapu, ne stránku — kdyby platilo pořád, nešlo by se přes mapu na mobilu
+     vůbec prorolovat. */
+  .mapa-plocha {
+    touch-action: pan-y;
+  }
+
+  /* Vyplní rám, aby se výška SVG neodvozovala od vlastního obsahu —
+     výřez mapy má stejné proporce jako rám, takže se do něj vejde přesně. */
+  .mapa-vnitrek {
+    position: absolute;
+    inset: 0;
+  }
+
+  .mapa-plocha :global(svg) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Bez tohohle by při přiblížení zesílily i linky ulic a řeky: `viewBox`
+     zvětšuje všechno včetně šířky tahu. Takhle si drží šířku na obrazovce. */
+  .mapa-plocha :global(svg [class*='mapa-'] path) {
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* Když je mapa přiblížená, tažením se posouvá. */
+  .mapa-plocha[data-lze-posouvat] {
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .mapa-plocha[data-taham] {
+    cursor: grabbing;
+  }
+
+  /* ---------- Ovládání zvětšení ---------- */
+
+  .mapa-ovladani {
+    position: absolute;
+    right: 0.6rem;
+    bottom: 0.6rem;
+    display: flex;
+    gap: 0.35rem;
+    z-index: 3;
+  }
+
+  .mapa-ovladani[hidden] {
+    display: none;
+  }
+
+  .mapa-ovladani button {
+    display: grid;
+    place-items: center;
+    min-width: 2.1rem;
+    height: 2.1rem;
+    padding-inline: 0.6rem;
+    border: 1px solid var(--linka-na-noci);
+    border-radius: var(--radius-maly);
+    background: rgb(11 32 50 / 0.82);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: var(--na-noci);
+    font: inherit;
+    font-size: var(--text-maly);
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition: background var(--prechod), border-color var(--prechod);
+  }
+
+  .mapa-ovladani button:hover:not(:disabled) {
+    background: var(--noc-svetlejsi);
+    border-color: var(--na-noci-tlum);
+  }
+
+  .mapa-ovladani button:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .mapa-ovladani [data-zoom='reset'] {
+    font-size: var(--text-drobny);
+  }
+
+  /* ---------- Obarvení podkladu ----------
+     Podkladové SVG nemá vlastní barvy schválně — všechno se řídí odsud,
+     takže mapa může kdykoliv změnit ladění bez přegenerování. */
+
+  /* ---------- Tónový žebřík podkladu ----------
+     Odstíny jsou vybrané tak, aby šly od nejtmavšího k nejsvětlejšímu
+     v pořadí, v jakém je člověk potřebuje rozeznat:
+
+       pozadí → pole → les → průmysl → zástavba → voda → cestičky → ulice
+
+     Pořadí není libovolné. Na mapě se hledá především to, kde je ves,
+     takže zástavba musí být výrazně světlejší než okolní krajina, a voda
+     musí být jednoznačně vodou — přehrada zabírá skoro polovinu výřezu
+     a když splyne s pozadím, není poznat, co je voda a co prázdné místo.
+
+     **Modrá na mapě znamená vodu, nic jiného.** Zástavba je proto šedá,
+     ne modrošedá. Když měla modrý odstín, dala se plocha vsi na první
+     pohled splést s hladinou — a to je u mapy, na které se hledají místa
+     v obci, ta nejhorší možná záměna. Šedá je tady výjimka z pravidla
+     „barvy jen z palety značky": paleta má samu modrou a zelenou, jenže
+     obojí už na mapě něco znamená.
+
+     Vybíralo se z variant vykreslených vedle sebe, s odznaky ve všech
+     barvách z `BARVA_TEMATU`. Zeleň krajiny je proto tlumená: v jasnějších
+     variantách si les konkuroval se zelenými odznaky a mapa přestala říkat,
+     co je bod a co les. */
+
+  .mapa-plocha :global(.mapa-pole path) { fill: #2b3945; }
+  .mapa-plocha :global(.mapa-les path) { fill: #1e3a2b; }
+  .mapa-plocha :global(.mapa-prumysl path) { fill: #454f57; }
+  .mapa-plocha :global(.mapa-zastavba path) { fill: #5f717e; }
+  .mapa-plocha :global(.mapa-zelen path) { fill: #27523a; }
+  .mapa-plocha :global(.mapa-vodni-plocha path) { fill: #2f82bd; }
+
+  /* Cesticky (prijezdy k domum, pesiny, polni cesty, schody) jsou schvalne
+     na hranici viditelnosti. Jsou to ctyri patiny vsech cest v datech, takze
+     v plne sile z mapy udelaji pavucinu a ulice v ni zmizi — ale bez nich
+     zas nejde poznat, kudy se k mistu dostanete. Kresli se pod ulicemi. */
+  .mapa-plocha :global(.mapa-cesticka path) { fill: none; stroke: #4e6577; stroke-width: 0.6; }
+
+  .mapa-plocha :global(.mapa-ulice path) { fill: none; stroke: #9dbacf; stroke-width: 1.4; }
+  .mapa-plocha :global(.mapa-silnice path) { fill: none; stroke: #adc6d8; stroke-width: 2.2; }
+  .mapa-plocha :global(.mapa-silnice-hlavni path) { fill: none; stroke: #c8dae6; stroke-width: 3.2; }
+  .mapa-plocha :global(.mapa-zeleznice path) {
+    fill: none;
+    stroke: #8fa3b1;
+    stroke-width: 1.1;
+    stroke-dasharray: 5 5;
+  }
+  .mapa-plocha :global(.mapa-potok path) { fill: none; stroke: #4694c4; stroke-width: 1.2; }
+
+  /* Řeka má barvu vody, ne zvýrazňovací.
+     V šabloně tu byla zelená v plné síle: tam šlo o řeku Hanou, kterou
+     program sliboval zpřístupnit, takže byla schválně vidět. Tady je to
+     Svratka, která protéká přehradou — a zelená čára vedená napříč vodní
+     plochou nevypadala jako řeka, ale jako chyba ve vykreslení. */
+  .mapa-plocha :global(.mapa-reka path) {
+    fill: none;
+    stroke: #4694c4;
+    stroke-width: 2.5;
+  }
+
+  /* ---------- Body ---------- */
+
+  .mapa-body {
+    position: absolute;
+    inset: 0;
+  }
+
+  .mapa-bod {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    margin: -1rem 0 0 -1rem;
+    padding: 0;
+    border: 2px solid rgb(255 255 255 / 0.85);
+    border-radius: 999px;
+    background: var(--barva, var(--modra));
+    color: #fff;
+    font: inherit;
+    font-size: var(--text-drobny);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.45);
+    /* Odznak leží nad mapou, ne v ní, takže se s přiblížením nezvětšuje
+       sám — zvětší se jen pod kurzorem a u zvýrazněné položky. */
+    transform: scale(var(--zvetseni, 1));
+    transition:
+      transform var(--prechod),
+      opacity var(--prechod),
+      border-color var(--prechod),
+      box-shadow var(--prechod);
+  }
+
+  .mapa-bod:hover {
+    --zvetseni: 1.28;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 0.6);
+    z-index: 2;
+  }
+
+  /* Vybraný bod musí být poznat na první pohled. Samotné zvětšení nestačí —
+     v hromadě stejně velkých koleček se ztratí, tak k němu přibyl světlý
+     prstenec a ostatní body ustoupí. */
+  .mapa-bod.je-zvyrazneny {
+    --zvetseni: 1.5;
+    border-color: #fff;
+    box-shadow:
+      0 0 0 4px rgb(255 255 255 / 0.4),
+      0 6px 20px rgb(0 0 0 / 0.7);
+    z-index: 3;
+  }
+
+  /* `:not([data-skryty])` tu musí být: odfiltrovaný bod má ustupovat víc
+     (0.12) a bez té výjimky by ho tohle pravidlo kvůli vyšší specifičnosti
+     přebilo a zase ho zviditelnilo. */
+  .mapa-plocha[data-zvyraznuji] .mapa-bod:not(.je-zvyrazneny):not([data-skryty]) {
+    opacity: 0.4;
+  }
+
+  .mapa-bod[data-skryty] {
+    opacity: 0.12;
+    pointer-events: none;
+  }
+
+  /* Odznak mimo výřez by rám sice odřízl, ale klávesnice by na něj pořád
+     skákala. Proto se schová úplně. */
+  .mapa-bod[data-mimo] {
+    display: none;
+  }
+
+  @media (max-width: 560px) {
+    .mapa-bod {
+      width: 1.7rem;
+      height: 1.7rem;
+      margin: -0.85rem 0 0 -0.85rem;
+    }
+  }
+
+  .mapa-zdroj {
+    margin: 0.7rem 0 0;
+    font-size: var(--text-drobny);
+    color: var(--na-noci-tlum);
+  }
+
+  /* ---------- Seznam ---------- */
+
+  .mapa-seznam {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .zamer[data-skryty] {
+    display: none;
+  }
+
+  .zamer details {
+    background: rgb(255 255 255 / 0.04);
+    border: 1px solid var(--linka-na-noci);
+    border-radius: var(--radius-maly);
+    transition: border-color var(--prechod), background var(--prechod);
+  }
+
+  .zamer details[open],
+  .zamer.je-zvyrazneny details {
+    border-color: var(--na-noci-tlum);
+    background: rgb(255 255 255 / 0.07);
+  }
+
+  .zamer summary {
+    display: flex;
+    align-items: start;
+    gap: 0.7rem;
+    padding: 0.7rem 0.85rem;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .zamer summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .zamer-cislo {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 999px;
+    background: var(--barva, var(--modra));
+    color: #fff;
+    font-size: var(--text-drobny);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .zamer-hlava {
+    display: grid;
+    gap: 0.3rem;
+  }
+
+  .zamer-nazev {
+    font-size: var(--text-maly);
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .zamer-stitky {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  .zamer-tema {
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--barva) 26%, transparent);
+    color: var(--na-noci);
+    font-size: var(--text-drobny);
+  }
+
+  .zamer-navrh {
+    padding: 0.1rem 0.5rem;
+    border: 1px dashed var(--navrh);
+    border-radius: 999px;
+    color: #e0a45c;
+    font-size: var(--text-drobny);
+  }
+
+  .zamer-text {
+    padding: 0 0.85rem 0.85rem 3.15rem;
+    font-size: var(--text-maly);
+    color: var(--na-noci-tlum);
+  }
+
+  @media (max-width: 560px) {
+    .zamer-text {
+      padding-left: 0.85rem;
+    }
+  }
+</style>
+
+<script>
+  const mapa = document.querySelector<HTMLElement>('[data-mapa]');
+  const seznam = document.querySelector<HTMLElement>('[data-mapa-seznam]');
+  const filtry = document.querySelector<HTMLElement>('[data-mapa-filtry]');
+
+  if (mapa && seznam) {
+    const body = [...mapa.querySelectorAll<HTMLButtonElement>('.mapa-bod')];
+    const polozky = [...seznam.querySelectorAll<HTMLElement>('.zamer')];
+
+    const polozkaPodle = (poradi: string) => polozky.find((p) => p.dataset.polozka === poradi);
+
+    /**
+     * Vybraný záměr. Drží se zvlášť od najetí myší, protože po kliknutí do
+     * mapy se odroluje na položku v seznamu — mapa se přitom pohne pod
+     * kurzorem, kurzor bod opustí a `mouseleave` by výběr hned zhasl.
+     * Najetí se tedy jen dočasně přiloží a při odjetí se vrátí to vybrané.
+     */
+    let vybrany: string | null = null;
+
+    /** Zvýrazní dvojici bod + položka. Volá se z obou stran. */
+    function zvyraznit(poradi: string | null) {
+      for (const b of body) b.classList.toggle('je-zvyrazneny', b.dataset.bod === poradi);
+      for (const p of polozky) p.classList.toggle('je-zvyrazneny', p.dataset.polozka === poradi);
+      // Podle tohohle příznaku CSS utlumí ostatní body. Kdyby se ustupovalo
+      // pořád, mapa by vypadala vybledle i bez vybraného bodu.
+      mapa!.toggleAttribute('data-zvyraznuji', poradi !== null);
+    }
+
+    /** Vybere záměr natrvalo — dokud si člověk nevybere jiný. */
+    function vybrat(poradi: string | null) {
+      vybrany = poradi;
+      zvyraznit(poradi);
+    }
+
+    // --- Klik na bod v mapě rozbalí položku v seznamu ----------------------
+    for (const bod of body) {
+      bod.addEventListener('click', () => {
+        const poradi = bod.dataset.bod!;
+        const polozka = polozkaPodle(poradi);
+        if (!polozka) return;
+
+        // Ostatní se zavřou, ať je vždycky otevřený jen jeden záměr.
+        for (const jina of polozky) {
+          const detail = jina.querySelector('details');
+          if (detail) detail.open = jina === polozka;
+        }
+        vybrat(poradi);
+        polozka.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      });
+
+      bod.addEventListener('mouseenter', () => zvyraznit(bod.dataset.bod!));
+      bod.addEventListener('mouseleave', () => zvyraznit(vybrany));
+    }
+
+    // --- Rozbalení v seznamu zvýrazní bod v mapě ---------------------------
+    for (const polozka of polozky) {
+      const detail = polozka.querySelector('details');
+
+      detail?.addEventListener('toggle', () => {
+        if (!detail.open) return;
+        for (const jina of polozky) {
+          const jiny = jina.querySelector('details');
+          if (jiny && jina !== polozka) jiny.open = false;
+        }
+        vybrat(polozka.dataset.polozka!);
+      });
+
+      polozka.addEventListener('mouseenter', () => zvyraznit(polozka.dataset.polozka!));
+      polozka.addEventListener('mouseleave', () => zvyraznit(vybrany));
+    }
+
+    // --- Zvětšování a posouvání mapy ---------------------------------------
+
+    const vnitrek = mapa.querySelector<HTMLElement>('[data-mapa-vnitrek]');
+    const svg = mapa.querySelector<SVGSVGElement>('svg');
+    const ovladani = mapa.querySelector<HTMLElement>('[data-mapa-ovladani]');
+
+    if (vnitrek && svg && ovladani) {
+      ovladani.hidden = false;
+
+      // Rozměr podkladu se čte z jeho vlastního `viewBox`u. Frontmatter je
+      // pro tenhle skript nedostupný — běží v prohlížeči, ne při sestavení —
+      // a opsat sem čísla ručně by znamenalo druhý zdroj pravdy, který by se
+      // rozešel, jakmile se mapa přegeneruje s jiným výřezem.
+      const puvodniVyrez = (svg.getAttribute('viewBox') ?? '')
+        .split(/[\s,]+/)
+        .map(Number)
+        .filter((c) => Number.isFinite(c));
+      const ROZMER = { sirka: puvodniVyrez[2] || 1000, vyska: puvodniVyrez[3] || 717 };
+
+      // Nejmenší přiblížení je celý podklad, největší šestina jeho šířky.
+      // Zoom se drží jako číslo (1 = celé město), aby ho štípnutí dvěma prsty
+      // mohlo nastavovat přímo z rozestupu prstů.
+      const NEJMENSI = 1;
+      const NEJVETSI = 6;
+      const KROK = 1.6;
+
+      // Rám mapy má stejné proporce jako podklad (`aspect-ratio` v HTML),
+      // takže výřez si je drží taky a nikdy nikde nezůstane prázdný pruh.
+      const POMER = ROZMER.vyska / ROZMER.sirka;
+
+      let pohled = { x: 0, y: 0, w: ROZMER.sirka };
+      const zoomNyni = () => ROZMER.sirka / pohled.w;
+
+      /** Udrží výřez uvnitř podkladu, aby se mapa nedala odtáhnout mimo rám. */
+      function srovnej() {
+        pohled.w = Math.min(ROZMER.sirka, Math.max(ROZMER.sirka / NEJVETSI, pohled.w));
+        const h = pohled.w * POMER;
+        pohled.x = Math.min(ROZMER.sirka - pohled.w, Math.max(0, pohled.x));
+        pohled.y = Math.min(ROZMER.vyska - h, Math.max(0, pohled.y));
+      }
+
+      function vykresli() {
+        srovnej();
+        const h = pohled.w * POMER;
+        svg!.setAttribute('viewBox', `${pohled.x} ${pohled.y} ${pohled.w} ${h}`);
+
+        // Odznaky jsou HTML nad mapou, takže se přepočítávají zvlášť.
+        for (const bod of body) {
+          const x = ((Number(bod.dataset.mx) - pohled.x) / pohled.w) * 100;
+          const y = ((Number(bod.dataset.my) - pohled.y) / h) * 100;
+          bod.style.left = x + '%';
+          bod.style.top = y + '%';
+          bod.toggleAttribute('data-mimo', x < -4 || x > 104 || y < -4 || y > 104);
+        }
+
+        const zoom = zoomNyni();
+        mapa!.toggleAttribute('data-lze-posouvat', zoom > NEJMENSI + 0.001);
+
+        ovladani!.querySelector<HTMLButtonElement>('[data-zoom="dovnitr"]')!.disabled =
+          zoom >= NEJVETSI - 0.001;
+        const venTlacitko = ovladani!.querySelector<HTMLButtonElement>('[data-zoom="ven"]')!;
+        const resetTlacitko = ovladani!.querySelector<HTMLButtonElement>('[data-zoom="reset"]')!;
+        venTlacitko.disabled = zoom <= NEJMENSI + 0.001;
+        resetTlacitko.disabled = zoom <= NEJMENSI + 0.001;
+      }
+
+      /**
+       * Přiblíží mapu tak, aby zadaný bod zůstal pod prstem (nebo kurzorem).
+       * Souřadnice jsou vůči rámu mapy; bez nich se přibližuje střed.
+       */
+      function nastavZoom(novy: number, kolemX?: number, kolemY?: number) {
+        const cil = Math.min(NEJVETSI, Math.max(NEJMENSI, novy));
+        if (Math.abs(cil - zoomNyni()) < 0.001) return;
+
+        const r = mapa!.getBoundingClientRect();
+        const px = kolemX ?? r.width / 2;
+        const py = kolemY ?? r.height / 2;
+        const h = pohled.w * POMER;
+        const mx = pohled.x + (px / r.width) * pohled.w;
+        const my = pohled.y + (py / r.height) * h;
+
+        const sirka = ROZMER.sirka / cil;
+        pohled.x = mx - (px / r.width) * sirka;
+        pohled.y = my - (py / r.height) * sirka * POMER;
+        pohled.w = sirka;
+        vykresli();
+      }
+
+      ovladani.addEventListener('click', (e) => {
+        const tlacitko = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-zoom]');
+        if (!tlacitko) return;
+        const co = tlacitko.dataset.zoom;
+        if (co === 'dovnitr') nastavZoom(zoomNyni() * KROK);
+        else if (co === 'ven') nastavZoom(zoomNyni() / KROK);
+        else {
+          pohled = { x: 0, y: 0, w: ROZMER.sirka };
+          vykresli();
+        }
+      });
+
+      // Kolečko přibližuje přímo, bez držení Ctrl — na mapě to lidé čekají
+      // a stejně to funguje i u mapy volebních místností. Plynulé násobení
+      // podle `deltaY` drží krok stejný pro kolečko i pro touchpad.
+      mapa.addEventListener(
+        'wheel',
+        (e) => {
+          e.preventDefault();
+          const r = mapa!.getBoundingClientRect();
+          nastavZoom(
+            zoomNyni() * Math.pow(1.0018, -e.deltaY),
+            e.clientX - r.left,
+            e.clientY - r.top,
+          );
+        },
+        { passive: false },
+      );
+
+      // --- Tažení a štípání dvěma prsty ---
+      const prsty = new Map<number, { x: number; y: number }>();
+      let tazeniZ: { x: number; y: number; px: number; py: number } | null = null;
+      let stipnutiZ: { vzdalenost: number; zoom: number } | null = null;
+      let taholJsem = false;
+
+      const stred = () => {
+        const b = [...prsty.values()];
+        return { x: (b[0].x + b[1].x) / 2, y: (b[0].y + b[1].y) / 2 };
+      };
+      const rozestup = () => {
+        const b = [...prsty.values()];
+        return Math.hypot(b[0].x - b[1].x, b[0].y - b[1].y);
+      };
+
+      mapa.addEventListener('pointerdown', (e) => {
+        // Na odznaku se nesmí začít táhnout, jinak by nešel zmáčknout.
+        if ((e.target as HTMLElement).closest('.mapa-bod, .mapa-ovladani')) return;
+
+        const r = mapa!.getBoundingClientRect();
+        prsty.set(e.pointerId, { x: e.clientX - r.left, y: e.clientY - r.top });
+        mapa!.setPointerCapture(e.pointerId);
+        taholJsem = false;
+
+        if (prsty.size === 1 && zoomNyni() > NEJMENSI + 0.001) {
+          const p = prsty.get(e.pointerId)!;
+          tazeniZ = { x: p.x, y: p.y, px: pohled.x, py: pohled.y };
+          mapa!.toggleAttribute('data-taham', true);
+        } else if (prsty.size === 2) {
+          tazeniZ = null;
+          stipnutiZ = { vzdalenost: rozestup(), zoom: zoomNyni() };
+        }
+      });
+
+      mapa.addEventListener('pointermove', (e) => {
+        if (!prsty.has(e.pointerId)) return;
+        const r = mapa!.getBoundingClientRect();
+        prsty.set(e.pointerId, { x: e.clientX - r.left, y: e.clientY - r.top });
+
+        if (prsty.size === 2 && stipnutiZ) {
+          const nova = rozestup();
+          if (stipnutiZ.vzdalenost > 0) {
+            const s = stred();
+            nastavZoom((stipnutiZ.zoom * nova) / stipnutiZ.vzdalenost, s.x, s.y);
+          }
+          taholJsem = true;
+          return;
+        }
+
+        if (tazeniZ) {
+          const p = prsty.get(e.pointerId)!;
+          // Posun se počítá v jednotkách mapy: o kolik procent rámu se táhlo,
+          // o tolik procent výřezu se musí posunout.
+          pohled.x = tazeniZ.px - ((p.x - tazeniZ.x) / r.width) * pohled.w;
+          pohled.y = tazeniZ.py - ((p.y - tazeniZ.y) / r.height) * pohled.w * POMER;
+          if (Math.hypot(p.x - tazeniZ.x, p.y - tazeniZ.y) > 4) taholJsem = true;
+          vykresli();
+        }
+      });
+
+      const pustil = (e: PointerEvent) => {
+        prsty.delete(e.pointerId);
+        if (prsty.size < 2) stipnutiZ = null;
+        if (prsty.size === 0) {
+          tazeniZ = null;
+          mapa!.toggleAttribute('data-taham', false);
+        }
+      };
+      mapa.addEventListener('pointerup', pustil);
+      mapa.addEventListener('pointercancel', pustil);
+
+      // Dvojklik do mapy přiblíží na místo, kam člověk klepl.
+      mapa.addEventListener('dblclick', (e) => {
+        if ((e.target as HTMLElement).closest('.mapa-bod, .mapa-ovladani')) return;
+        const r = mapa!.getBoundingClientRect();
+        nastavZoom(zoomNyni() * KROK, e.clientX - r.left, e.clientY - r.top);
+      });
+
+      // Po tažení se nesmí spustit klik, jinak by se otevřel náhodný záměr.
+      mapa.addEventListener(
+        'click',
+        (e) => {
+          if (taholJsem) {
+            e.stopPropagation();
+            e.preventDefault();
+            taholJsem = false;
+          }
+        },
+        true,
+      );
+
+      // Změna šířky okna může posun vyhodit z mezí.
+      window.addEventListener('resize', vykresli);
+
+      vykresli();
+    }
+
+    // --- Filtry ------------------------------------------------------------
+    if (filtry) {
+      filtry.hidden = false;
+
+      filtry.addEventListener('click', (e) => {
+        const tlacitko = (e.target as HTMLElement).closest<HTMLButtonElement>('.filtr');
+        if (!tlacitko) return;
+
+        const tema = tlacitko.dataset.tema ?? '';
+        for (const jine of filtry.querySelectorAll('.filtr')) {
+          jine.classList.toggle('je-aktivni', jine === tlacitko);
+        }
+
+        for (const bod of body) {
+          bod.toggleAttribute('data-skryty', !!tema && bod.dataset.tema !== tema);
+        }
+        for (const polozka of polozky) {
+          const sedi = !tema || polozka.dataset.tema === tema;
+          polozka.toggleAttribute('data-skryty', !sedi);
+          if (!sedi) {
+            const detail = polozka.querySelector('details');
+            if (detail) detail.open = false;
+          }
+        }
+        vybrat(null);
+      });
+    }
+  }
+</script>
