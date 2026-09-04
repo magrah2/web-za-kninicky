@@ -39,10 +39,21 @@ const MAPY = [
     // a ves tim v zaberu zbytecne ztracela na velikosti. Z prehrady zustava
     // pruh podel breznu, coz na zarazeni mapy staci.
     //
+    // Cely vyrez je pak posunuty o 0,0025 stupne na zapad. Duvod je Sokolske
+    // koupaliste (16.5137): pri utazene hrane 16.5125 sedel jeho odznak
+    // pet procent od leve strany mapy, tedy prakticky na ramu. Sirka vyrezu
+    // zustala skoro stejna, aby se ves nezmensila — misto rozsireni na zapad
+    // se o stejny kus utahla vychodni hrana, kde za vsi (konci na 16.5316)
+    // zbyva uz jen les.
+    //
+    // Posouvat dal na zapad uz nema smysl: pri 16.5085 se odznak dostal do
+    // ctvrtiny sirky, ale ves se odsunula k pravemu okraji a vlevo dole
+    // zustala jen jednolita vodni plocha bez obsahu.
+    //
     // Chatove osady na severnim brehu (kolem 49.2485-49.2584) se do vyrezu
     // nevejdou. Az bude potreba bod i tam, sestaveni na to samo upozorni
     // (MapaZameru.astro hlida, ze kazdy bod lezi uvnitr) a vyrez se rozsiri.
-    vyrez: { jih: 49.2295, sever: 49.2444, zapad: 16.5125, vychod: 16.5380 },
+    vyrez: { jih: 49.2295, sever: 49.2444, zapad: 16.5100, vychod: 16.5360 },
     svg: 'public/mapa-kninicky.svg',
     json: 'src/lib/mapa-vyrez.json',
   },
