@@ -64,17 +64,10 @@ v `src/lib/odpocet.ts`, počítá kalendářní dny v pražské zóně a hlídaj
 
 | Kde | Co |
 |---|---|
-| `src/lib/strana.ts` | `HESLO` — motto strany, teď `#Placeholder` |
-| `src/lib/strana.ts` | `EMAIL` — teď zástupný `info@zakninicky.cz` |
-| `src/content/program/*-placeholder.md` | celý program (4 zástupné oblasti) |
-| `src/content/zamery/01-placeholder.md` | body na mapě |
 | `src/pages/jak-volit.astro` | `MISTNOST` — adresa volební místnosti podle vyhlášky |
 | `src/pages/transparentnost.astro` | kontaktní osoba, období, částka |
-| `src/pages/soukromi.astro` | `ODPOVEDNA_OSOBA` |
 | `src/pages/kontakt.astro` | odkazy na sociální sítě (prázdné = sekce se neukáže) |
 | `astro.config.mjs` + `src/layouts/Zaklad.astro` | doména, teď zástupná `zakninicky.cz` |
-| `src/assets/portrety/` | fotky kandidátů |
-| úvodní stránka, `/lide/` | texty „kdo jsme" |
 
 ### Mapa — co by se ještě dalo doladit
 
@@ -90,7 +83,7 @@ Podklad je čitelný a geograficky správný. Zbývá jen kosmetika:
   krajiny a stojí to za to; kdyby se to mělo srazit, jde zvětšit krok
   v `proredit()` v `nastroje/mapa.mjs`.
 
-### Dvě kontroly čekají na obsah
+### Zkouška už na nic nečeká
 
 `npm run zkouska` je celá zelená a nic už nečeká na obsah — program i mapa
 mají skutečná data.

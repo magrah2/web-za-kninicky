@@ -73,6 +73,18 @@ export const POCET_SLOVY = 'devět';
 export const EMAIL = 'zakninicky@gmail.com';
 
 /**
+ * Kdo odpovídá za zpracování osobních údajů — jméno na `/soukromi/`.
+ *
+ * Bez jména by stránka svou povinnost podle GDPR neplnila. Patří sem, a ne
+ * do `soukromi.astro`, ze stejného důvodu jako všechno ostatní v tomhle
+ * souboru: v jiné obci to bude někdo jiný a nemá se to hledat po stránkách.
+ *
+ * Bez titulů schválně. Na kandidátce je „Ing. arch. Barbora Jelínková, Ph.D.",
+ * ale tohle je kontaktní údaj, ne medailonek.
+ */
+export const ODPOVEDNA_OSOBA = 'Barbora Jelínková';
+
+/**
  * Kdy se otevřou a kdy zavřou volební místnosti.
  *
  * Dvě hodnoty, ne jedna, a je to schválně: volby jsou dvoudenní. Odpočet na
