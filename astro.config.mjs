@@ -17,7 +17,9 @@ export default defineConfig({
   site: naostro ? 'https://zakninicky.cz' : 'https://magrah2.github.io',
   base: naostro ? '/' : '/web-za-kninicky',
   trailingSlash: 'always',
-  integrations: [sitemap()],
+  // Leták je podklad k tisku, ne stránka pro návštěvníky — do sitemapy
+  // a tím do vyhledávačů nepatří. `noindex` má i ve své hlavičce.
+  integrations: [sitemap({ filter: (adresa) => !adresa.includes('/letak/') })],
   build: {
     // Každá stránka jako složka s index.html — hezké adresy bez .html
     format: 'directory',

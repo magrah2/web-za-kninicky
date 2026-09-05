@@ -20,6 +20,7 @@ Web je statický — žádný server, žádná databáze, žádné cookies ani m
 | `src/content/zamery/` | **Body na mapě záměrů** — jeden soubor na místo |
 | `src/assets/portrety/` | Portrétní fotky, jeden soubor na kandidáta pojmenovaný podle jeho id |
 | `src/pages/` | Jednotlivé stránky webu |
+| `src/pages/letak.astro` | **Leták k tisku** (A5 oboustranně) na adrese `/letak/`. Není v nabídce ani ve vyhledávačích — je to podklad pro tiskárnu. Bere obsah z týchž zdrojů jako web, takže se s ním nemůže rozejít. Tisk: Ctrl+P → A5, měřítko 100 %, bez okrajů, zapnuté „Tisknout pozadí" |
 | `src/components/` | Opakující se části (hlavička, karta kandidáta, patička…) |
 | `src/lib/strana.ts` | **Název strany, počet zastupitelů, datum voleb, e-mail** — jediné místo, kde se tyhle údaje mění |
 | `src/styles/tokeny.css` | **Barvy, písmo, rozestupy** — jediné místo, kde se mění vzhled globálně |

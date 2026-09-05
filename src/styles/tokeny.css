@@ -89,8 +89,16 @@
   /* --- Rozměry ---------------------------------------------------------- */
   --sirka: min(1180px, 100% - 2.5rem);   /* obsahový pruh */
   --sirka-textu: 36rem;                  /* delší text se čte po ~70 znacích */
-  --radius: 14px;
-  --radius-maly: 8px;
+  /* Rohy jsou ostré — na přání týmu. Tokeny zůstávají, i když jsou nulové:
+     zaoblení bylo na dvaadvaceti místech (karty, fotky, mapa, panely, štítky)
+     a přes token se dá vrátit jednou hodnotou. Kdyby se místo toho ze všech
+     pravidel `border-radius` smazal, návrat by znamenal projít je znovu
+     a část by se určitě zapomněla.
+
+     Kruhy a pilulky (`999px`, `50%`) se tím neřídí a zůstávají: odznak na mapě
+     ani tlačítko nejsou zaoblený roh, ale tvar. */
+  --radius: 0;
+  --radius-maly: 0;
 
   /* --- Rytmus -----------------------------------------------------------
      Pozor: sekce mají odsazení nahoře i dole, takže mezi dvěma sousedními

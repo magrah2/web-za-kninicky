@@ -1,6 +1,9 @@
 ---
 import { odkaz } from '../lib/odkaz';
 import Krivka from './Krivka.astro';
+// Patička leží mimo <main>, takže na ni typografická úprava v Zaklad.astro
+// nedosáhne — jednopísmenné předložky se tu proto lepí ručně.
+import { prilepPredlozky as typo } from '../lib/typografie';
 import { NAZEV, HESLO, EMAIL, ZASTUPITELSTVO, DATUM_VOLEB } from '../lib/strana';
 
 const rok = new Date().getFullYear();
@@ -20,7 +23,7 @@ const rok = new Date().getFullYear();
     </div>
 
     <nav class="pata-navigace" aria-label="Patička">
-      <h2 class="jen-pro-ctecky">Odkazy v patičce</h2>
+      <h2 class="jen-pro-ctecky">{typo('Odkazy v patičce')}</h2>
       <ul>
         <li><a href={odkaz('/program/')}>Náš program</a></li>
         <li><a href={odkaz('/mapa/')}>Mapa záměrů</a></li>
@@ -28,7 +31,7 @@ const rok = new Date().getFullYear();
         <li><a href={odkaz('/jak-volit/')}>Jak volit</a></li>
         <li><a href={odkaz('/kontakt/')}>Kontakt</a></li>
         <li><a href={odkaz('/soukromi/')}>Ochrana osobních údajů</a></li>
-        <li><a href={odkaz('/transparentnost/')}>Oznámení o transparentnosti</a></li>
+        <li><a href={odkaz('/transparentnost/')}>{typo('Oznámení o transparentnosti')}</a></li>
       </ul>
     </nav>
 
@@ -38,14 +41,14 @@ const rok = new Date().getFullYear();
         {EMAIL}
         <span class="pata-kopirovat" hidden>Zkopírovat</span>
       </a>
-      <p class="pata-volby">Volby do {ZASTUPITELSTVO}<br />{DATUM_VOLEB}</p>
+      <p class="pata-volby">{typo(`Volby do ${ZASTUPITELSTVO}`)}<br />{DATUM_VOLEB}</p>
     </div>
   </div>
 
   <div class="pruh pata-spodek">
     <p>© {rok} <span class="nazev-strany">{NAZEV}</span></p>
     <p class="pata-poznamka">
-      Bez cookies, bez měřicích kódů. Tento web o vás nesbírá žádná data.
+      {typo('Bez cookies, bez měřicích kódů. Tento web o vás nesbírá žádná data.')}
     </p>
   </div>
 </footer>

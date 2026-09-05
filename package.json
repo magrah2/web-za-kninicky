@@ -17,7 +17,8 @@
     "zkouska-bez-js": "node nastroje/zkouska-bez-js.mjs",
     "zmensit-fotky": "node nastroje/zmensit-fotky.mjs",
     "logo": "node nastroje/logo.mjs",
-    "mapa": "node nastroje/mapa.mjs"
+    "mapa": "node nastroje/mapa.mjs",
+    "qr": "node nastroje/qr.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
@@ -29,6 +30,7 @@
   "devDependencies": {
     "fontkit": "^2.0.4",
     "playwright-core": "^1.62.1",
+    "qrcode": "^1.5.4",
     "sharp": "^0.35.3"
   }
 }

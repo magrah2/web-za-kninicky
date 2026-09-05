@@ -11,7 +11,6 @@ import { Image } from 'astro:assets';
 import spolecnaFotka from '../assets/spolecna-fotka.jpg';
 import {
   NAZEV,
-  NAZEV_UPLNY,
   HESLO_ZACATEK,
   HESLO_KONEC,
   ZASTUPITELSTVO,
@@ -114,18 +113,6 @@ const prvni = kandidati.slice(0, 6);
       </span>
     </p>
 
-    {/* Úplný název tak, jak je na kandidátní listině. Ve zbytku webu se používá
-        krátké „Za Kníničky" — tohle je čtvrté místo, kde má stát celý název
-        (vedle zkušebního lístku, oznámení o transparentnosti a správce údajů).
-
-        Skládá se z `NAZEV_UPLNY`, ne napsaný ručně: jména podporujících stran
-        jsou právní údaj a nesmí se rozejít s lístkem.
-
-        Znaky ODS a KDU-ČSL tu nejsou. Jsou to ochranné známky cizích stran,
-        takže se nesmí nakreslit „podobné" a musí přijít od nich jako soubory
-        do `src/assets/` — stahovat je za běhu ze stránek stran nelze, web
-        nesmí posílat požadavky na cizí servery. */}
-    <p class="pruh hero-podpora">{NAZEV_UPLNY}</p>
   </section>
 
   {/* ---------- Kdo jsme ---------- */}
@@ -444,23 +431,6 @@ const prvni = kandidati.slice(0, 6);
     color: var(--linka-vyrazna);
   }
 
-  /* Úplný název s podporou stran. Tichý řádek pod formálními údaji o volbách —
-     patří k nim, ne k tvrzení nahoře, a nemá ho přebít. Proto `--text-maly`
-     a žádná linka navíc: tu už má `.hero-volby` nad sebou.
-
-     Jen `margin-top`, ne zkrácený zápis — `margin: X 0 0` by přebilo
-     `margin-inline: auto` ze třídy `.pruh` a řádek by se přestal zarovnávat
-     se zbytkem stránky. Totéž platí o `.hero-volby` nad ním. */
-  /* Bez `max-width`: prvek nese i třídu `.pruh`, která mu dává šířku pruhu
-     a `margin-inline: auto`. Doraz by ho zúžil a to `auto` by ho pak
-     vycentrovalo doprostřed stránky, pryč od levé hrany textu nad ním.
-     Samotný název je krátký, takže se stejně nikde neroztáhne. */
-  .hero-podpora {
-    margin-top: 0.9rem;
-    font-size: var(--text-maly);
-    font-weight: 600;
-    color: var(--inkoust);
-  }
 
   /* Na mobilu se řádek stejně zalomí a oddělovač by zůstal viset
      na konci řádku jako překlep. Radši ho schováme a dáme řádkům odstup. */

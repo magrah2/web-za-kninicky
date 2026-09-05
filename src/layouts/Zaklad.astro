@@ -7,6 +7,7 @@
 import Hlavicka from '../components/Hlavicka.astro';
 import Pata from '../components/Pata.astro';
 import { odkaz } from '../lib/odkaz';
+import { upravTypografii } from '../lib/typografie';
 import { NAZEV, HESLO } from '../lib/strana';
 import '../styles/tokeny.css';
 import '../styles/zaklad.css';
@@ -88,8 +89,17 @@ const kanonicka = new URL(Astro.url.pathname, Astro.site).href;
 
     <Hlavicka />
 
+    {/* Obsah stránky se nevykreslí přímo, ale projde typografickou úpravou —
+        jednopísmenné předložky se přilepí k dalšímu slovu, aby nezůstávaly
+        viset na konci řádku. Děje se to tady, na jednom místě, a platí to
+        pro všechny stránky včetně textů z Markdownu.
+
+        `Astro.slots.render` vrátí obsah jako HTML řetězec. Skripty komponent
+        Astro vytahuje mimo obsah, takže se do řetězce nedostanou a úprava
+        se jich nemůže dotknout; `upravTypografii` navíc obsah `<script>`,
+        `<style>`, `<code>` a `<pre>` přeskakuje sama. */}
     <main id="obsah" class:list={[!bezOdsazeni && 'obsah-odsazeny']}>
-      <slot />
+      <Fragment set:html={upravTypografii(await Astro.slots.render('default'))} />
     </main>
 
     <Pata />

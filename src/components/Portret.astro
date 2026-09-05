@@ -65,20 +65,10 @@ const sirka = velikost === 'detail' ? 720 : 420;
     overflow: hidden;
     background: var(--sedozelena-jemna);
     border-radius: var(--radius);
-    /* Levý dolní roh je seříznutý obloučkem, do kterého se usadí pořadové číslo.
-       Body opisují křivku; musí být tak akorát velký, aby se do něj vešel
-       odznak s číslem (~2,1 rem), ale portrét z toho nesmí ukousnout půlku. */
-    clip-path: polygon(
-      0% 0%,
-      100% 0%,
-      100% 100%,
-      19% 100%,
-      15% 98%,
-      9% 94%,
-      4% 89%,
-      1% 84%,
-      0% 79%
-    );
+    /* Portrét je obyčejný obdélník. Dřív měl levý dolní roh seříznutý
+       obloučkem a v tom výřezu sedělo pořadové číslo; zrušeno na přání týmu
+       spolu se zaoblenými rohy. Číslo se přesunulo do levého horního rohu
+       a leží prostě na fotce. */
   }
 
   .portret-obrazek {

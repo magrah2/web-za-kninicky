@@ -249,10 +249,12 @@ const jsouNavrhy = zamery.some((z) => z.data.stav === 'navrh');
     display: none;
   }
 
+  /* Hranaté, ne pilulky — spolu se zaoblenými rohy zmizely na přání týmu
+     i tyhle. Kulaté zůstávají jen odznaky bodů: ty jsou tvar, ne roh. */
   .mapa-filtry .filtr {
     padding: 0.35rem 0.8rem;
     border: 1px solid var(--linka-na-noci);
-    border-radius: 999px;
+    border-radius: 0;
     background: transparent;
     color: var(--na-noci);
     font: inherit;
@@ -628,7 +630,7 @@ const jsouNavrhy = zamery.some((z) => z.data.stav === 'navrh');
 
   .zamer-tema {
     padding: 0.1rem 0.5rem;
-    border-radius: 999px;
+    border-radius: 0;
     background: color-mix(in srgb, var(--barva) 26%, transparent);
     color: var(--na-noci);
     font-size: var(--text-drobny);
@@ -637,7 +639,7 @@ const jsouNavrhy = zamery.some((z) => z.data.stav === 'navrh');
   .zamer-navrh {
     padding: 0.1rem 0.5rem;
     border: 1px dashed var(--navrh);
-    border-radius: 999px;
+    border-radius: 0;
     color: #e0a45c;
     font-size: var(--text-drobny);
   }

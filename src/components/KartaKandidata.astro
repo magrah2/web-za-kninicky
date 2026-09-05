@@ -66,21 +66,23 @@ const cil = `${odkaz('/lide/')}#medailonek-${poradi}`;
     display: block;
   }
 
-  /* Pořadové číslo sedí ve výřezu, který vznikl seříznutím rohu portrétu.
-     Z ozdoby je tím zároveň místo pro údaj, který u voleb rozhoduje. */
+  /* Číslo leží v levém horním rohu přímo na fotce. Dřív sedělo ve výřezu,
+     který vznikl seříznutím levého dolního rohu portrétu — ten je pryč.
+     Nahoře navíc nepřekrývá obličej, protože portréty jsou seříznuté na
+     hlavu a ramena a v rozích je pozadí. */
   .karta-cislo {
     position: absolute;
-    left: 0;
-    bottom: 0;
+    left: 0.6rem;
+    top: 0.6rem;
     display: grid;
     place-items: center;
-    min-width: 2.1rem;
-    height: 2.1rem;
-    padding-inline: 0.4rem;
+    min-width: 2.3rem;
+    height: 2.3rem;
+    padding-inline: 0.42rem;
     border-radius: 999px;
     background: var(--sedozelena);
     color: #fff;
-    font-size: var(--text-maly);
+    font-size: var(--text-zakladni);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;

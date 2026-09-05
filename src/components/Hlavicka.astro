@@ -14,7 +14,7 @@
  */
 
 import { odkaz } from '../lib/odkaz';
-import { NAZEV } from '../lib/strana';
+import { NAZEV, NAZEV_DOPLNEK } from '../lib/strana';
 
 // „Kde volit" tu schválně není: Kníničky mají jediný volební okrsek, takže
 // vyhledávač volební místnosti by odpovídal všem stejně. Adresa místnosti
@@ -38,15 +38,21 @@ const jeAktivni = (cil: string) => zdeCesta.endsWith(cil.replace(/\/+$/, ''));
     {/* Logo je vektor, takže je ostré na jakémkoliv displeji a váží pár kilobajtů.
         Poměr stran 1073 : 155 je zapsaný natvrdo, aby se stránka při načítání
         neposunula. */}
-    <a class="logo" href={odkaz('/')}>
-      <img
-        src={odkaz('/logo.svg')}
-        alt={`${NAZEV} — úvodní stránka`}
-        width="1073"
-        height="155"
-        fetchpriority="high"
-      />
-    </a>
+    {/* Značka = logo a za ním zbytek úplného názvu menším písmem. Doplněk
+        stojí VEDLE odkazu, ne v něm: kdyby byl uvnitř, čtečka by celý dlouhý
+        název přečetla jako text odkazu na úvodní stránku. */}
+    <div class="znacka">
+      <a class="logo" href={odkaz('/')}>
+        <img
+          src={odkaz('/logo.svg')}
+          alt={`${NAZEV} — úvodní stránka`}
+          width="1073"
+          height="155"
+          fetchpriority="high"
+        />
+      </a>
+      <p class="znacka-doplnek">{NAZEV_DOPLNEK}</p>
+    </div>
 
     {/* Široký displej: položky vedle sebe */}
     <nav class="nabidka-siroka" aria-label="Hlavní nabídka">
@@ -108,18 +114,60 @@ const jeAktivni = (cil: string) => zdeCesta.endsWith(cil.replace(/\/+$/, ''));
     min-height: 4.25rem;
   }
 
+  /* Logo a doplněk drží u sebe. `center` srovná dvouřádkový doplněk na střed
+     loga. `baseline` tu nefunguje: účaří obrázku je jeho spodní hrana, takže
+     doplněk sedal pod logo místo vedle něj. */
+  .znacka {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-width: 0;
+  }
+
   .logo {
     display: block;
     flex: none;
     line-height: 0;
   }
 
-  /* Šířka je menší než u dřívějšího loga se značkou, a přesto jsou písmena
-     větší. Značka zabírala skoro pětinu obrázku, takže na stejné šířce
-     zbylo na nápis méně místa; po jejím odstranění se do těch 235 px
-     roztáhl nápis celý a v hlavičce přebil navigaci. */
+  /* Doplněk je dlouhý a hlavička úzká, takže se láme na dva řádky.
+     `text-wrap: balance` je rozdělí na půl místo toho, aby na druhém
+     zůstalo viset jedno slovo. */
+  /* `margin-top` posadí doplněk o kousek níž, než kam ho dá `align-items:
+     center`. Opticky sedne líp: účaří prvního řádku pak leží blíž účaří
+     nápisu v logu, které je níž než jeho svislý střed. */
+  .znacka-doplnek {
+    max-width: 24ch;
+    margin: 0.45rem 0 0;
+    font-size: var(--text-drobny);
+    line-height: 1.3;
+    color: var(--inkoust-tlum);
+    text-wrap: balance;
+  }
+
+  /* Pod 1100 px se doplněk nevejde vedle navigace, aniž by ji utiskl.
+     Schová se jen tady, ne na mobilu: na úzkém displeji se navigace sbalí
+     do tlačítka a místo se uvolní. */
+  @media (min-width: 860px) and (max-width: 1099px) {
+    .znacka-doplnek {
+      display: none;
+    }
+  }
+
+  @media (max-width: 859px) {
+    .znacka {
+      /* Na mobilu vedle sebe nezbyde místo — doplněk sjede pod logo. */
+      flex-direction: column;
+      align-items: start;
+      gap: 0.25rem;
+    }
+  }
+
+  /* Strop 275 px je najetý: nad ním se doplněk přestane vejít vedle navigace,
+     protože od chvíle, kdy v logu není značka, se do šířky roztáhne celý
+     nápis. Při 195 px byl naopak vedle doplňku drobný. */
   .logo img {
-    width: clamp(150px, 18vw, 195px);
+    width: clamp(195px, 23vw, 275px);
     height: auto;
   }
 

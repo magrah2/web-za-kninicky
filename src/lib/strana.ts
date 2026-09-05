@@ -1,3 +1,5 @@
+import { prilepPredlozky } from './typografie';
+
 /**
  * Údaje o volební straně a o volbách — jediné místo, kde jsou zapsané.
  *
@@ -25,6 +27,21 @@ export const NAZEV = 'Za Kníničky';
 
 /** Úplný název tak, jak je zapsaný na kandidátní listině. */
 export const NAZEV_UPLNY = 'Za Kníničky nezávislí kandidáti s podporou ODS a KDU-ČSL';
+
+/**
+ * Zbytek úplného názvu za tím krátkým — do hlavičky za logo, menším písmem.
+ *
+ * Počítá se, nepíše ručně. Kdyby to byl třetí samostatný řetězec, při změně
+ * názvu by se rozešel s `NAZEV_UPLNY` a v hlavičce by zůstalo něco, co na
+ * kandidátní listině není. Když by krátký název přestal být začátkem toho
+ * úplného, vypíše se celý — radši dvakrát než špatně.
+ *
+ * Předložky se lepí tady, ne až v hlavičce: hlavička leží mimo `<main>`,
+ * takže na ni typografická úprava v `Zaklad.astro` nedosáhne.
+ */
+export const NAZEV_DOPLNEK = prilepPredlozky(
+  NAZEV_UPLNY.startsWith(NAZEV) ? NAZEV_UPLNY.slice(NAZEV.length).trim() : NAZEV_UPLNY,
+);
 
 /** Vylosované číslo na hlasovacím lístku. */
 export const CISLO_STRANY = 1;
