@@ -299,7 +299,7 @@ const jsouNavrhy = zamery.some((z) => z.data.stav === 'navrh');
     overflow: hidden;
     /* Tmavší než noční pruh okolo, aby na podkladu svítily světlé prvky.
        Je to zároveň barva míst, o kterých OpenStreetMap nic neříká. */
-    background: #071722;
+    background: #060f0b;
     border: 1px solid var(--linka-na-noci);
   }
 
@@ -416,27 +416,43 @@ const jsouNavrhy = zamery.some((z) => z.data.stav === 'navrh');
      Vybíralo se z variant vykreslených vedle sebe, s odznaky ve všech
      barvách z `BARVA_TEMATU`. Zeleň krajiny je proto tlumená: v jasnějších
      variantách si les konkuroval se zelenými odznaky a mapa přestala říkat,
-     co je bod a co les. */
+     co je bod a co les.
 
-  .mapa-plocha :global(.mapa-pole path) { fill: #2b3945; }
-  .mapa-plocha :global(.mapa-les path) { fill: #1e3a2b; }
-  .mapa-plocha :global(.mapa-prumysl path) { fill: #454f57; }
-  .mapa-plocha :global(.mapa-zastavba path) { fill: #5f717e; }
-  .mapa-plocha :global(.mapa-zelen path) { fill: #27523a; }
-  .mapa-plocha :global(.mapa-vodni-plocha path) { fill: #2f82bd; }
+     PŘELADĚNÍ DO ZELENA. Původní paleta byla modrošedá — zbytek po době,
+     kdy byl do modra laděný celý web. Na zeleném nočním pruhu z ní byl
+     studený obdélník. Zkoušely se čtyři varianty vedle sebe:
+
+       A  původní modrá noc — vedle pruhu působila cize
+       B  mírně do zelena — krajina i ves splynuly do jedné zelené kaše
+          a zelené odznaky (Sport a rekreace) se v lese ztrácely
+       C  světlá mapa — čitelná ze všech nejlíp, ale světlý obdélník
+          uprostřed tmavého pruhu vypadal jako vystřižený odjinud
+       D  tmavší krajina, světlejší cesty — tahle
+
+     U D je krajina tmavší než dřív a ulice naopak světlejší, takže ves
+     vystoupí z okolí víc než v kterékoliv z ostatních. Zástavba je
+     šedozelená, ne šedomodrá — pravidlo „modrá je jen voda" tím platí dál
+     a navíc se ztratila studená skvrna. */
+
+  .mapa-plocha :global(.mapa-pole path) { fill: #22312a; }
+  .mapa-plocha :global(.mapa-les path) { fill: #122a1d; }
+  .mapa-plocha :global(.mapa-prumysl path) { fill: #3c4740; }
+  .mapa-plocha :global(.mapa-zastavba path) { fill: #75877c; }
+  .mapa-plocha :global(.mapa-zelen path) { fill: #1d4630; }
+  .mapa-plocha :global(.mapa-vodni-plocha path) { fill: #2b7ec2; }
 
   /* Cesticky (prijezdy k domum, pesiny, polni cesty, schody) jsou schvalne
      na hranici viditelnosti. Jsou to ctyri patiny vsech cest v datech, takze
      v plne sile z mapy udelaji pavucinu a ulice v ni zmizi — ale bez nich
      zas nejde poznat, kudy se k mistu dostanete. Kresli se pod ulicemi. */
-  .mapa-plocha :global(.mapa-cesticka path) { fill: none; stroke: #4e6577; stroke-width: 0.6; }
+  .mapa-plocha :global(.mapa-cesticka path) { fill: none; stroke: #42574c; stroke-width: 0.6; }
 
-  .mapa-plocha :global(.mapa-ulice path) { fill: none; stroke: #9dbacf; stroke-width: 1.4; }
-  .mapa-plocha :global(.mapa-silnice path) { fill: none; stroke: #adc6d8; stroke-width: 2.2; }
-  .mapa-plocha :global(.mapa-silnice-hlavni path) { fill: none; stroke: #c8dae6; stroke-width: 3.2; }
+  .mapa-plocha :global(.mapa-ulice path) { fill: none; stroke: #c2d6c8; stroke-width: 1.4; }
+  .mapa-plocha :global(.mapa-silnice path) { fill: none; stroke: #d6e4da; stroke-width: 2.2; }
+  .mapa-plocha :global(.mapa-silnice-hlavni path) { fill: none; stroke: #eef4f0; stroke-width: 3.2; }
   .mapa-plocha :global(.mapa-zeleznice path) {
     fill: none;
-    stroke: #8fa3b1;
+    stroke: #8fa598;
     stroke-width: 1.1;
     stroke-dasharray: 5 5;
   }
