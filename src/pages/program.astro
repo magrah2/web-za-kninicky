@@ -8,47 +8,36 @@ import type { Tema } from '../lib/temata';
 
 const oblasti = (await getCollection('program')).sort((a, b) => a.data.poradi - b.data.poradi);
 
-// Podrobný rozpis nemá každá oblast — odkaz „Chci vědět víc" se proto ukáže
-// jen tam, kde k němu opravdu něco je.
-const detaily = await getCollection('programDetail');
-const detailOblasti = new Map(detaily.map((d) => [d.data.oblast, d.id]));
-
-// Překlep v `oblast` by odkaz potichu nevykreslil a nikdo by si toho nevšiml.
-// Radši to shodíme tady, při sestavení.
-const nezname = detaily.filter((d) => !oblasti.some((o) => o.id === d.data.oblast));
-if (nezname.length) {
-  throw new Error(
-    'Podrobný program ukazuje na oblasti, které neexistují: ' +
-      nezname.map((d) => `${d.id}.md → „${d.data.oblast}"`).join(', ') +
-      '. Do `oblast:` patří název souboru oblasti ze `src/content/program` bez přípony.',
-  );
-}
+/**
+ * Počet oblastí slovy, prvním pádem a s velkým písmenem — do věty
+ * „Pět oblastí, ve kterých…".
+ *
+ * Číslice by ve větě byla suchá a natvrdo napsané slovo by se rozešlo
+ * s obsahem, jakmile oblast přibude nebo ubude. Nad deset se vrátí číslice:
+ * tolik programových oblastí web neunese a vypisovat číslovky donekonečna
+ * by bylo víc práce než užitku.
+ */
+const CISLOVKY = ['Nula', 'Jedna', 'Dvě', 'Tři', 'Čtyři', 'Pět', 'Šest', 'Sedm', 'Osm', 'Devět', 'Deset'];
+const pocetOblastiSlovy = CISLOVKY[oblasti.length] ?? String(oblasti.length);
 
 const sObsahem = await Promise.all(
-  oblasti.map(async (oblast) => ({
-    ...oblast,
-    Obsah: (await render(oblast)).Content,
-    detail: detailOblasti.get(oblast.id) ?? null,
-  })),
+  oblasti.map(async (oblast) => ({ ...oblast, Obsah: (await render(oblast)).Content })),
 );
 ---
 
 <Zaklad
   titulek="Náš program"
-  popis="Co chceme v Kníničkách změnit. Program pro volby do zastupitelstva městské části Brno-Kníničky."
+  popis="Naše priority pro Kníničky. Program pro volby do zastupitelstva městské části Brno-Kníničky."
 >
   <div class="pruh">
     <p class="nadtitulek">Náš program</p>
-    <h1 class="nadpis">Co chceme v Kníničkách změnit</h1>
-    {/* Všech pět oblastí je skutečných, takže tu už nesmí stát nic o tom, že
-        program není hotový. Zbývají jen podrobné rozpisy za tlačítkem
-        „Chci vědět víc" — dokud jsou zástupné, musí to být řečeno tady,
-        protože z tlačítka to člověk nepozná. Až přijdou, tenhle odstavec
-        se smaže celý. */}
+    <h1 class="nadpis">Naše priority pro Kníničky</h1>
+    {/* Počet oblastí se nepíše natvrdo. Kdyby v textu stálo „Pět oblastí"
+        a někdo šestou přidal, věta by lhala — a nikdo by si toho nevšiml,
+        protože sestavení projde. Číslovka se proto skládá z délky kolekce. */}
     <p class="perex uvod">
-      Tohle je program, se kterým jdeme do voleb. Podrobné rozpisy
-      za tlačítkem „Chci vědět víc" teprve dopisujeme — co je na nich zatím
-      napsané, je jen zástupný text.
+      {pocetOblastiSlovy} oblastí, ve kterých máme jasnou představu, kam by se
+      Kníničky měly posunout.
     </p>
 
     <ol class="oblasti">
@@ -76,17 +65,6 @@ const sObsahem = await Promise.all(
             </div>
             <div class="oblast-obsah">
               <oblast.Obsah />
-              {
-                oblast.detail && (
-                  <p class="oblast-vic">
-                    <a class="tlacitko tlacitko-hlavni" href={odkaz(`/program/${oblast.detail}/`)}>
-                      Chci vědět víc
-                      <span class="jen-pro-ctecky">o oblasti {oblast.data.nazev}</span>
-                      <span aria-hidden="true">→</span>
-                    </a>
-                  </p>
-                )
-              }
             </div>
           </li>
         ))
@@ -152,8 +130,6 @@ const sObsahem = await Promise.all(
     color: var(--inkoust-tlum);
   }
 
-  /* Odkaz na podrobnosti nosí stejné tlačítko jako hlavní odkazy na webu.
-     Podtržený text se v odrážkách ztrácel a nikdo si ho nevšiml. */
   .oblast-nadpis {
     display: flex;
     align-items: start;
@@ -165,10 +141,6 @@ const sObsahem = await Promise.all(
   .oblast-nadpis :global(.oblast-ikona) {
     margin-top: 0.3rem;
     color: var(--barva);
-  }
-
-  .oblast-vic {
-    margin: 1.4rem 0 0;
   }
 
   .oblast-obsah {

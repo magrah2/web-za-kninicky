@@ -191,9 +191,10 @@ týmu — obrázek k němu zatím žádný nepatří.
 
 Úplný název strany je „Za Kníničky nezávislí kandidáti s podporou ODS
 a KDU-ČSL". V běžném textu se používá **jen „Za Kníničky"** (`NAZEV`);
-úplný název (`NAZEV_UPLNY`) patří na tři místa, kde ho vyžaduje zákon nebo
-věcná správnost: na zkušební hlasovací lístek, do oznámení o transparentnosti
-a jako správce osobních údajů.
+úplný název (`NAZEV_UPLNY`) patří na čtyři místa: na zkušební hlasovací
+lístek, do oznámení o transparentnosti, jako správce osobních údajů — tam
+všude ho žádá zákon nebo věcná správnost — a na úvodní stránku pod údaje
+o volbách, kam ho na přání týmu doplnila i podpora obou stran.
 
 Politická příslušnost jednotlivců (ODS u č. 1 a 7, KDU-ČSL u č. 9) se
 vypisuje jen v medailonku. Kdo je bez příslušnosti, nemá pole `prislusnost`
@@ -253,20 +254,15 @@ ho do `dist/` zapíše. Vypadá to jako chyba v kódu a není. Když něco na
 `localhost` chybí, ale v `dist/` to je, restartujte server
 (`astro dev stop` a `astro dev --background`) — ne hledejte chybu v šabloně.
 
-Podrobný program má **dva** placeholdery schválně: s jediným by odkazy na
-sousední oblast na konci stránky neměly kam vést.
+**Podrobný program je smazaný.** Šablona měla za tlačítkem „Chci vědět víc"
+u každé oblasti vlastní stránku s podrobným rozpisem. Tým ho nechtěl:
+program jsou odrážky na `/program/` a nic za nimi. Pryč je celá kolekce
+`programDetail`, cesta `src/pages/program/[oblast].astro` i obě tlačítka.
+Kdyby se to mělo vrátit, je to v historii gitu — ne v mrtvém kódu, stejně
+jako `/kde-volit/`.
 
-**Podrobný rozpis ukazuje na oblast názvem souboru.** Když se placeholderová
-oblast smaže a nahradí skutečnou, musí se přepsat i `oblast:` v rozpisu,
-který na ni mířil — jinak sestavení spadne s hláškou „Podrobný program
-ukazuje na oblasti, které neexistují". Stalo se to hned při první skutečné
-oblasti, která nahradila `1-placeholder`.
-
-**Až bude program hotový, musí se přepsat i perex na `/program/`.** Dokud
-byly všechny oblasti zástupné, stálo v něm „nic z toho není závazek";
-s první skutečnou oblastí by to o ní lhalo. Teď rozlišuje podle slova
-„Placeholder" v názvu oblasti a se zmizením posledního placeholderu má
-zmizet celý.
+Bylo to nutné udělat najednou: samotné odstranění tlačítek by nechalo
+prázdnou kolekci, a ta hlásí varování.
 
 ## Co se z kódu nevyčte
 

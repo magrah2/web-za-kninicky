@@ -13,8 +13,8 @@ export const TEMATA = [
   'Bydlení',
   'Zeleň a voda',
   'Doprava',
-  'Školství',
-  'Sport',
+  'Veřejná vybavenost',
+  'Sport a rekreace',
   'Kultura',
   'Podnikání',
   'Bezpečnost',
@@ -33,11 +33,11 @@ export const BARVA_TEMATU: Record<Tema, string> = {
   'Bydlení': '#2b8ac9',
   'Zeleň a voda': '#5bae39',
   'Doprava': '#0e4d80',
-  'Školství': '#3f9bd4',
-  // Tmavší zelená (`--zelena-text`). Sport sousedí na stránce se Školstvím
-  // a Dopravou, tedy se dvěma modrými — zelená je od nich odliší i tomu,
-  // kdo modré odstíny rozlišuje hůř.
-  'Sport': '#3d7a24',
+  'Veřejná vybavenost': '#3f9bd4',
+  // Tmavší zelená (`--zelena-text`). Sport a rekreace sousedí na stránce
+  // s Veřejnou vybaveností a Dopravou, tedy se dvěma modrými — zelená je
+  // od nich odliší i tomu, kdo modré odstíny rozlišuje hůř.
+  'Sport a rekreace': '#3d7a24',
   'Kultura': '#7cc45f',
   'Podnikání': '#145286',
   'Bezpečnost': '#4a9e7e',

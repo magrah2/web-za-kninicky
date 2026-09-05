@@ -10,7 +10,7 @@
  */
 
 import { getCollection, render } from 'astro:content';
-import { BARVA_TEMATU, temaDoAdresy } from '../lib/temata';
+import { BARVA_TEMATU, TEMATA, temaDoAdresy } from '../lib/temata';
 import type { Tema } from '../lib/temata';
 import { naMape, jeVeVyrezu, ROZMER } from '../lib/mapa';
 import podklad from '../../public/mapa-kninicky.svg?raw';
@@ -38,14 +38,23 @@ if (mimoMapu.length) {
 // důležitější než mezera mezi odznaky: kdo chce mít mezi nimi místo,
 // přiblíží si mapu, a vybraný bod se stejně vytáhne dopředu.
 const polohy = vsechny.map((z) => naMape(z.data.lat, z.data.lon));
-const zamery = vsechny.map((zamer, i) => ({ ...zamer, poloha: polohy[i] }));
+
+// `tema` smí být jedna oblast i seznam — místo může patřit do víc oblastí
+// naráz. Dál se s tím pracuje jednotně jako se seznamem, aby se to nemuselo
+// rozlišovat na pěti místech. První v pořadí určuje barvu odznaku: víc barev
+// jeden puntík neunese.
+const zamery = vsechny.map((zamer, i) => {
+  const temata = (Array.isArray(zamer.data.tema) ? zamer.data.tema : [zamer.data.tema]) as Tema[];
+  return { ...zamer, poloha: polohy[i], temata, barva: BARVA_TEMATU[temata[0]] };
+});
 
 const sObsahem = await Promise.all(
   zamery.map(async (zamer) => ({ ...zamer, Obsah: (await render(zamer)).Content })),
 );
 
-/** Nabízí se jen to, co je na mapě skutečně zastoupené. */
-const pouziteTemata = [...new Set(zamery.map((z) => z.data.tema))] as Tema[];
+/** Nabízí se jen to, co je na mapě skutečně zastoupené. Pořadí drží podle
+    `TEMATA`, aby filtry neskákaly podle toho, který bod přibyl první. */
+const pouziteTemata = TEMATA.filter((t) => zamery.some((z) => z.temata.includes(t)));
 
 const jsouNavrhy = zamery.some((z) => z.data.stav === 'navrh');
 ---
@@ -115,10 +124,10 @@ const jsouNavrhy = zamery.some((z) => z.data.stav === 'navrh');
                     type="button"
                     class="mapa-bod"
                     data-bod={zamer.cislo}
-                    data-tema={temaDoAdresy(zamer.data.tema)}
+                    data-tema={zamer.temata.map(temaDoAdresy).join(' ')}
                     data-mx={(zamer.poloha.x / 100) * ROZMER.sirka}
                     data-my={(zamer.poloha.y / 100) * ROZMER.vyska}
-                    style={`left: ${zamer.poloha.x}%; top: ${zamer.poloha.y}%; --barva: ${BARVA_TEMATU[zamer.data.tema]}`}
+                    style={`left: ${zamer.poloha.x}%; top: ${zamer.poloha.y}%; --barva: ${zamer.barva}`}
                     aria-label={`${zamer.cislo}. ${zamer.data.nazev}`}
                   >
                     <span aria-hidden="true">{zamer.cislo}</span>
@@ -158,19 +167,21 @@ const jsouNavrhy = zamery.some((z) => z.data.stav === 'navrh');
             <li
               class="zamer"
               data-polozka={zamer.cislo}
-              data-tema={temaDoAdresy(zamer.data.tema)}
+              data-tema={zamer.temata.map(temaDoAdresy).join(' ')}
             >
               <details>
                 <summary>
-                  <span class="zamer-cislo" style={`--barva: ${BARVA_TEMATU[zamer.data.tema]}`}>
+                  <span class="zamer-cislo" style={`--barva: ${zamer.barva}`}>
                     {zamer.cislo}
                   </span>
                   <span class="zamer-hlava">
                     <span class="zamer-nazev">{zamer.data.nazev}</span>
                     <span class="zamer-stitky">
-                      <span class="zamer-tema" style={`--barva: ${BARVA_TEMATU[zamer.data.tema]}`}>
-                        {zamer.data.tema}
-                      </span>
+                      {zamer.temata.map((tema) => (
+                        <span class="zamer-tema" style={`--barva: ${BARVA_TEMATU[tema]}`}>
+                          {tema}
+                        </span>
+                      ))}
                       {zamer.data.stav === 'navrh' && <span class="zamer-navrh">návrh</span>}
                     </span>
                   </span>
@@ -926,11 +937,17 @@ const jsouNavrhy = zamery.some((z) => z.data.stav === 'navrh');
           jine.classList.toggle('je-aktivni', jine === tlacitko);
         }
 
+        // `data-tema` nese oblastí i víc, oddělených mezerou — jedno místo
+        // může patřit do dvou naráz. Porovnávat celý řetězec by takový bod
+        // pod filtrem schovalo, i když do něj patří.
+        const patriDo = (prvek: HTMLElement) =>
+          (prvek.dataset.tema ?? '').split(' ').includes(tema);
+
         for (const bod of body) {
-          bod.toggleAttribute('data-skryty', !!tema && bod.dataset.tema !== tema);
+          bod.toggleAttribute('data-skryty', !!tema && !patriDo(bod));
         }
         for (const polozka of polozky) {
-          const sedi = !tema || polozka.dataset.tema === tema;
+          const sedi = !tema || patriDo(polozka);
           polozka.toggleAttribute('data-skryty', !sedi);
           if (!sedi) {
             const detail = polozka.querySelector('details');

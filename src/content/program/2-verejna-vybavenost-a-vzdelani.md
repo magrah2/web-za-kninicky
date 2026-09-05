@@ -5,7 +5,7 @@ poradi: 2
 nazev: "Vybavenost a vzdělání"
 nadpis: "Veřejná vybavenost a vzdělání"
 shrnuti: "Nová mateřská škola, knihovna jako komunitní prostor a obchod v obci."
-tema: Školství
+tema: Veřejná vybavenost
 ---
 
 - Budeme podporovat výstavbu nové mateřské školy v bývalém areálu VUT

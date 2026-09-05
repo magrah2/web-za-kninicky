@@ -17,8 +17,9 @@
  *
  * Úplný registrovaný název (`NAZEV_UPLNY`) je dlouhý a nese jména dvou
  * politických stran; v běžném textu by přebil všechno ostatní. Používá se
- * proto jen tam, kde ho vyžaduje zákon — na hlasovacím lístku, v oznámení
- * o transparentnosti a jako správce údajů.
+ * proto jen na čtyřech místech — na hlasovacím lístku, v oznámení
+ * o transparentnosti, jako správce údajů a na úvodní stránce pod údaji
+ * o volbách.
  */
 export const NAZEV = 'Za Kníničky';
 
@@ -68,8 +69,8 @@ export const POCET_ZASTUPITELU = 9;
 /** Číslovka slovy, prvním pádem — do nadpisů, kde by číslice byla suchá. */
 export const POCET_SLOVY = 'devět';
 
-/** E-mail. PLACEHOLDER — skutečná adresa zatím není. */
-export const EMAIL = 'info@zakninicky.cz';
+/** E-mail, na který se lidem odpovídá. */
+export const EMAIL = 'zakninicky@gmail.com';
 
 /**
  * Kdy se otevřou a kdy zavřou volební místnosti.

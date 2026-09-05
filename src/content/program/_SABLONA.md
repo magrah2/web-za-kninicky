@@ -27,7 +27,7 @@ shrnuti: "Jedna věta, která shrne, o čem oblast je."
 # Programová oblast. Určuje barvu a ikonu.
 # Musí to být přesně jedna z hodnot v src/lib/temata.ts:
 #   Komunikace · Hospodaření · Bydlení · Zeleň a voda · Doprava
-#   Školství · Sport · Kultura · Podnikání · Bezpečnost
+#   Veřejná vybavenost · Sport a rekreace · Kultura · Podnikání · Bezpečnost
 # Překlep shodí sestavení, takže si toho všimneme my, ne návštěvník.
 tema: Hospodaření
 ---

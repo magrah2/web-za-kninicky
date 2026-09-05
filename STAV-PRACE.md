@@ -67,7 +67,6 @@ v `src/lib/odpocet.ts`, počítá kalendářní dny v pražské zóně a hlídaj
 | `src/lib/strana.ts` | `HESLO` — motto strany, teď `#Placeholder` |
 | `src/lib/strana.ts` | `EMAIL` — teď zástupný `info@zakninicky.cz` |
 | `src/content/program/*-placeholder.md` | celý program (4 zástupné oblasti) |
-| `src/content/program-detail/placeholder*.md` | podrobný rozpis (2 zástupné — s jedním by odkazy na sousední oblast neměly kam vést) |
 | `src/content/zamery/01-placeholder.md` | body na mapě |
 | `src/pages/jak-volit.astro` | `MISTNOST` — adresa volební místnosti podle vyhlášky |
 | `src/pages/transparentnost.astro` | kontaktní osoba, období, částka |
@@ -93,14 +92,12 @@ Podklad je čitelný a geograficky správný. Zbývá jen kosmetika:
 
 ### Dvě kontroly čekají na obsah
 
-`npm run zkouska` je celá zelená, ale dvě věci hlásí žlutě `CEKA`, protože
-na placeholderu nemají co měřit:
+`npm run zkouska` je celá zelená a nic už nečeká na obsah — program i mapa
+mají skutečná data.
 
-1. `podrobnost ma vic textu nez odrazky` — až bude skutečný program.
-2. `filtr mapy neco skryl` — až budou body aspoň ve dvou oblastech.
-
-Nejsou vypnuté schválně: kdyby se tiše přeskakovaly, nikdo by nepoznal,
-že už se dají kontrolovat.
+Pomocník `cekaNaObsah()` ve zkoušce zůstává: až přibude kontrola, která
+na zástupném obsahu měřit nejde, hlásí se žlutě místo toho, aby se tiše
+přeskočila. Kdyby se přeskakovala, nikdo by nepoznal, že už se dá měřit.
 
 ---
 

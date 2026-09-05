@@ -46,34 +46,6 @@ const program = defineCollection({
 });
 
 /**
- * Podrobný rozpis programu.
- *
- * Na starém webu se u pěti oblastí schovával za tlačítkem „Chci vědět víc"
- * a bylo v něm to nejkonkrétnější, co program má — čísla dotačních programů,
- * jmenované lokality, počty bytů. Do odrážek na `/program/` se to nevejde,
- * proto má každá takhle rozepsaná oblast vlastní stránku.
- *
- * Detail nemá každá oblast a mít nemusí: odkaz „Chci vědět víc" se u oblasti
- * objeví, jen když k ní soubor existuje. Kdyby se vypisoval vždy, vedla by
- * půlka odkazů na prázdno.
- *
- * `oblast` musí ukazovat na skutečnou oblast v kolekci `program`. Kontroluje
- * to `src/pages/program/[oblast].astro` a překlep shodí sestavení — tuhle
- * chybu má vidět tým, ne návštěvník.
- */
-const programDetail = defineCollection({
-  loader: glob({ pattern: ['**/*.md', '!_*.md'], base: './src/content/program-detail' }),
-  schema: z.object({
-    /** Identifikátor oblasti — název jejího souboru v `src/content/program`. */
-    oblast: z.string(),
-    /** Nadpis stránky. Bývá delší než název dlaždice. */
-    nadpis: z.string(),
-    /** Věta pod nadpisem. Nemá ji každá oblast. */
-    perex: z.string().nullish(),
-  }),
-});
-
-/**
  * Body na mapě záměrů. Jeden soubor = jedno místo.
  *
  * Číslo na odznaku se **nikde nevypisuje** — dopočítá si ho mapa z pořadí
@@ -86,7 +58,18 @@ const zamery = defineCollection({
   loader: glob({ pattern: ['**/*.md', '!_*.md'], base: './src/content/zamery' }),
   schema: z.object({
     nazev: z.string(),
-    tema: z.enum(TEMATA),
+    /**
+     * Programová oblast, nebo víc oblastí naráz.
+     *
+     * Na rozdíl od programu, kde má každá oblast právě jedno téma, jedno
+     * místo na mapě může patřit do dvou i tří — parkoviště je zároveň
+     * dopravní stavba i veřejná vybavenost. Píše se buď `tema: Doprava`,
+     * nebo `tema: [Doprava, Veřejná vybavenost]`.
+     *
+     * PRVNÍ v seznamu určuje BARVU odznaku: víc barev jeden puntík neunese.
+     * Pod filtrem se bod ukáže u všech svých oblastí.
+     */
+    tema: z.union([z.enum(TEMATA), z.array(z.enum(TEMATA)).nonempty()]),
     /**
      * Zeměpisné souřadnice místa. Web si z nich polohu na mapě dopočítá sám
      * (src/lib/mapa.ts), takže když se změní výřez mapy, body se posunou
@@ -103,4 +86,4 @@ const zamery = defineCollection({
   }),
 });
 
-export const collections = { kandidati, program, programDetail, zamery };
+export const collections = { kandidati, program, zamery };

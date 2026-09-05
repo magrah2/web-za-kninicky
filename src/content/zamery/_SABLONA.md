@@ -15,10 +15,15 @@
 nazev: Název místa
 
 # Programová oblast. Určuje barvu bodu a to, pod kterým filtrem se ukáže.
-# Musí to být přesně jedna z hodnot v src/lib/temata.ts:
+# Musí to být přesně některá z hodnot v src/lib/temata.ts:
 #   Komunikace · Hospodaření · Bydlení · Zeleň a voda · Podnikání
-#   Školství · Sport · Bezpečnost · Kultura · Doprava
+#   Veřejná vybavenost · Sport a rekreace · Bezpečnost · Kultura · Doprava
 # Překlep shodí sestavení, takže si toho všimneme my, ne návštěvník.
+#
+# Když místo patří do víc oblastí naráz, napíšou se do hranatých závorek:
+#   tema: [Doprava, Veřejná vybavenost]
+# PRVNÍ v pořadí určuje barvu bodu — víc barev jeden puntík neunese.
+# Pod filtrem se pak bod ukáže u všech svých oblastí.
 tema: Zeleň a voda
 
 # Zeměpisné souřadnice. Nejsnáz na mapy.cz: pravý klik na místo →

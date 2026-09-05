@@ -17,7 +17,6 @@ Web je statický — žádný server, žádná databáze, žádné cookies ani m
 |---|---|
 | `src/content/kandidati/` | **Kandidáti** — jeden soubor na člověka, tady se vyplňují medailonky |
 | `src/content/program/` | **Program** — jedna oblast na soubor, odrážky na stránce `/program/` |
-| `src/content/program-detail/` | **Podrobný program** — to, co je za tlačítkem „Chci vědět víc". Jeden soubor na oblast, každý má vlastní stránku. Mít ho nemusí každá oblast — odkaz se objeví jen tam, kde soubor existuje |
 | `src/content/zamery/` | **Body na mapě záměrů** — jeden soubor na místo |
 | `src/assets/portrety/` | Portrétní fotky, jeden soubor na kandidáta pojmenovaný podle jeho id |
 | `src/pages/` | Jednotlivé stránky webu |

@@ -183,35 +183,16 @@ try {
     overit('odpocet ukazuje spravny pocet dnu', cekano, odpocet.text);
   }
 
-  // --- Podrobny program ---------------------------------------------------
-  // Nejkonkretnejsi cast programu lezi na samostatnych strankach. Odkaz na ni
-  // se ma objevit jen u oblasti, ktera ji ma — jinak by vedl na prazdno.
+  // --- Program ------------------------------------------------------------
+  // Podrobne rozpisy za tlacitkem "Chci vedet vic" na prani tymu zmizely,
+  // vcetne stranek /program/<oblast>/. Zbyva zkontrolovat, ze na /program/
+  // je kazda oblast vypsana i s odrazkami — to je ted cely program.
   await stranka.goto(`${ADRESA}program/`, { waitUntil: 'networkidle' });
   await stranka.waitForTimeout(300);
   const oblasti = await stranka.locator('.oblast').count();
-  const sPodrobnosti = await stranka.locator('.oblast-vic a').count();
-  overit('program ma odkazy na podrobnosti', true, sPodrobnosti > 0 && sPodrobnosti < oblasti);
-
-  await stranka.locator('.oblast-vic a').first().click();
-  await stranka.waitForTimeout(500);
-  overit('podrobnost programu se otevre', true,
-    (await stranka.locator('.detail-text').count()) === 1);
-  // Podrobny rozpis ma nest vyrazne vic textu nez odrazky na /program/,
-  // jinak nema vlastni stranka smysl. Na placeholderu to overit nejde.
-  const delkaPodrobnosti = (await stranka.textContent('.detail-text')).length;
-  const jePlaceholder = (await stranka.textContent('.detail-text')).includes('Placeholder');
-  if (jePlaceholder) {
-    cekaNaObsah('podrobnost ma vic textu nez odrazky',
-      'v podrobnem programu je zatim placeholder');
-  } else {
-    overit('podrobnost ma vic textu nez odrazky', true, delkaPodrobnosti > 1500);
-  }
-
-  // Sousedni oblast se da otevrit bez vraceni na rozcesti.
-  await stranka.locator('.detail-soused').first().click();
-  await stranka.waitForTimeout(500);
-  overit('odkaz na sousedni oblast vede na podrobnost', true,
-    (await stranka.locator('.detail-text').count()) === 1);
+  overit('program ma nekolik oblasti', true, oblasti >= 2);
+  overit('kazda oblast ma odrazky', oblasti,
+    await stranka.locator('.oblast-obsah ul').count());
 
   // --- Volebni listek -----------------------------------------------------
   // Tohle pocita, komu pripadne hlas. Kdyby to pocitalo spatne, ucili bychom

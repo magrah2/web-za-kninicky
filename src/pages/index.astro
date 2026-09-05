@@ -11,6 +11,7 @@ import { Image } from 'astro:assets';
 import spolecnaFotka from '../assets/spolecna-fotka.jpg';
 import {
   NAZEV,
+  NAZEV_UPLNY,
   HESLO_ZACATEK,
   HESLO_KONEC,
   ZASTUPITELSTVO,
@@ -28,18 +29,8 @@ const stavVoleb = odpocet(ZACATEK_VOLEB, KONEC_VOLEB);
 
 const program = (await getCollection('program')).sort((a, b) => a.data.poradi - b.data.poradi);
 
-// Podrobný rozpis nemá každá oblast, takže tlačítko „Chci vědět víc" se
-// v panelu ukáže jen tam, kde je kam kliknout.
-const detailOblasti = new Map(
-  (await getCollection('programDetail')).map((d) => [d.data.oblast, d.id]),
-);
-
 const programSObsahem = await Promise.all(
-  program.map(async (oblast) => ({
-    ...oblast,
-    Obsah: (await render(oblast)).Content,
-    detail: detailOblasti.get(oblast.id) ?? null,
-  })),
+  program.map(async (oblast) => ({ ...oblast, Obsah: (await render(oblast)).Content })),
 );
 
 const kandidati = (await getCollection('kandidati')).sort((a, b) => a.data.poradi - b.data.poradi);
@@ -83,19 +74,14 @@ const prvni = kandidati.slice(0, 6);
           </p>
         </div>
 
-        <div class="hero-tlacitka">
-          <a class="tlacitko tlacitko-hlavni" href={odkaz('/program/')}>Náš program</a>
-          <a class="tlacitko tlacitko-vedlejsi" href={odkaz('/jak-volit/')}>Jak volit →</a>
-        </div>
       </div>
 
       {/* Společná fotka kandidátky. Dřív tu stálo logo — to je pryč: od chvíle,
           kdy je z něj jen nápis, opakovalo totéž, co je o pár pixelů výš
           v hlavičce.
 
-          Nechává se v původním poměru 3 : 2, neořezává se do čtverce ani
-          na výšku: lidé stojí v řadě přes celou šířku a jakýkoliv ořez
-          po stranách někoho z nich uřízne. */}
+          Ořezává se jen po stranách, nikdy shora ani zdola: lidé stojí v řadě
+          a vodorovný ořez by uřízl hlavy nebo nohy. */}
       <Image
         class="hero-foto"
         src={spolecnaFotka}
@@ -106,6 +92,16 @@ const prvni = kandidati.slice(0, 6);
         fetchpriority="high"
         decoding="async"
       />
+
+      {/* Tlačítka stojí VEDLE `.hero-text`, ne v něm, a je to schválně: fotka
+          vpravo se výškou srovnává s textovým blokem a tlačítka se do té
+          výšky počítat nemají. Kdyby zůstala uvnitř, fotka by se natáhla
+          až pod ně a musela by se víc ořezat. Na mřížce sedí v druhém řádku
+          prvního sloupce, tedy přesně pod textem. */}
+      <div class="hero-tlacitka">
+        <a class="tlacitko tlacitko-hlavni" href={odkaz('/program/')}>Náš program</a>
+        <a class="tlacitko tlacitko-vedlejsi" href={odkaz('/jak-volit/')}>Jak volit →</a>
+      </div>
     </div>
 
     <p class="pruh hero-volby">
@@ -117,6 +113,19 @@ const prvni = kandidati.slice(0, 6);
         {stavVoleb.text}
       </span>
     </p>
+
+    {/* Úplný název tak, jak je na kandidátní listině. Ve zbytku webu se používá
+        krátké „Za Kníničky" — tohle je čtvrté místo, kde má stát celý název
+        (vedle zkušebního lístku, oznámení o transparentnosti a správce údajů).
+
+        Skládá se z `NAZEV_UPLNY`, ne napsaný ručně: jména podporujících stran
+        jsou právní údaj a nesmí se rozejít s lístkem.
+
+        Znaky ODS a KDU-ČSL tu nejsou. Jsou to ochranné známky cizích stran,
+        takže se nesmí nakreslit „podobné" a musí přijít od nich jako soubory
+        do `src/assets/` — stahovat je za běhu ze stránek stran nelze, web
+        nesmí posílat požadavky na cizí servery. */}
+    <p class="pruh hero-podpora">{NAZEV_UPLNY}</p>
   </section>
 
   {/* ---------- Kdo jsme ---------- */}
@@ -190,20 +199,6 @@ const prvni = kandidati.slice(0, 6);
               <div class="dlazdice-obsah">
                 <oblast.Obsah />
               </div>
-              {
-                oblast.detail && (
-                  <p class="program-panel-vic">
-                    <a
-                      class="tlacitko tlacitko-hlavni"
-                      href={odkaz(`/program/${oblast.detail}/`)}
-                    >
-                      Chci vědět víc
-                      <span class="jen-pro-ctecky">o oblasti {oblast.data.nazev}</span>
-                      <span aria-hidden="true">→</span>
-                    </a>
-                  </p>
-                )
-              }
             </div>
           ))
         }
@@ -294,11 +289,16 @@ const prvni = kandidati.slice(0, 6);
     padding-block: clamp(3rem, 7vw, 5.5rem) clamp(2rem, 4vw, 3.25rem);
   }
 
+  /* `row-gap` je nula schválně. Mřížka má tři prvky (text, fotka, tlačítka)
+     a svislé rozestupy si mezi nimi drží samy prvky svým `margin-top` —
+     kdyby k tomu přibyla ještě mezera mřížky, sečetly by se a pod perexem
+     by vznikla díra. */
   .hero-vnitrek {
     position: relative;
     z-index: 1;
     display: grid;
-    gap: clamp(2rem, 5vw, 3rem);
+    column-gap: clamp(2rem, 5vw, 3rem);
+    row-gap: 0;
     align-items: start;
   }
 
@@ -309,9 +309,9 @@ const prvni = kandidati.slice(0, 6);
      doraz 42 ch (~410 px) a claim „Povídejte," je v hero velikosti přes
      450 px široký, takže při užším levém sloupci by se začal lámat.
 
-     `stretch` srovná výšku fotky s výškou textu. Bez ořezu to nejde:
-     text je vysoký 579 px a fotka v původním poměru 3 : 2 by na tu výšku
-     potřebovala 868 px šířky — na text by z pruhu zbylo 264 px. */
+     Fotka sedí v prvním řádku vedle textu, tlačítka v druhém pod textem.
+     Řádek je proto vysoký jako claim s perexem a `stretch` na tu výšku
+     natáhne i fotku — tlačítka se do ní nepočítají. */
   @media (min-width: 900px) {
     .hero-vnitrek {
       grid-template-columns: 1fr 1.3fr;
@@ -319,18 +319,28 @@ const prvni = kandidati.slice(0, 6);
     }
 
     .hero-foto {
+      grid-row: 1;
+      grid-column: 2;
       height: 100%;
       /* Ořezává se po stranách, ne shora a zdola: lidé stojí v řadě a nahoře
          mají nad hlavami stromy, dole dlažbu — vodorovný ořez by uřízl hlavy.
          Skupina zabírá zhruba prostřední dvě třetiny snímku (16–76 % šířky),
-         takže symetrický ořez na 74 % šířky nikoho nezasáhne. */
+         takže symetrický ořez ji nezasáhne. */
       object-fit: cover;
+    }
+
+    .hero-tlacitka {
+      grid-column: 1;
     }
   }
 
+  /* Na úzkém displeji je jeden sloupec a fotka patří až za tlačítka —
+     mezi perex a tlačítka by se vklínila a odtrhla výzvu od textu,
+     kvůli kterému tam je. */
   @media (max-width: 899px) {
-    .hero-vnitrek {
-      gap: clamp(1.5rem, 5vw, 2.25rem);
+    .hero-foto {
+      order: 1;
+      margin-top: clamp(1.5rem, 5vw, 2.25rem);
     }
   }
 
@@ -432,6 +442,24 @@ const prvni = kandidati.slice(0, 6);
 
   .hero-volby-oddel {
     color: var(--linka-vyrazna);
+  }
+
+  /* Úplný název s podporou stran. Tichý řádek pod formálními údaji o volbách —
+     patří k nim, ne k tvrzení nahoře, a nemá ho přebít. Proto `--text-maly`
+     a žádná linka navíc: tu už má `.hero-volby` nad sebou.
+
+     Jen `margin-top`, ne zkrácený zápis — `margin: X 0 0` by přebilo
+     `margin-inline: auto` ze třídy `.pruh` a řádek by se přestal zarovnávat
+     se zbytkem stránky. Totéž platí o `.hero-volby` nad ním. */
+  /* Bez `max-width`: prvek nese i třídu `.pruh`, která mu dává šířku pruhu
+     a `margin-inline: auto`. Doraz by ho zúžil a to `auto` by ho pak
+     vycentrovalo doprostřed stránky, pryč od levé hrany textu nad ním.
+     Samotný název je krátký, takže se stejně nikde neroztáhne. */
+  .hero-podpora {
+    margin-top: 0.9rem;
+    font-size: var(--text-maly);
+    font-weight: 600;
+    color: var(--inkoust);
   }
 
   /* Na mobilu se řádek stejně zalomí a oddělovač by zůstal viset
@@ -635,10 +663,6 @@ const prvni = kandidati.slice(0, 6);
 
   .dlazdice-obsah :global(li)::marker {
     color: var(--zelena);
-  }
-
-  .program-panel-vic {
-    margin: 1.4rem 0 0;
   }
 
   .program-odkaz {

@@ -3,12 +3,12 @@ poradi: 3
 nazev: "Sport a rekreace"
 nadpis:
 shrnuti: "Víceúčelové hřiště, přístupy k řece a areál u Sokolského koupaliště."
-tema: Sport
+tema: Sport a rekreace
 ---
 
 - Zajistíme výstavbu víceúčelového hřiště (nohejbal, volejbal, tenis)
   v blízkosti dětského hřiště Dolní Louky s cílem zlepšit další možnosti
-  sportovního vyžití. Součástí tohoto projektu bude i vybudování zděné
+  sportovního vyžití. Součástí tohoto projektu bude i vybudování
   bezbariérové toalety a zastřešeného posezení s grilem. Pro teenagery
   bychom rádi vybudovali pumptrack, workoutové hřiště, menší skatepark
   (U-rampa).
