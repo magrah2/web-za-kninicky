@@ -20,7 +20,7 @@ body {
   margin: 0;
   background: var(--papir);
   color: var(--inkoust);
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
   font-size: var(--text-zakladni);
   font-weight: 400;
   line-height: 1.65;
@@ -58,14 +58,15 @@ body::before {
      tedy k nerozeznání od obyčejné jednobarevné plochy. */
   background: radial-gradient(
     135% 115% at -10% -12%,
-    color-mix(in srgb, var(--modra) 25%, transparent),
+    color-mix(in srgb, var(--sedozelena) 25%, transparent),
     transparent 74%
   );
 }
 
 /* --- Nadpisy -------------------------------------------------------------
-   Nadpisy jsou sevřenější než text. Inter má osu optické velikosti, takže
-   ve velkém působí ostřeji sám od sebe; prostrkání to jen dotahuje. */
+   Nadpisy jsou sevřenější než text. Montserrat je geometrický grotesk se
+   širokými kulatými znaky, takže ve velkém potřebuje stažené prostrkání víc
+   než dřívější Inter — bez něj se nadpisy rozjíždějí do šířky. */
 
 h1,
 h2,
@@ -99,7 +100,7 @@ p:last-child {
 }
 
 a {
-  color: var(--modra-text);
+  color: var(--sedozelena-text);
   text-underline-offset: 0.18em;
   text-decoration-thickness: 1px;
 }
@@ -146,7 +147,7 @@ ol {
 }
 
 .pas-noc a {
-  color: #8fc4ec;
+  color: var(--sedozelena-na-noci);
 }
 
 /* Nadřazený popisek nad nadpisem sekce */
@@ -156,11 +157,11 @@ ol {
   font-weight: 600;
   letter-spacing: 0.13em;
   text-transform: uppercase;
-  color: var(--modra-text);
+  color: var(--sedozelena-text);
 }
 
 .pas-noc .nadtitulek {
-  color: #7fb4dd;
+  color: var(--sedozelena-na-noci-tlum);
 }
 
 .perex {
@@ -193,12 +194,12 @@ ol {
 }
 
 .tlacitko-hlavni {
-  background: var(--modra);
+  background: var(--sedozelena);
   color: #fff;
 }
 
 .tlacitko-hlavni:hover {
-  background: var(--modra-text);
+  background: var(--sedozelena-text);
   color: #fff;
   transform: translateY(-1px);
 }
@@ -233,8 +234,8 @@ ol {
   display: inline-block;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  background: var(--modra-jemna);
-  color: var(--modra-text);
+  background: var(--sedozelena-jemna);
+  color: var(--sedozelena-text);
   font-size: var(--text-drobny);
   font-weight: 500;
   letter-spacing: -0.005em;
@@ -270,13 +271,29 @@ ol {
 }
 
 :focus-visible {
-  outline: 2px solid var(--modra);
+  outline: 2px solid var(--sedozelena);
   outline-offset: 3px;
   border-radius: 2px;
 }
 
 .pas-noc :focus-visible {
-  outline-color: #8fc4ec;
+  outline-color: var(--sedozelena-na-noci);
+}
+
+/* Název strany uvnitř běžného textu — sází se verzálkami, stejně jako
+   v logu, aby to na stránce byl viditelně jeden a týž nápis.
+
+   Dělá to `text-transform`, ne verzálky napsané v textu. Zdrojem názvu je
+   `NAZEV` ve `strana.ts` a ten musí zůstat čitelný i tam, kde se nesází:
+   v titulku okna, v popisu pro vyhledávače a v `alt` u loga. Napsaný
+   verzálkami by se navíc čtečkám obrazovky mohl číst po písmenech.
+
+   Verzálky potřebují kladné prostrkání — bez něj se slepí. Táž hodnota
+   je v `nastroje/logo.mjs`, aby nápis v textu a nápis v logu vypadaly
+   stejně. */
+.nazev-strany {
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 /* Skryté jen vizuálně — čtečky obrazovky to přečtou */

@@ -28,8 +28,20 @@ export const NAZEV_UPLNY = 'Za Kníničky nezávislí kandidáti s podporou ODS 
 /** Vylosované číslo na hlasovacím lístku. */
 export const CISLO_STRANY = 1;
 
-/** Motto do hlavičky a patičky. PLACEHOLDER — tým zatím nedodal. */
-export const HESLO = '#Placeholder';
+/**
+ * Motto. Stojí jako claim na úvodní stránce, v patičce a v titulku okna.
+ *
+ * Tečka na konci je schválně: je to věta, ne hashtag.
+ *
+ * Je rozepsané na dvě části, protože hero je sází každou jinak velkou —
+ * „Povídejte," nahoře velké, „my nasloucháme." pod tím menší. Kdyby se
+ * ten rozpad napsal natvrdo v `index.astro`, byl by to druhý zdroj pravdy
+ * a při změně hesla by se rozešel s patičkou i titulkem okna. Celý tvar
+ * se proto skládá odsud a nikde jinde se nepíše.
+ */
+export const HESLO_ZACATEK = 'Povídejte,';
+export const HESLO_KONEC = 'my nasloucháme.';
+export const HESLO = `${HESLO_ZACATEK} ${HESLO_KONEC}`;
 
 /** Obec, respektive městská část, do jejíhož zastupitelstva se kandiduje. */
 export const OBEC = 'Brno-Kníničky';

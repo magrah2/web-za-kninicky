@@ -32,6 +32,19 @@ const { tema, class: trida } = Astro.props;
 
 /** `t` = obrys tahem, `p` = tlumená plocha pod ním. */
 const TVARY: Record<Tema, { t: string[]; p?: string[] }> = {
+  // Dvě bubliny — mluví jedna i druhá strana. Menší je ta plná, protože
+  // plocha nesmí přetékat přes obrys: kdyby se bubliny překrývaly (jak se
+  // chatové ikony obvykle kreslí), prosvítala by tlumená výplň dovnitř té
+  // obrysové, která je bez výplně. Proto se nedotýkají a odpovídají si
+  // po úhlopříčce.
+  'Komunikace': {
+    t: [
+      'M5.4 4.2H11.8A2.2 2.2 0 0 1 14 6.4V10A2.2 2.2 0 0 1 11.8 12.2H9.2L6.2 15V12.2H5.4A2.2 2.2 0 0 1 3.2 10V6.4A2.2 2.2 0 0 1 5.4 4.2Z',
+    ],
+    p: [
+      'M15.4 13.6H19.2A1.8 1.8 0 0 1 21 15.4V16.8A1.8 1.8 0 0 1 19.2 18.6L18 21.2L16 18.6H15.4A1.8 1.8 0 0 1 13.6 16.8V15.4A1.8 1.8 0 0 1 15.4 13.6Z',
+    ],
+  },
   // Sloupce nad osou. Prostřední je plný — je to ten, na který se člověk dívá.
   'Hospodaření': {
     t: ['M4.4 19.8h15.2', 'M7.8 19.8v-6.6', 'M16.2 19.8v-9'],
@@ -69,6 +82,20 @@ const TVARY: Record<Tema, { t: string[]; p?: string[] }> = {
       'M13.4 6.4h2.6',
     ],
     p: ['M12 16.7a1.3 1.3 0 1 1 0-2.6a1.3 1.3 0 0 1 0 2.6z'],
+  },
+  // Míč. Nejde o konkrétní sport — oblast míchá hřiště, pumptrack i přístup
+  // k řece — takže musí zabrat obecný znak, ne jedno náčiní. Kulatý obrys
+  // je v celé sadě jediný, a právě podle siluety se ikona pozná na dvaceti
+  // pixelech dřív, než je vidět, co je uvnitř.
+  //
+  // Pětiúhelník uprostřed musí být VÝRAZNĚ velký, jinak z ikony není míč,
+  // ale terč. Zkoušely se poloměry 3,5 a 4,2 jednotky a obojí se v ikoně
+  // četlo jako kroužek v kroužku: tah 1,75 se zakulacenými spoji ukousne
+  // z každého rohu skoro jednotku, takže malý pětiúhelník se zaoblí do
+  // kolečka. Při 5,4 rohy přežijí a je z toho šitý míč.
+  'Sport': {
+    t: ['M12 4.2a7.8 7.8 0 1 0 0 15.6a7.8 7.8 0 0 0 0-15.6'],
+    p: ['M12 6.6 17.14 10.33 15.17 16.37 8.83 16.37 6.86 10.33z'],
   },
   // Otevřená kniha, jedna strana plná.
   'Školství': {

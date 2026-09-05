@@ -4,7 +4,7 @@
    ========================================================================== */
 
 /* --- Písmo -------------------------------------------------------------- */
-/* Inter je variabilní: jeden soubor umí všechny tučnosti i optické velikosti.
+/* Montserrat je variabilní: jeden soubor umí všechny tučnosti od 100 do 900.
    Rozdělený na dvě podmnožiny — česká diakritika (ě š č ř ž ů) sedí
    v „latin-ext", takže se ostatním jazykům nestahuje zbytečně.
    Hostujeme si ho sami, takže web neposílá IP adresy návštěvníků Googlu.
@@ -16,8 +16,8 @@
    obsahu do názvu, takže se nemusí řešit vyprázdnění mezipaměti. */
 
 @font-face {
-  font-family: 'Inter';
-  src: url('../pisma/inter-latin-ext.woff2') format('woff2');
+  font-family: 'Montserrat';
+  src: url('../pisma/montserrat-latin-ext.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -27,8 +27,8 @@
 }
 
 @font-face {
-  font-family: 'Inter';
-  src: url('../pisma/inter-latin.woff2') format('woff2');
+  font-family: 'Montserrat';
+  src: url('../pisma/montserrat-latin.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -39,36 +39,49 @@
 
 :root {
   /* --- Barvy -----------------------------------------------------------
-     Modrá a zelená jsou naměřené přímo z loga.
-     Pozadí není bílé, ale papír tónovaný do modra — bílé karty na něm
-     mají kam plavat a web hned vypadá navržený, ne výchozí. */
+     Web je laděný do šedozelené. Celá stupnice — papír, inkoust, tmavé
+     pásy i linky — má stejný nádech, takže neutrální plochy nepůsobí
+     jako šedá vedle zelené, ale jako jedna barva v různé síle.
+     Pozadí není bílé, ale papír tónovaný do zelena — bílé karty na něm
+     mají kam plavat a web hned vypadá navržený, ne výchozí.
 
-  --papir: #f1f5f8;
-  --papir-tmavsi: #e4ecf2; /* jemné odsazené pruhy */
+     Kontrasty jsou přeměřené proti předchozí modré paletě a drží stejné
+     poměry, ne podobné odstíny: hlavní text 7,4 : 1, tlumený 6,7 : 1,
+     bílá na tlačítku 5,3 : 1, text na tmavém pásu 14,2 : 1. Kdyby se
+     odstín měnil od oka, první, co spadne pod normu, je tlumený text. */
+
+  --papir: #eef2ee;
+  --papir-tmavsi: #e3eae3; /* jemné odsazené pruhy */
   --plocha: #ffffff;
 
-  --inkoust: #0e1d28;      /* text — tmavá modro-šedá, ne černá */
+  --inkoust: #15201a;      /* text — tmavá šedozelená, ne černá */
   /* Tlumený text musí projít i v nejtmavším rohu podkladového přechodu.
-     Původní #5a6c78 tam mělo 4,2 : 1 a #4e606c 4,4 : 1 — obojí pod normou.
-     Tenhle odstín má 5,0 : 1, takže projde i po zesílení přechodu. */
-  --inkoust-tlum: #475864; /* popisky, meta údaje */
+     Tenhle odstín má na papíru 6,7 : 1, tedy stejně jako měl v modré
+     paletě — pod přechodem z toho zbude s rezervou nad normou. */
+  --inkoust-tlum: #4a574e; /* popisky, meta údaje */
 
-  --modra: #1d6eb0;        /* značka — plochy, ikony, výplně */
-  --modra-text: #145286;   /* modrá jako text (kontrast 6,1 : 1 na papíru) */
-  --modra-jemna: #dbe9f4;  /* podklady štítků a zvýraznění */
+  /* Hlavní barva webu — nadpisy, odkazy, tlačítka, ohraničení. */
+  --sedozelena: #517359;        /* plochy, ikony, výplně */
+  --sedozelena-text: #37543f;   /* jako text (kontrast 7,4 : 1 na papíru) */
+  --sedozelena-jemna: #e0eae1;  /* podklady štítků a zvýraznění */
+  /* Světlá varianta na tmavý pás. Dřív byla natvrdo na třech místech
+     v `zaklad.css` (#8fc4ec, #7fb4dd) — a přesně proto se při změně
+     ladění nezměnila s ostatními a zůstala by modrá. */
+  --sedozelena-na-noci: #a1cfab;
+  --sedozelena-na-noci-tlum: #8ebe98;
 
   --zelena: #5bae39;       /* akcent — POUZE plocha a grafika */
   --zelena-text: #3d7a24;  /* zelená jako text — logová má jen 2,9 : 1 */
   --zelena-jemna: #e6f2e0;
 
-  --noc: #0b2032;          /* tmavé pásy (mapa, průvodce volbami) */
-  --noc-svetlejsi: #12304a;
-  --na-noci: #e8eff5;      /* text na tmavém pásu */
-  --na-noci-tlum: #93a9bb;
+  --noc: #12211a;          /* tmavé pásy (mapa, průvodce volbami) */
+  --noc-svetlejsi: #1d3527;
+  --na-noci: #e7efe8;      /* text na tmavém pásu */
+  --na-noci-tlum: #9aada0;
 
-  --linka: rgb(14 29 40 / 0.12);
-  --linka-vyrazna: rgb(14 29 40 / 0.22);
-  --linka-na-noci: rgb(232 239 245 / 0.16);
+  --linka: rgb(21 32 26 / 0.12);
+  --linka-vyrazna: rgb(21 32 26 / 0.22);
+  --linka-na-noci: rgb(231 239 232 / 0.16);
 
   --varovani: #b3261e;     /* neplatný lístek, chybové stavy */
   --navrh: #a05a00;        /* označení „návrh — k ověření" */
@@ -89,10 +102,10 @@
   --prechod: 0.28s cubic-bezier(0.25, 0.1, 0.25, 1);
 
   /* --- Stíny ------------------------------------------------------------
-     Velmi měkké a barevně laděné do modra, ne šedé — jinak karty
+     Velmi měkké a barevně laděné do zelena, ne šedé — jinak karty
      na tónovaném papíru vypadají špinavě. */
-  --stin: 0 1px 2px rgb(14 29 40 / 0.04), 0 4px 16px rgb(14 29 40 / 0.05);
-  --stin-zvednuty: 0 2px 4px rgb(14 29 40 / 0.05), 0 12px 32px rgb(14 29 40 / 0.10);
+  --stin: 0 1px 2px rgb(21 32 26 / 0.04), 0 4px 16px rgb(21 32 26 / 0.05);
+  --stin-zvednuty: 0 2px 4px rgb(21 32 26 / 0.05), 0 12px 32px rgb(21 32 26 / 0.10);
 
   /* --- Typografická škála ----------------------------------------------- */
   --text-hero: clamp(2.6rem, 8vw, 5.5rem);

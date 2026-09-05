@@ -1,27 +1,24 @@
 /**
  * Vyrobi logo a favicon:  node nastroje/logo.mjs
  *
- * Logo je ZATIM ZASTUPNE. Vzniklo, aby web nemel v hlavicce diru, a klidne
- * se cele zahodi, az tym dodá vlastni znacku. Do te doby ale musi obstat,
- * takze se nekresli od oka: znacka je geometrie, wordmark je Inter — tedy
- * tentyz rez, jakym je sazeny cely web.
+ * Logo je ciste typograficke — zadny obrazek, jen napis „Za Kninicky"
+ * ve dvou barvach. Drivejsi znacka (kruh se zelenym brehem nad modrou
+ * hladinou) je pryc: web je laden do sedozelene a syta modra hladina
+ * v hlavicce byla jedina vec, ktera do neho nepatrila.
  *
- * Znacka: kruh z linky, uvnitr zeleny breh nad modrou hladinou. Kninicky
- * lezi na Brnenske prehrade a stara ves skoncila pod vodou, kdyz se
- * prehrada v roce 1940 napustila — voda je to jedine, co obec odlisi od
- * kterekoliv jine mestske casti. Kruh zustal prazdny nahore schvalne:
- * plny kotouc byl v hlavicce prilis tezky a na tmavem pruhu splyval.
+ * Wordmark je Montserrat — tedy tentyz rez, jakym je sazeny cely web.
  *
  * Text se prevadi na cesty schvalne. Logo se nacita pres <img>, kam se
  * webfont ze stranky nedostane, takze <text> by se na kazdem pocitaci
  * vysadilo jinym pismem — presne to, co logo delat nesmi.
  *
- * Rezy Interu se stahuji jednou a ukladaji do nastroje/.pisma/. Berou se
- * staticke soubory, ne ty ze src/pisma/: tam je Inter variabilni a fontkit
- * z jeho woff2 instance vraci prazdne glyfy, takze by z toho nesel dostat
- * jiny rez nez Regular.
+ * Rezy Montserratu se stahuji jednou a ukladaji do nastroje/.pisma/. Berou
+ * se staticke soubory, ne ty ze src/pisma/: tam je Montserrat variabilni
+ * a fontkit z jeho woff2 instance vraci prazdne glyfy, takze by z toho nesel
+ * dostat jiny rez nez Regular.
  *
- * Inter (c) The Inter Project Authors, licence SIL Open Font License 1.1.
+ * Montserrat (c) The Montserrat Project Authors, licence SIL Open Font
+ * License 1.1.
  */
 
 import fs from 'node:fs';
@@ -43,9 +40,9 @@ const REZY_KE_STAZENI = [
 async function stahniPisma() {
   fs.mkdirSync(PISMA, { recursive: true });
   for (const [podmnozina, vaha] of REZY_KE_STAZENI) {
-    const soubor = path.join(PISMA, `inter-${podmnozina}-${vaha}.woff`);
+    const soubor = path.join(PISMA, `montserrat-${podmnozina}-${vaha}.woff`);
     if (fs.existsSync(soubor)) continue;
-    const adresa = `https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-${podmnozina}-${vaha}-normal.woff`;
+    const adresa = `https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5/files/montserrat-${podmnozina}-${vaha}-normal.woff`;
     console.log('   stahuji ' + path.basename(soubor));
     const odpoved = await fetch(adresa);
     if (!odpoved.ok) throw new Error(`Stazeni pisma selhalo (${odpoved.status}): ${adresa}`);
@@ -56,27 +53,39 @@ async function stahniPisma() {
 await stahniPisma();
 
 const rez = (podmnozina, vaha) =>
-  fontkit.openSync(path.join(PISMA, `inter-${podmnozina}-${vaha}.woff`));
+  fontkit.openSync(path.join(PISMA, `montserrat-${podmnozina}-${vaha}.woff`));
 
 const REZY = {
   500: { latin: rez('latin', 500), ext: rez('latin-ext', 500) },
   700: { latin: rez('latin', 700), ext: rez('latin-ext', 700) },
 };
 
-// Barvy jsou tytez jako v src/styles/tokeny.css. Do SVG se musi zapsat
-// natvrdo — logo se nacita pres <img>, kam se promenne z CSS nedostanou.
-const MODRA = '#1d6eb0'; // --modra: znacka, plochy a grafika
-const ZELENA = '#5bae39'; // --zelena: akcent, POUZE plocha a grafika
-const ZELENA_TEXT = '#3d7a24'; // --zelena-text: logova zelena ma na text jen 2,9 : 1
+/*
+ * Barvy se do SVG musi zapsat natvrdo — logo se nacita pres <img>, kam se
+ * promenne z CSS nedostanou. Odpovidaji tokenum v src/styles/tokeny.css.
+ *
+ * Zelena je `--zelena-text`, ne logova `--zelena`: ta ma na svetlem pozadi
+ * kontrast 2,9 : 1 a napis je text, at uz je ulozeny jako cesty nebo ne.
+ *
+ * Seda je zamerne o dost tmavsi nez zelena (8,7 : 1 proti 5,2 : 1 na bile).
+ * Kdyz mely oba odstiny stejnou svetlost, lisila se slova jen odstinem —
+ * v odstinech sedi, na malem logu a pro barvoslepe splynula v jedno slovo.
+ */
+const ZELENA_TEXT = '#3d7a24'; // „Za"
+const SEDA = '#444e48';        // „Kníničky" — sedá s nadechem do zelena, at sedne do palety
 
 /**
  * Vysazi text na cesty.
  *
- * Retezec se deli na useky podle toho, ktery podsoubor Interu ma dany znak.
- * Kerning se pocita uvnitr useku, takze na svu mezi nimi se ztrati — u
- * „Kníni|č|ky" jde o dvojice n-i a k-y, kde Inter nekerni tak jako tak.
+ * Retezec se deli na useky podle toho, ktery podsoubor Montserratu ma dany
+ * znak. Kerning se pocita uvnitr useku, takze na svu mezi nimi se ztrati —
+ * u „KNÍNI|Č|KY" jde o dvojice N-I a K-Y, kde Montserrat nekerni tak jako tak.
+ *
+ * Vraci i obalku (`obalka`) v souradnicich SVG. Diky ni si viewBox sedne
+ * tesne na pismena: bez znacky uz neni ctverec 240 x 240, ktery by vysku
+ * urcoval, a natvrdo napsana vyska by nechala nad napisem prazdny pruh.
  */
-function sazba(text, vaha, velikost) {
+function sazba(text, vaha, velikost, prostrkani = 0) {
   const { latin, ext } = REZY[vaha];
   const useky = [];
   for (const znak of text) {
@@ -89,81 +98,114 @@ function sazba(text, vaha, velikost) {
   const meritko = velikost / latin.unitsPerEm;
   let x = 0;
   let d = '';
+  const obalka = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+
   for (const usek of useky) {
     const rozlozeni = usek.font.layout(usek.text);
     for (let i = 0; i < rozlozeni.glyphs.length; i++) {
       const pozice = rozlozeni.positions[i];
-      d += rozlozeni.glyphs[i].path
+      const cesta = rozlozeni.glyphs[i].path
         .translate(x + (pozice.xOffset ?? 0), pozice.yOffset ?? 0)
         // Zaporne Y: v pisme souradnice rostou nahoru, v SVG dolu.
-        .scale(meritko, -meritko)
-        .toSVG();
-      x += pozice.xAdvance;
+        .scale(meritko, -meritko);
+      d += cesta.toSVG();
+
+      // Mezera zadnou cestu nema a jeji obalka vychazi jako nekonecno —
+      // bez tehle podminky by z toho byl viewBox s NaN a prazdne logo.
+      const b = cesta.bbox;
+      if (Number.isFinite(b.minX)) {
+        obalka.minX = Math.min(obalka.minX, b.minX);
+        obalka.minY = Math.min(obalka.minY, b.minY);
+        obalka.maxX = Math.max(obalka.maxX, b.maxX);
+        obalka.maxY = Math.max(obalka.maxY, b.maxY);
+      }
+      x += pozice.xAdvance + prostrkani / meritko;
     }
   }
-  return { d, sirka: x * meritko };
+  return { d, sirka: x * meritko, obalka };
 }
 
-/**
- * Znacka ve ctverci 240 x 240.
- *
- * `linka` ridi silu kruhu: v logu je tencí, ve faviconu silnejsi, aby se
- * kruh na 16 pixelech nerozpadl na tenkou nitku.
- */
-function znacka({ linka = 20 } = {}) {
-  const r = 120 - linka / 2;
-  return `  <defs><clipPath id="obrys"><circle cx="120" cy="120" r="${r}"/></clipPath></defs>
-  <g clip-path="url(#obrys)">
-    <path fill="${ZELENA}" d="M4 158C30 108 54 100 82 124C104 143 118 143 140 118C168 86 200 88 240 122V158Z"/>
-    <path fill="${MODRA}" d="M4 158C40 148 76 168 120 168C164 168 200 148 240 158V246H4Z"/>
-  </g>
-  <circle cx="120" cy="120" r="${r}" fill="none" stroke="${MODRA}" stroke-width="${linka}"/>`;
-}
+/** Posune obalku po ose X — kdyz se usek sazi jinam nez na nulu. */
+const posun = (o, dx) => ({ ...o, minX: o.minX + dx, maxX: o.maxX + dx });
+
+/** Nejmensi obdelnik, do ktereho se vejdou vsechny zadane obalky. */
+const spoj = (...obalky) => ({
+  minX: Math.min(...obalky.map((o) => o.minX)),
+  minY: Math.min(...obalky.map((o) => o.minY)),
+  maxX: Math.max(...obalky.map((o) => o.maxX)),
+  maxY: Math.max(...obalky.map((o) => o.maxY)),
+});
 
 const HLAVICKA = `<!-- Zastupne logo. Vygenerovano skriptem nastroje/logo.mjs - needitovat rucne.
-     Wordmark je Inter prevedeny na cesty; Inter (c) The Inter Project Authors,
-     licence SIL Open Font License 1.1. -->`;
+     Wordmark je Montserrat prevedeny na cesty; Montserrat (c) The Montserrat
+     Project Authors, licence SIL Open Font License 1.1. -->`;
 
-/** Vodorovna sestava: znacka vlevo, „Za Kníničky" vedle ni. */
-function logo({ velikost = 150, mezera = 54, vyska = 300 } = {}) {
-  const za = sazba('Za', 500, velikost);
-  const mezislovi = sazba('Za ', 500, velikost).sirka;
-  const jmeno = sazba('Kníničky', 700, velikost);
+/**
+ * Napis „ZA KNÍNIČKY" — „ZA" zelene, „KNÍNIČKY" sede.
+ *
+ * Verzalkami na prani tymu. Verzalky potrebuji kladne prostrkani: pismo je
+ * kernene pro mala pismena a bez nej se v celych verzalkach slova slepi.
+ * 0,03 em je tolik, aby to bylo znat, a min, nez kolik uz by z napisu
+ * udelalo rozsypany caj.
+ */
+function logo({ velikost = 150 } = {}) {
+  const prostrkani = velikost * 0.03;
+  const za = sazba('ZA', 500, velikost, prostrkani);
+  const mezislovi = sazba('ZA ', 500, velikost, prostrkani).sirka;
+  const jmeno = sazba('KNÍNIČKY', 700, velikost, prostrkani);
 
-  const textX = 240 + mezera;
-  // Ucari: Inter ma vysku verzalek 0,727 em, stred verzalky tedy lezi
-  // 0,3635 em nad ucarim. Tim se text opticky vystredi na vysku znacky.
-  const ucari = vyska / 2 + velikost * 0.3635;
-  const sirka = Math.ceil(textX + mezislovi + jmeno.sirka + 6);
+  // Okraj kolem napisu. Bez nej by se cárky nad „í" a nozicka „y" dotykaly
+  // hrany obrazku a pri zaobleni nebo oriznuti by se ustrihly.
+  const okraj = velikost * 0.06;
+  const o = spoj(za.obalka, posun(jmeno.obalka, mezislovi));
+
+  const sirka = Math.ceil(o.maxX - o.minX + okraj * 2);
+  const vyska = Math.ceil(o.maxY - o.minY + okraj * 2);
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${sirka} ${vyska}" role="img" aria-label="Za Kníničky">
 ${HLAVICKA}
-  <g transform="translate(0 ${(vyska - 240) / 2})">
-${znacka()}
-  </g>
-  <g transform="translate(${textX} ${ucari})">
+  <g transform="translate(${(okraj - o.minX).toFixed(2)} ${(okraj - o.minY).toFixed(2)})">
     <path fill="${ZELENA_TEXT}" d="${za.d}"/>
-    <path fill="${MODRA}" transform="translate(${mezislovi} 0)" d="${jmeno.d}"/>
+    <path fill="${SEDA}" transform="translate(${mezislovi.toFixed(2)} 0)" d="${jmeno.d}"/>
   </g>
 </svg>
 `;
 }
 
-/** Samotna znacka ve ctverci — favicon a mista, kde by se nazev opakoval. */
-function znak({ linka = 20 } = {}) {
+/**
+ * Monogram „ZK" ve ctverci — favicon.
+ *
+ * Favicon musi byt obrazek, takze cely napis se do nej nevejde: na 16
+ * pixelech by z „Za Kníničky" byla seda smouha. Monogram drzi obe barvy
+ * loga, takze zalozka a hlavicka porad patri k sobe.
+ */
+function znak() {
+  const VELIKOST = 100;
+  const z = sazba('Z', 700, VELIKOST);
+  const k = sazba('K', 700, VELIKOST);
+  // Kerning mezi Z a K je v Montserratu nulovy, takze staci sirka samotneho „Z".
+  const o = spoj(z.obalka, posun(k.obalka, z.sirka));
+
+  const sirkaTextu = o.maxX - o.minX;
+  const vyskaTextu = o.maxY - o.minY;
+  // Ctverec 240 s okrajem 24 — monogram se do nej vejde delsi stranou.
+  const meritko = (240 - 48) / Math.max(sirkaTextu, vyskaTextu);
+  const posunX = (240 - sirkaTextu * meritko) / 2 - o.minX * meritko;
+  const posunY = (240 - vyskaTextu * meritko) / 2 - o.minY * meritko;
+
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Za Kníničky">
 ${HLAVICKA}
-${znacka({ linka })}
+  <g transform="translate(${posunX.toFixed(2)} ${posunY.toFixed(2)}) scale(${meritko.toFixed(4)})">
+    <path fill="${ZELENA_TEXT}" d="${z.d}"/>
+    <path fill="${SEDA}" transform="translate(${z.sirka.toFixed(2)} 0)" d="${k.d}"/>
+  </g>
 </svg>
 `;
 }
 
 const SOUBORY = [
   ['public/logo.svg', logo()],
-  // Favicon ma silnejsi linku: na 16 pixelech je kruh siroky jeden a pul
-  // pixelu a s puvodni silou by z nej zbyl sedy flek.
-  ['public/favicon.svg', znak({ linka: 30 })],
-  ['src/assets/logo/znak.svg', znak()],
+  ['public/favicon.svg', znak()],
 ];
 
 for (const [cesta, obsah] of SOUBORY) {
@@ -172,5 +214,12 @@ for (const [cesta, obsah] of SOUBORY) {
   fs.writeFileSync(cil, obsah);
   console.log('   ' + cesta + '  (' + Math.round(obsah.length / 1024) + ' kB)');
 }
+
+// Pomer stran se vypisuje kvuli atributum `width`/`height` u <img>
+// v Hlavicce a na uvodni strance. Jsou tam proto, aby stranka pri nacitani
+// neposkocila — a kdyz se logo prekresli na jiny pomer, musi se prepsat.
+const rozmer = /viewBox="0 0 (\d+) (\d+)"/.exec(logo());
+console.log(`\n   pomer stran loga: ${rozmer[1]} x ${rozmer[2]}`);
+console.log('   (tyhle dve cisla patri do width/height u <img> v Hlavicce a index.astro)');
 
 console.log('\nHotovo.');

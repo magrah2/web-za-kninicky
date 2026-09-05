@@ -1,11 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Za Kníničky">
 <!-- Zastupne logo. Vygenerovano skriptem nastroje/logo.mjs - needitovat rucne.
-     Wordmark je Inter prevedeny na cesty; Inter (c) The Inter Project Authors,
-     licence SIL Open Font License 1.1. -->
-  <defs><clipPath id="obrys"><circle cx="120" cy="120" r="105"/></clipPath></defs>
-  <g clip-path="url(#obrys)">
-    <path fill="#5bae39" d="M4 158C30 108 54 100 82 124C104 143 118 143 140 118C168 86 200 88 240 122V158Z"/>
-    <path fill="#1d6eb0" d="M4 158C40 148 76 168 120 168C164 168 200 148 240 158V246H4Z"/>
+     Wordmark je Montserrat prevedeny na cesty; Montserrat (c) The Montserrat
+     Project Authors, licence SIL Open Font License 1.1. -->
+  <g transform="translate(18.73 168.55) scale(1.3873)">
+    <path fill="#3d7a24" d="M3.8 0L3.8 -10.5L42.2 -56.8L4.6 -56.8L4.6 -70L63.5 -70L63.5 -59.5L25.2 -13.2L65 -13.2L65 0Z"/>
+    <path fill="#444e48" transform="translate(67.10 0)" d="M8.3 0L8.3 -70L24.4 -70L24.4 -37.3L55.4 -70L73.4 -70L44.4 -38.8L75.1 0L56.2 0L33.8 -27.5L24.4 -17.7L24.4 0Z"/>
   </g>
-  <circle cx="120" cy="120" r="105" fill="none" stroke="#1d6eb0" stroke-width="30"/>
 </svg>

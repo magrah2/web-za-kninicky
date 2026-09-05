@@ -7,10 +7,12 @@ import IkonaTematu from '../components/IkonaTematu.astro';
 import { BARVA_TEMATU } from '../lib/temata';
 import type { Tema } from '../lib/temata';
 import { fotkaKandidata } from '../lib/portrety';
+import { Image } from 'astro:assets';
+import spolecnaFotka from '../assets/spolecna-fotka.jpg';
 import {
   NAZEV,
-  HESLO,
-  OBEC_Z,
+  HESLO_ZACATEK,
+  HESLO_KONEC,
   ZASTUPITELSTVO,
   POCET_ZASTUPITELU,
   POCET_SLOVY,
@@ -58,12 +60,28 @@ const prvni = kandidati.slice(0, 6);
 
     <div class="pruh hero-vnitrek">
       <div class="hero-text">
-        <h1 class="hero-claim">{HESLO}</h1>
+        <h1 class="hero-claim">
+          <span class="hero-claim-zacatek">{HESLO_ZACATEK}</span>
+          <span class="hero-claim-konec">{HESLO_KONEC}</span>
+        </h1>
 
-        <p class="hero-perex">
-          <strong>Placeholder.</strong> Sem přijde odstavec, který řekne, kdo jsme a proč
-          kandidujeme. Zatím tu drží místo, aby bylo vidět, kolik textu se sem vejde.
-        </p>
+        {/* Text dodal tým — není to placeholder. „Kníničky" je tu natvrdo,
+            protože `strana.ts` má jen tvary „v Kníničkách" a „z Kníniček";
+            první pád by se z nich poskládat nedal. */}
+        <div class="hero-perex">
+          <p>
+            Jsme sdružení nezávislých kandidátů, kterým leží na srdci, aby se Kníničky
+            staly místem přívětivým pro všechny – bez ohledu na věk, zájmy nebo to, jak
+            dlouho tu žijí. Naši kandidátku proto tvoří lidé různých generací a pohledů
+            na svět.
+          </p>
+          <p>
+            Jsme realisté a víme, že ne vždy lze vyhovět všemu a všem. Ale jen pokud
+            budeme mít ucelenější představu o vašich potřebách a obavách, můžeme dělat
+            lepší rozhodnutí. Pojďte s námi více komunikovat – my vám budeme naslouchat
+            a vysvětlovat, proč a jak věci řešíme.
+          </p>
+        </div>
 
         <div class="hero-tlacitka">
           <a class="tlacitko tlacitko-hlavni" href={odkaz('/program/')}>Náš program</a>
@@ -71,16 +89,22 @@ const prvni = kandidati.slice(0, 6);
         </div>
       </div>
 
-      {/* Značka stojí vedle claimu, ne nad ním — vyplní pravou půlku, kterou
-          by jinak zabírala jen prázdná plocha. Popisek je prázdný schválně:
-          totéž logo je v hlavičce a čtečka by ho jinak přečetla dvakrát. */}
-      <img
-        class="hero-logo"
-        src={odkaz('/logo.svg')}
-        alt=""
-        width="1200"
-        height="300"
+      {/* Společná fotka kandidátky. Dřív tu stálo logo — to je pryč: od chvíle,
+          kdy je z něj jen nápis, opakovalo totéž, co je o pár pixelů výš
+          v hlavičce.
+
+          Nechává se v původním poměru 3 : 2, neořezává se do čtverce ani
+          na výšku: lidé stojí v řadě přes celou šířku a jakýkoliv ořez
+          po stranách někoho z nich uřízne. */}
+      <Image
+        class="hero-foto"
+        src={spolecnaFotka}
+        alt={`Kandidáti sdružení ${NAZEV}`}
+        widths={[640, 960, 1280]}
+        sizes="(max-width: 899px) 92vw, 640px"
+        loading="eager"
         fetchpriority="high"
+        decoding="async"
       />
     </div>
 
@@ -102,14 +126,15 @@ const prvni = kandidati.slice(0, 6);
         <p class="nadtitulek">Kdo jsme</p>
         <h2>{POCET_SLOVY.charAt(0).toUpperCase() + POCET_SLOVY.slice(1)} lidí, kteří tady žijí</h2>
       </div>
+      {/* Text dodal tým — není to placeholder. */}
       <div class="dvojice-text">
         <p>
-          <strong>Placeholder.</strong> Sem přijdou dva odstavce o tom, kdo kandidátku tvoří
-          a co nás spojuje. Text zatím nemáme.
-        </p>
-        <p>
-          Architektka, lékař, ekonomka, technik, studentka i jednatelé firem — všichni
-          {' '}{OBEC_Z}. Zbytek doplníme.
+          Za kandidátkou <span class="nazev-strany">{NAZEV}</span> stojí pestrá skupina lidí,
+          které spojuje jedno – chuť
+          starat se o místo, kde žijeme. Najdete mezi námi lidi nejrůznějších profesí
+          i generací: od studentky přes rodiče malých i velkých dětí až po prarodiče
+          a seniory. Každý z nás přináší jiný pohled a jinou zkušenost a právě tato
+          rozmanitost nám pomáhá vidět potřeby Kníniček z více úhlů.
         </p>
         <p>
           <a href={odkaz('/lide/')}>Poznejte všech {POCET_ZASTUPITELU} →</a>
@@ -195,10 +220,17 @@ const prvni = kandidati.slice(0, 6);
     <div class="pruh zamery-vnitrek">
       <div>
         <p class="nadtitulek">Mapa záměrů</p>
-        <h2>Program není seznam přání. Jsou to&nbsp;místa, která denně míjíte.</h2>
+        {/* Totéž, co je nad mapou na `/mapa/` (MapaZameru.astro). Opsané je to
+            schválně: úvodní stránka mapu nevkládá, jen na ni odkazuje, takže
+            nemá odkud text vzít. Když se mění, mění se na obou místech.
+
+            Dřív tu stálo „Placeholder. Mapa Kníniček je připravená, body na ni
+            teprve doplníme" — to přestalo platit ve chvíli, kdy na mapě body
+            přibyly. */}
+        <h2>Náš program nejsou jen sliby na&nbsp;papíře.</h2>
         <p class="perex">
-          <strong>Placeholder.</strong> Mapa Kníniček je připravená, body na ni teprve
-          doplníme — každý bude konkrétní místo a konkrétní věc, kterou tam chceme udělat.
+          Jsou to místa, kolem kterých každý den procházíte – a u každého víme přesně,
+          co a jak chceme zlepšit.
         </p>
         <p class="zamery-tlacitko">
           <a class="tlacitko tlacitko-hlavni" href={odkaz('/mapa/')}>Otevřít mapu</a>
@@ -267,16 +299,32 @@ const prvni = kandidati.slice(0, 6);
     z-index: 1;
     display: grid;
     gap: clamp(2rem, 5vw, 3rem);
-    /* Logo lícuje s horní hranou claimu, ne se středem sloupce. */
     align-items: start;
   }
 
-  /* Na širokém displeji stojí značka vedle claimu a vyplní pravou půlku.
-     Na úzkém se logo posune nad text, protože vedle sebe by se obojí
-     zmenšilo na nečitelnou míru. */
+  /* Na širokém displeji stojí fotka vedle textu. Na úzkém sjede pod něj —
+     nad claimem by odsunula dolů větu, kvůli které hero existuje. Pořadí
+     zařídí samo DOM, takže tu nejsou žádná pravidla `order`. */
+  /* Fotka dostává víc místa než text. Dál už se roztáhnout nemůže: perex má
+     doraz 42 ch (~410 px) a claim „Povídejte," je v hero velikosti přes
+     450 px široký, takže při užším levém sloupci by se začal lámat.
+
+     `stretch` srovná výšku fotky s výškou textu. Bez ořezu to nejde:
+     text je vysoký 579 px a fotka v původním poměru 3 : 2 by na tu výšku
+     potřebovala 868 px šířky — na text by z pruhu zbylo 264 px. */
   @media (min-width: 900px) {
     .hero-vnitrek {
-      grid-template-columns: 1.1fr 0.9fr;
+      grid-template-columns: 1fr 1.3fr;
+      align-items: stretch;
+    }
+
+    .hero-foto {
+      height: 100%;
+      /* Ořezává se po stranách, ne shora a zdola: lidé stojí v řadě a nahoře
+         mají nad hlavami stromy, dole dlažbu — vodorovný ořez by uřízl hlavy.
+         Skupina zabírá zhruba prostřední dvě třetiny snímku (16–76 % šířky),
+         takže symetrický ořez na 74 % šířky nikoho nezasáhne. */
+      object-fit: cover;
     }
   }
 
@@ -284,41 +332,25 @@ const prvni = kandidati.slice(0, 6);
     .hero-vnitrek {
       gap: clamp(1.5rem, 5vw, 2.25rem);
     }
-    .hero-text {
-      order: 2;
-    }
-    .hero-logo {
-      order: 1;
-      justify-self: start;
-    }
   }
 
-  /* Křivka z loga jako podklad — velká, přetéká přes pravý okraj.
-     Má se dát vytušit, ne přečíst, proto tak nízká sytost v tokenech. */
+  /* Fotka si nese vlastní poměr stran, žádný `aspect-ratio` tu není —
+     `<Image>` zapisuje `width` a `height` z původního souboru, takže si
+     místo drží od začátku a stránka při načtení neposkočí.
 
-  /* Pod 900 px se logo stěhuje nad text a pravá strana volná není,
-     takže se stopa schová — jinak by ležela pod odstavcem. */
-  @media (max-width: 899px) {
-  }
-
-  /* Na úzkém displeji je text přes celou šířku, takže by křivka ležela
-     přímo pod odstavcem. Odsuneme ji nahoru a za okraj, ať jen prosvítá. */
-  @media (max-width: 720px) {
-  }
-
-  .hero-logo {
+     Rohy jsou ostré. Zaoblení je na webu vyhrazené kartám a dlaždicím —
+     tedy plochám, které něco ohraničují; fotka je obsah, ne karta. */
+  .hero-foto {
     width: 100%;
-    max-width: 520px;
     height: auto;
-    justify-self: end;
+    box-shadow: var(--stin);
   }
 
-  @media (max-width: 899px) {
-    .hero-logo {
-      max-width: min(360px, 78vw);
-    }
-  }
-
+  /* Claim je dvouhlasý: „Povídejte," nahoře velké, „my nasloucháme." pod tím
+     menší. Velikost druhého řádku je v `em`, tedy podílem prvního — takhle
+     se poměr drží i na mobilu, kde `--text-hero` spadne skoro na polovinu.
+     Kdyby měl každý řádek vlastní `clamp()`, poměr by se s šířkou okna
+     pohyboval a někde by se řádky srovnaly do stejné velikosti. */
   .hero-claim {
     max-width: 14ch;
     margin: 0;
@@ -326,15 +358,51 @@ const prvni = kandidati.slice(0, 6);
     font-weight: 650;
     line-height: 0.95;
     letter-spacing: -0.042em;
-    color: var(--modra-text);
+    color: var(--sedozelena-text);
   }
 
+  .hero-claim-zacatek,
+  .hero-claim-konec {
+    display: block;
+  }
+
+  .hero-claim-konec {
+    font-size: 0.52em;
+    font-weight: 600;
+    /* Menší stupeň unese míň stažené prostrkání — v `-0.042em` vypadala
+       písmena slepená, protože záporné prostrkání se počítá z velikosti
+       písma a na menším řádku ubere poměrně víc. */
+    letter-spacing: -0.028em;
+    line-height: 1.1;
+    margin-top: 0.18em;
+  }
+
+  /* O kousek menší než `--text-velky`, ne o celý stupeň níž. Odstavce jsou
+     tu dva a v plné velikosti perexu přebíjely claim nad sebou; posunout je
+     rovnou na `--text-zakladni` by z nich zas udělalo běžný text stránky,
+     který v heru vypadá jako popiska. Proto podíl, ne jiný token — škála
+     se tím nerozšiřuje o devátý stupeň. */
+  /* Doraz je v `ch`, ne v procentech: řádek má mít pod osmdesát znaků,
+     jinak oko na konci řádku ztrácí, kde začíná další. Sloupec vedle fotky
+     je na tuhle míru i tak užší, takže se doraz projeví hlavně na širokém
+     displeji bez fotky. */
   .hero-perex {
     max-width: 42ch;
     margin: clamp(1.4rem, 3vw, 2rem) 0 0;
-    font-size: var(--text-velky);
+    font-size: calc(var(--text-velky) * 0.86);
     line-height: 1.55;
     color: var(--inkoust-tlum);
+  }
+
+  /* Odstavce uvnitř si nesmějí vzít odsazení od prohlížeče: nahoře by přidalo
+     mezeru k té, kterou už má obal, a mezi odstavci by při téhle velikosti
+     písma vznikla díra. Mezera je proto v `em`, tedy úměrná velikosti textu. */
+  .hero-perex p {
+    margin: 0;
+  }
+
+  .hero-perex p + p {
+    margin-top: 0.7em;
   }
 
   .hero-tlacitka {
@@ -442,7 +510,7 @@ const prvni = kandidati.slice(0, 6);
   }
 
   .dlazdice.je-aktivni {
-    border-color: var(--modra);
+    border-color: var(--sedozelena);
   }
 
   /* Ikona a název drží vedle sebe, šipku odstrčí doprava `margin` u názvu.
@@ -471,7 +539,7 @@ const prvni = kandidati.slice(0, 6);
 
   .dlazdice-znak {
     flex: none;
-    color: var(--modra);
+    color: var(--sedozelena);
     opacity: 0;
     transform: translateX(-4px);
     transition: opacity var(--prechod), transform var(--prechod);
@@ -536,8 +604,8 @@ const prvni = kandidati.slice(0, 6);
   }
 
   .program-panel-zavrit:hover {
-    background: var(--modra-jemna);
-    color: var(--modra-text);
+    background: var(--sedozelena-jemna);
+    color: var(--sedozelena-text);
   }
 
   .program-panel-nadtitulek {

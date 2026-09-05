@@ -16,7 +16,7 @@ const rok = new Date().getFullYear();
 <footer class="pata">
   <div class="pruh pata-vnitrek">
     <div class="pata-hlavni">
-      <p class="pata-hashtag">{HESLO}</p>
+      <p class="pata-heslo">{HESLO}</p>
     </div>
 
     <nav class="pata-navigace" aria-label="Patička">
@@ -43,7 +43,7 @@ const rok = new Date().getFullYear();
   </div>
 
   <div class="pruh pata-spodek">
-    <p>© {rok} {NAZEV}</p>
+    <p>© {rok} <span class="nazev-strany">{NAZEV}</span></p>
     <p class="pata-poznamka">
       Bez cookies, bez měřicích kódů. Tento web o vás nesbírá žádná data.
     </p>
@@ -83,12 +83,12 @@ const rok = new Date().getFullYear();
     }
   }
 
-  .pata-hashtag {
+  .pata-heslo {
     margin: 0;
     font-size: var(--text-nadpis-2);
     font-weight: 600;
     letter-spacing: -0.025em;
-    color: var(--modra-text);
+    color: var(--sedozelena-text);
   }
 
   .pata-navigace ul {
@@ -108,7 +108,7 @@ const rok = new Date().getFullYear();
 
   .pata-navigace a:hover,
   .pata-email:hover {
-    color: var(--modra-text);
+    color: var(--sedozelena-text);
     text-decoration: underline;
   }
 

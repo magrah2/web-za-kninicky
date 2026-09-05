@@ -36,14 +36,14 @@ const jeAktivni = (cil: string) => zdeCesta.endsWith(cil.replace(/\/+$/, ''));
 <header class="hlavicka">
   <div class="pruh hlavicka-vnitrek">
     {/* Logo je vektor, takže je ostré na jakémkoliv displeji a váží pár kilobajtů.
-        Poměr stran 1672 : 373 je zapsaný natvrdo, aby se stránka při načítání
+        Poměr stran 1073 : 155 je zapsaný natvrdo, aby se stránka při načítání
         neposunula. */}
     <a class="logo" href={odkaz('/')}>
       <img
         src={odkaz('/logo.svg')}
         alt={`${NAZEV} — úvodní stránka`}
-        width="1672"
-        height="373"
+        width="1073"
+        height="155"
         fetchpriority="high"
       />
     </a>
@@ -114,8 +114,12 @@ const jeAktivni = (cil: string) => zdeCesta.endsWith(cil.replace(/\/+$/, ''));
     line-height: 0;
   }
 
+  /* Šířka je menší než u dřívějšího loga se značkou, a přesto jsou písmena
+     větší. Značka zabírala skoro pětinu obrázku, takže na stejné šířce
+     zbylo na nápis méně místa; po jejím odstranění se do těch 235 px
+     roztáhl nápis celý a v hlavičce přebil navigaci. */
   .logo img {
-    width: clamp(175px, 22vw, 235px);
+    width: clamp(150px, 18vw, 195px);
     height: auto;
   }
 
@@ -151,13 +155,13 @@ const jeAktivni = (cil: string) => zdeCesta.endsWith(cil.replace(/\/+$/, ''));
   }
 
   .nabidka-siroka a:hover {
-    color: var(--modra-text);
+    color: var(--sedozelena-text);
     border-bottom-color: var(--zelena);
   }
 
   .nabidka-siroka a[aria-current='page'] {
-    color: var(--modra-text);
-    border-bottom-color: var(--modra);
+    color: var(--sedozelena-text);
+    border-bottom-color: var(--sedozelena);
   }
 
   @media (max-width: 859px) {
@@ -244,8 +248,8 @@ const jeAktivni = (cil: string) => zdeCesta.endsWith(cil.replace(/\/+$/, ''));
 
   .nabidka-uzka nav a:hover,
   .nabidka-uzka nav a[aria-current='page'] {
-    background: var(--modra-jemna);
-    color: var(--modra-text);
+    background: var(--sedozelena-jemna);
+    color: var(--sedozelena-text);
   }
 </style>
 

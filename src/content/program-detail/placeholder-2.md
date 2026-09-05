@@ -4,7 +4,7 @@
 # přeskakování mezi sousedními oblastmi na konci stránky. S jediným rozpisem
 # by odkazy „soused" neměly kam vést.
 # Až bude program hotový, smažte oba a založte rozpisy podle `_SABLONA.md`.
-oblast: 3-placeholder
+oblast: 5-bydleni
 nadpis: "Druhý podrobný rozpis — text zatím nemáme"
 perex: "Placeholder. Slouží k tomu, aby šlo přejít na sousední oblast."
 ---

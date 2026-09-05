@@ -3,7 +3,7 @@
 # Drží místo, aby bylo vidět, jak vypadá stránka s podrobným rozpisem
 # a tlačítko „Chci vědět víc". Až bude program hotový, tenhle soubor
 # smažte a založte rozpis podle `_SABLONA.md`.
-oblast: 1-placeholder
+oblast: 3-sport-a-rekreace
 nadpis: "Podrobný rozpis — text zatím nemáme"
 perex: "Placeholder. Takhle bude vypadat stránka s podrobným rozpisem oblasti."
 ---

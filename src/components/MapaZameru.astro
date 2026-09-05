@@ -53,11 +53,11 @@ const jsouNavrhy = zamery.some((z) => z.data.stav === 'navrh');
 <section class="mapa-sekce pas-noc" id="zamery">
   <div class="pruh">
     <p class="nadtitulek">Mapa záměrů</p>
-    <h2 class="mapa-nadpis">Program není seznam přání. Jsou to&nbsp;místa, která denně míjíte.</h2>
+    <h2 class="mapa-nadpis">Náš program nejsou jen sliby na&nbsp;papíře.</h2>
     <p class="perex mapa-perex">
       {
         zamery.length > 0
-          ? 'Každý bod je konkrétní místo v Kníničkách a konkrétní věc, kterou tam chceme udělat. Klikněte na bod v mapě nebo na položku v seznamu.'
+          ? 'Jsou to místa, kolem kterých každý den procházíte – a u každého víme přesně, co a jak chceme zlepšit. Klikněte na bod v mapě nebo v seznamu a podívejte se sami.'
           : 'Podklad mapy je hotový, body na něj teprve doplníme. Každý bude konkrétní místo v Kníničkách a konkrétní věc, kterou tam chceme udělat.'
       }
     </p>
@@ -257,8 +257,8 @@ const jsouNavrhy = zamery.some((z) => z.data.stav === 'navrh');
   }
 
   .mapa-filtry .filtr.je-aktivni {
-    background: var(--barva, var(--modra));
-    border-color: var(--barva, var(--modra));
+    background: var(--barva, var(--sedozelena));
+    border-color: var(--barva, var(--sedozelena));
     color: #fff;
   }
 
@@ -459,7 +459,7 @@ const jsouNavrhy = zamery.some((z) => z.data.stav === 'navrh');
     padding: 0;
     border: 2px solid rgb(255 255 255 / 0.85);
     border-radius: 999px;
-    background: var(--barva, var(--modra));
+    background: var(--barva, var(--sedozelena));
     color: #fff;
     font: inherit;
     font-size: var(--text-drobny);
@@ -575,7 +575,7 @@ const jsouNavrhy = zamery.some((z) => z.data.stav === 'navrh');
     width: 1.6rem;
     height: 1.6rem;
     border-radius: 999px;
-    background: var(--barva, var(--modra));
+    background: var(--barva, var(--sedozelena));
     color: #fff;
     font-size: var(--text-drobny);
     font-weight: 700;

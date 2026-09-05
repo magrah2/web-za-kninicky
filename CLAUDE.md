@@ -68,23 +68,47 @@ mapy** (`MapaZameru.astro`). Logo se načítá přes `<img>`, kam se proměnné
 z CSS nedostanou, takže barvy musí být v SVG. Mapa má vlastní tmavou paletu,
 protože leží na nočním pruhu a tokeny na to odstíny nemají.
 
-**Modrá `#1d6eb0` a zelená `#5bae39` jsou barvy značky.** Zelená má na světlém
-pozadí kontrast jen 2,9 : 1 — **na text se nikdy nesmí použít**, od toho je
-`--zelena-text`. Platí to i v logu: „Za" je proto tmavší zelenou.
+**Web je laděný do šedozelené.** Hlavní barva je `--sedozelena` (`#517359`)
+a od ní se odvíjí celá stupnice — papír, inkoust, tmavé pásy i linky mají
+stejný nádech. Dřív byla hlavní barvou modrá `#1d6eb0` a tokeny se jmenovaly
+`--modra*`; přejmenovaly se, aby název barvy nelhal.
+
+Kontrasty v tokenech jsou naměřené, ne odhadnuté, a drží poměry z modré
+palety: hlavní text 7,4 : 1, tlumený 6,7 : 1, bílá na tlačítku 5,3 : 1.
+Když se odstín mění, první, co spadne pod normu, je `--inkoust-tlum` —
+přepočítat, ne hádat.
+
+**Zelená `#5bae39` je barva značky.** Má na světlém pozadí kontrast jen
+2,9 : 1 — **na text se nikdy nesmí použít**, od toho je `--zelena-text`.
+Platí to i v logu: „Za" je proto tmavší zelenou.
+
+**Barvy témat na přeladění webu nečekaly.** `BARVA_TEMATU` v
+`src/lib/temata.ts` má pořád čtyři modré odstíny, takže ikony oblastí na
+šedozeleném webu svítí jako cizí prvek. Není to přehlédnutí: tytéž odstíny
+nesou odznaky na tmavé mapě, kde si zelené barvy konkurují se zelení
+krajiny. Musí se vybrat z variant vykreslených vedle sebe proti mapě,
+ne přepsat od stolu.
+
+Výjimkou je **`Komunikace`**, která přibyla jako devátá oblast až po
+přeladění a nese rovnou hlavní barvu webu (`#517359`). Je to jediná oblast,
+která nemluví o konkrétním místě, ale o způsobu rozhodování — na mapě proto
+zatím nemá co označit a proti podkladu se vybírat nemusela.
 
 ## Grafika drží pohromadě
 
 **Grafika smí přibývat, ale musí být součástí jedné soustavy, ne sbírkou
 klipartů.** Co v soustavě je:
 
-- **Značka** (`nastroje/logo.mjs`) — kruh z linky, uvnitř zelený břeh nad
-  modrou hladinou. Kníničky leží na Brněnské přehradě a stará ves skončila
-  pod vodou, když se přehrada v roce 1940 napustila; voda je to jediné, co
-  obec odliší od kterékoliv jiné městské části. Kruh je nahoře prázdný
-  schválně — plný kotouč byl v hlavičce příliš těžký a na tmavém pruhu
-  splýval.
-- **Zelená stopa** (`src/components/Krivka.astro`) — břeh vytažený ze značky,
-  takže se motiv na webu a logo v hlavičce shodují.
+- **Logo** (`nastroje/logo.mjs`) — jen nápis „Za Kníničky", žádný obrázek.
+  „Za" je zelené, „Kníničky" tmavě šedozelené. Obrázková značka (kruh
+  se zeleným břehem nad modrou hladinou) tu byla do přeladění webu do
+  šedozelené; syté modré jezírko v hlavičce pak bylo jediné, co do palety
+  nepatřilo.
+- **Zelená stopa** (`src/components/Krivka.astro`) — křivka břehu. Původně
+  byla vytažená ze zrušené značky, takže dnes už si s logem neodpovídá.
+  Na webu se z ní používá jen varianta `oddelovac` (vlna mezi patičkou
+  a stránkou); `podklad` a `znacka` nikde. Až se bude řešit grafika,
+  je tohle první kandidát na vyhození nebo na nové navázání.
 - **Ikony programových oblastí** (`src/components/IkonaTematu.astro`) —
   mřížka 24 × 24, obrys tahem 1,75 a k němu jedna tlumená plocha ve stejné
   barvě, zakulacené konce, `currentColor` obarvený barvou oblasti
@@ -100,25 +124,51 @@ Dvě věci platí bez výjimky:
 2. **Barvy jen z palety značky.** Nic mimo `tokeny.css` a `BARVA_TEMATU`.
 
 A ještě jedna zkušenost: **ikonu ani logo nemá smysl posuzovat z kódu.**
-Značka se vybírala z osmi variant vykreslených vedle sebe ve velikosti
-hlavičky, hero i na tmavém podkladu. Z první série neobstála ani jedna:
-hráz čtená jako miska, kopec jako hřib, plný kotouč jako ikona aplikace.
-Z kódu to poznat nešlo.
+Zrušená značka se vybírala z osmi variant vykreslených vedle sebe ve
+velikosti hlavičky, hero i na tmavém podkladu. Z první série neobstála ani
+jedna: hráz čtená jako miska, kopec jako hřib, plný kotouč jako ikona
+aplikace. Z kódu to poznat nešlo.
+
+Totéž platí o **velikosti** loga. Když ze sestavy zmizela značka, zabíral
+nápis najednou celou šířku, kterou předtím sdílel s ní — v hlavičce vyrostl
+o třetinu a přebil navigaci, v heru stál vedle claimu jako druhý nadpis.
+Obojí se muselo stáhnout (`.logo img` a `.hero-logo`) a z kódu to vidět
+nebylo: čísla se nezměnila, změnil se obsah obrázku.
 
 ## Logo se generuje, nekreslí ručně
 
-`npm run logo` vyrobí `public/logo.svg`, `public/favicon.svg` a
-`src/assets/logo/znak.svg`. Wordmark je **Inter převedený na cesty** — logo
-se načítá přes `<img>`, kam se webfont ze stránky nedostane, takže `<text>`
-by se na každém počítači vysadilo jiným písmem.
+`npm run logo` vyrobí `public/logo.svg` a `public/favicon.svg`. Wordmark je
+**Montserrat převedený na cesty** — logo se načítá přes `<img>`, kam se
+webfont ze stránky nedostane, takže `<text>` by se na každém počítači
+vysadilo jiným písmem. Řez musí být týž, jakým je sázený web: kdyby se
+změnilo písmo webu a logo ne, byly by v hlavičce dva různé grotesky vedle
+sebe.
 
-Řezy Interu si generátor stáhne sám do `nastroje/.pisma/` (jsou v gitignore).
-Berou se **statické** soubory z fontsource, ne ty variabilní ze `src/pisma/`:
-fontkit z variabilního woff2 vrací prázdné glyfy, takže by z něj nešel dostat
-jiný řez než Regular.
+Favicon je monogram **„ZK"** ve stejných dvou barvách. Celý nápis se do něj
+nevejde: na 16 pixelech by z „Za Kníničky" byla šedá šmouha.
+
+`viewBox` loga si generátor **spočítá z obálky písmen**, takže sedí těsně.
+Když se nápis změní, změní se i poměr stran — skript ho proto na konci
+vypíše a ta dvě čísla patří do `width`/`height` u `<img>` v `Hlavicka.astro`
+a `index.astro`. Jsou tam proto, aby stránka při načítání neposkočila.
+
+Řezy Montserratu si generátor stáhne sám do `nastroje/.pisma/` (jsou
+v gitignore). Berou se **statické** soubory z fontsource, ne ty variabilní
+ze `src/pisma/`: fontkit z variabilního woff2 vrací prázdné glyfy, takže by
+z něj nešel dostat jiný řez než Regular.
+
+**Písmo webu se mění na čtyřech místech naráz:** `@font-face` v `tokeny.css`,
+`font-family` v `zaklad.css`, `preload` v `Zaklad.astro` a `nastroje/logo.mjs`.
+Vynechat kterékoliv z nich se pozná až na hotové stránce, ne při sestavení —
+sestavení projde a text se jen tiše vysadí náhradním písmem.
+
+Samotné soubory písma leží v `src/pisma/` a **stahují se jednou do
+repozitáře**, nenačítají se z Googlu ani z CDN. Je to důvod, proč web
+nepotřebuje cookie lištu.
 
 **Logo je zatím zástupné.** Vzniklo, aby web neměl v hlavičce díru, a klidně
-se celé zahodí, až tým dodá vlastní značku.
+se celé zahodí, až tým dodá vlastní značku. Ryze typografické je na přání
+týmu — obrázek k němu zatím žádný nepatří.
 
 ## Zásady, které platí všude
 
@@ -192,13 +242,31 @@ Testuje se i **na šířce 390 px** — na to snímek zatím nikdo nenahradí.
 přeskakovaly, nikdo by nepoznal, že už se ta věc kontrolovat může. Na konci
 výpisu je vidět, kolik jich čeká.
 
-**Prázdná kolekce shodí sestavení varováním.** Astro hlásí „The collection
-… does not exist or is empty", a to se počítá jako varování. Proto má
-každá kolekce aspoň jeden placeholder — až přijde skutečný obsah, placeholdery
-se smažou.
+**Prázdná kolekce shodí sestavení varováním.** Astro hlásí „No files found
+matching …", a to se počítá jako varování. Proto má každá kolekce aspoň
+jeden placeholder — až přijde skutečný obsah, placeholdery se smažou.
+
+**Vývojový server umí zapomenout na nově přidaný soubor.** Když se najednou
+smažou staré soubory kolekce a přidají nové, běžící `astro dev` se o jednom
+z nich nemusí dozvědět: v prohlížeči prostě chybí, zatímco `npm run build`
+ho do `dist/` zapíše. Vypadá to jako chyba v kódu a není. Když něco na
+`localhost` chybí, ale v `dist/` to je, restartujte server
+(`astro dev stop` a `astro dev --background`) — ne hledejte chybu v šabloně.
 
 Podrobný program má **dva** placeholdery schválně: s jediným by odkazy na
 sousední oblast na konci stránky neměly kam vést.
+
+**Podrobný rozpis ukazuje na oblast názvem souboru.** Když se placeholderová
+oblast smaže a nahradí skutečnou, musí se přepsat i `oblast:` v rozpisu,
+který na ni mířil — jinak sestavení spadne s hláškou „Podrobný program
+ukazuje na oblasti, které neexistují". Stalo se to hned při první skutečné
+oblasti, která nahradila `1-placeholder`.
+
+**Až bude program hotový, musí se přepsat i perex na `/program/`.** Dokud
+byly všechny oblasti zástupné, stálo v něm „nic z toho není závazek";
+s první skutečnou oblastí by to o ní lhalo. Teď rozlišuje podle slova
+„Placeholder" v názvu oblasti a se zmizením posledního placeholderu má
+zmizet celý.
 
 ## Co se z kódu nevyčte
 

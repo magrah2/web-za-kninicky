@@ -8,11 +8,13 @@
  */
 
 export const TEMATA = [
+  'Komunikace',
   'Hospodaření',
   'Bydlení',
   'Zeleň a voda',
   'Doprava',
   'Školství',
+  'Sport',
   'Kultura',
   'Podnikání',
   'Bezpečnost',
@@ -23,11 +25,19 @@ export type Tema = (typeof TEMATA)[number];
 /** Barva, kterou se téma značí na mapě a ve štítcích. Odstíny modré a zelené
     z loga — nic mimo značkovou paletu, jinak se web rozsype do duhy. */
 export const BARVA_TEMATU: Record<Tema, string> = {
+  // Hlavní barva webu (`--sedozelena`). Komunikace je první oblast programu
+  // a jediná, která nemluví o konkrétním místě, ale o tom, jak se rozhoduje —
+  // proto nese barvu webu, ne jeden z jeho akcentů.
+  'Komunikace': '#517359',
   'Hospodaření': '#1d6eb0',
   'Bydlení': '#2b8ac9',
   'Zeleň a voda': '#5bae39',
   'Doprava': '#0e4d80',
   'Školství': '#3f9bd4',
+  // Tmavší zelená (`--zelena-text`). Sport sousedí na stránce se Školstvím
+  // a Dopravou, tedy se dvěma modrými — zelená je od nich odliší i tomu,
+  // kdo modré odstíny rozlišuje hůř.
+  'Sport': '#3d7a24',
   'Kultura': '#7cc45f',
   'Podnikání': '#145286',
   'Bezpečnost': '#4a9e7e',

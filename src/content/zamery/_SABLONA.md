@@ -16,8 +16,8 @@ nazev: Název místa
 
 # Programová oblast. Určuje barvu bodu a to, pod kterým filtrem se ukáže.
 # Musí to být přesně jedna z hodnot v src/lib/temata.ts:
-#   Hospodaření · Bydlení · Zeleň a voda · Podnikání
-#   Školství · Bezpečnost · Kultura · Doprava
+#   Komunikace · Hospodaření · Bydlení · Zeleň a voda · Podnikání
+#   Školství · Sport · Bezpečnost · Kultura · Doprava
 # Překlep shodí sestavení, takže si toho všimneme my, ne návštěvník.
 tema: Zeleň a voda
 
