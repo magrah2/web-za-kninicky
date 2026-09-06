@@ -7,6 +7,7 @@ import {
   ZASTUPITELSTVO,
   DATUM_VOLEB,
   HODINY_VOLEB,
+  VOLEBNI_MISTNOST,
 } from '../lib/strana';
 
 /**
@@ -47,21 +48,16 @@ const NEPLATNY = [
   'Lístek přeškrtáte, dopíšete do něj jméno nebo ho jinak upravíte.',
 ];
 
-/**
+/*
  * Kde a kdy se volí.
  *
  * Šablona na tohle měla vlastní stránku s vyhledávačem podle adresy — byla
  * psaná pro obec s dvaceti okrsky, kde by člověk ten svůj jinak nenašel.
  * Kníničky mají jediný okrsek, takže vyhledávač by všem odpověděl stejně
- * a stránka navíc by jen odváděla pozornost. Adresa proto stojí rovnou tady.
- *
- * PLACEHOLDER: adresu je nutné opsat z veřejné vyhlášky starosty, než web
- * půjde naostro. Poslat člověka do špatné místnosti je horší než neříct nic.
+ * a stránka by jen odváděla pozornost. Adresa proto stojí rovnou v sekci
+ * „Kde a kdy" níž; samotný údaj je ve `strana.ts`, protože je i na úvodní
+ * stránce.
  */
-const MISTNOST = {
-  nazev: 'Placeholder — doplnit podle vyhlášky',
-  adresa: 'Placeholder — doplnit podle vyhlášky',
-};
 ---
 
 <Zaklad
@@ -132,7 +128,7 @@ const MISTNOST = {
       <dl class="kde-udaje">
         <div>
           <dt>Volební místnost</dt>
-          <dd>{MISTNOST.nazev}<br />{MISTNOST.adresa}</dd>
+          <dd>{VOLEBNI_MISTNOST.adresa}<br /><span class="kde-vchod">{VOLEBNI_MISTNOST.vchod}</span></dd>
         </div>
         <div>
           <dt>Kdy</dt>
@@ -334,6 +330,12 @@ const MISTNOST = {
     margin: 0.4rem 0 0;
     font-size: var(--text-maly);
     line-height: 1.5;
+  }
+
+  /* Navádění ke vchodu je doplněk k adrese, ne druhý řádek adresy —
+     ztlumené, aby si s ní nekonkurovalo. */
+  .kde-vchod {
+    color: var(--inkoust-tlum);
   }
 
   .kde-pozn {

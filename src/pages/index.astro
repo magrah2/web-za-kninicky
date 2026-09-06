@@ -17,6 +17,7 @@ import {
   POCET_ZASTUPITELU,
   POCET_SLOVY,
   DATUM_VOLEB,
+  VOLEBNI_MISTNOST,
   ZACATEK_VOLEB,
   KONEC_VOLEB,
 } from '../lib/strana';
@@ -107,6 +108,10 @@ const prvni = kandidati.slice(0, 6);
       <span class="hero-volby-datum">Volby do {ZASTUPITELSTVO}</span>
       <span class="hero-volby-oddel" aria-hidden="true">·</span>
       <span>{DATUM_VOLEB}</span>
+      <span class="hero-volby-oddel" aria-hidden="true">·</span>
+      {/* Adresa bez upřesnění vchodu — v pruhu je na to málo místa a člověk,
+          který řeší, kudy dovnitř, se stejně proklikne na „Jak volit". */}
+      <span>Volební místnost {VOLEBNI_MISTNOST.adresa}</span>
       <span class="hero-volby-oddel" aria-hidden="true">·</span>
       <span data-odpocet-od={ZACATEK_VOLEB} data-odpocet-do={KONEC_VOLEB}>
         {stavVoleb.text}

@@ -119,6 +119,27 @@ export const DATUM_VOLEB = '9.–10. října 2026';
 export const HODINY_VOLEB = { patek: '14:00–22:00', sobota: '8:00–14:00' };
 
 /**
+ * Volební místnost. Kníničky mají jediný okrsek, takže je jedna pro všechny.
+ *
+ * Stojí tu, ne na `/jak-volit/`, protože je i na úvodní stránce v pruhu
+ * s datem voleb. Adresa opsaná na dvou místech je přesně ta věc, u které se
+ * jedna kopie časem přestane opravovat — a poslat člověka do špatné místnosti
+ * je horší než neříct nic.
+ *
+ * `vchod` je samostatný údaj, ne druhý řádek adresy: na Ondrově je vchodů
+ * víc a tohle je jediná věta, která člověka stojícího před domem dostane
+ * dovnitř. V pruhu na úvodní stránce se proto vypisuje jen adresa, podrobnost
+ * patří na `/jak-volit/`.
+ *
+ * Adresu dodal tým. Než web půjde naostro, musí se ověřit proti veřejné
+ * vyhlášce starosty.
+ */
+export const VOLEBNI_MISTNOST = {
+  adresa: 'Ondrova 17/25',
+  vchod: 'vchod od kaple',
+};
+
+/**
  * Ostatní kandidátky v obci — pro zkušební hlasovací lístek.
  *
  * V šabloně tu byly zástupné „Ukázkové kandidátky A a B" s odůvodněním, že

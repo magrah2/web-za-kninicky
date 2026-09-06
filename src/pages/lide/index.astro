@@ -241,21 +241,28 @@ const sObsahem = await Promise.all(
     max-width: 260px;
   }
 
+  /* Číslo sedí přesně tam a vypadá přesně tak jako na kartě v mřížce
+     (`.karta-cislo` v `KartaKandidata.astro`) — po rozkliknutí je to táž
+     fotka téhož člověka, takže by ta značka neměla nikam poskočit. Dřív
+     seděla v levém dolním rohu, ve výřezu, který tam býval; ten je pryč
+     spolu se zaoblenými rohy. Hodnoty jsou proto opsané odtamtud a při
+     změně se musí měnit na obou místech. */
   .medailonek-cislo {
     position: absolute;
-    left: 0;
-    bottom: 0;
+    left: 0.6rem;
+    top: 0.6rem;
     display: grid;
     place-items: center;
-    min-width: 2.6rem;
-    height: 2.6rem;
-    padding-inline: 0.5rem;
+    min-width: 2.3rem;
+    height: 2.3rem;
+    padding-inline: 0.42rem;
     border-radius: 999px;
     background: var(--sedozelena);
     color: #fff;
     font-size: var(--text-zakladni);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
   }
 
   .medailonek-text h2 {

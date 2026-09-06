@@ -281,9 +281,14 @@ const POCET_RADKU = Math.max(...STRANY.map((strana) => strana.jmena.length));
     background: color-mix(in srgb, var(--zelena) 5%, transparent);
   }
 
+  /* Hlavičky sedí na spodní hraně, ne na svém středu. Náš název je delší
+     a na mobilu se láme na čtyři řádky, kdežto druhá kandidátka se vejde na
+     dva — vystředěná pak visela ve vzduchu a rozestup nad prvním kandidátem
+     vycházel v každém sloupci jinak. Odspoda se obě jména i oba rámečky
+     opřou o tutéž linku, od které pak stejně daleko začínají jedničky. */
   .sloupec-hlava {
     display: flex;
-    align-items: center;
+    align-items: end;
     gap: 0.6rem;
     padding: 0.85rem;
     border-bottom: 2px solid var(--linka-vyrazna);
