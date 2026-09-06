@@ -159,7 +159,14 @@ const jeAktivni = (cil: string) => zdeCesta.endsWith(cil.replace(/\/+$/, ''));
       /* Na mobilu vedle sebe nezbyde místo — doplněk sjede pod logo. */
       flex-direction: column;
       align-items: start;
-      gap: 0.25rem;
+      gap: 0.05rem;
+    }
+
+    /* Odsazení shora srovnává doplněk na účaří nápisu v logu, což dává smysl
+       jen ve vodorovné sazbě. Pod logem se přičte ke `gap` a obojí se sečte —
+       dva řádky téhož nápisu se pak rozestoupí, jako by spolu nesouvisely. */
+    .znacka-doplnek {
+      margin-top: 0;
     }
   }
 

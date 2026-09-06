@@ -47,6 +47,13 @@ const STRANY = [
   { id: 'zk', cislo: CISLO_STRANY, nazev: NAZEV_UPLNY, jmena: nasi, nase: true },
   ...OSTATNI_KANDIDATKY.map((s) => ({ ...s, nase: false })),
 ].sort((a, b) => a.cislo - b.cislo);
+
+/**
+ * Nejdelší kandidátka určuje, kolik řádků má mřížka lístku. Sloupce si řádky
+ * sdílejí (viz `subgrid` v CSS), takže musí být vypsané předem — kdyby si
+ * je každý sloupec počítal sám, jedničky by zase nebyly vedle sebe.
+ */
+const POCET_RADKU = Math.max(...STRANY.map((strana) => strana.jmena.length));
 ---
 
 <div class="listek" data-listek data-pocet-zastupitelu={POCET_ZASTUPITELU}>
@@ -78,7 +85,8 @@ const STRANY = [
 
   {/* ---------- Samotný lístek ---------- */}
   <div class="listek-posuv">
-    <div class="listek-sloupce">
+    {/* Počet řádků nejde napsat do CSS natvrdo — je to délka kandidátky. */}
+    <div class="listek-sloupce" style={`--radku: ${POCET_RADKU}`}>
       {
         STRANY.map((strana) => (
           <section class="sloupec" data-strana={strana.id} class:list={['sloupec', strana.nase && 'sloupec-nase']}>
@@ -235,15 +243,33 @@ const STRANY = [
     background: var(--plocha);
   }
 
+  /* Sloupce si sdílejí řádky, aby jedničky obou kandidátek ležely vedle sebe,
+     dvojky vedle sebe a tak dál — na skutečném lístku to tak taky je.
+
+     Nejde to udělat prostým `flex`em: každý sloupec by si výšku hlavičky
+     i řádků počítal sám. Náš název je delší (kvůli „s podporou ODS a KDU-ČSL"),
+     takže se na mobilu lámal na čtyři řádky proti dvěma u druhé kandidátky
+     a celý náš seznam jmen odsud sjel o 36 px níž. Stejně by se to rozešlo
+     u dlouhého jména, které se zalomí jen v jednom sloupci.
+
+     Řádky proto určuje jediná mřížka nahoře a sloupce si je přebírají přes
+     `subgrid` — dvakrát vnořeně, protože mezi sloupcem a řádky stojí ještě
+     `<ol>`. To `<ol>` se nedá nahradit `display: contents`: tím by z něj
+     zmizel seznam i pro čtečky obrazovky. */
   .listek-sloupce {
-    display: flex;
-    gap: 0;
+    display: grid;
+    grid-auto-flow: column;
+    /* Řádek na hlavičku a pak po jednom na kandidáta. `auto` znamená, že
+       výšku řádku určuje nejvyšší buňka napříč všemi sloupci. */
+    grid-template-rows: auto repeat(var(--radku), auto);
+    grid-auto-columns: minmax(15rem, 1fr);
     min-width: min-content;
   }
 
   .sloupec {
-    flex: 1 0 15rem;
-    min-width: 15rem;
+    display: grid;
+    grid-row: 1 / -1;
+    grid-template-rows: subgrid;
     border-right: 1px solid var(--linka);
   }
 
@@ -287,6 +313,10 @@ const STRANY = [
   }
 
   .sloupec-jmena {
+    /* Druhé patro `subgrid`u: řádky si bere ze sloupce, ten je má z lístku. */
+    grid-row: 2 / -1;
+    display: grid;
+    grid-template-rows: subgrid;
     margin: 0;
     padding: 0;
     list-style: none;
