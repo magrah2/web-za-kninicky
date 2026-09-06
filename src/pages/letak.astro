@@ -50,7 +50,7 @@ import {
   EMAIL,
   ZASTUPITELSTVO,
 } from '../lib/strana';
-import { odkaz, jmenoBezTitulu } from '../lib/odkaz';
+import { odkaz } from '../lib/odkaz';
 import montserratLatin from '../pisma/montserrat-latin.woff2?url';
 import montserratLatinExt from '../pisma/montserrat-latin-ext.woff2?url';
 import '../styles/tokeny.css';
@@ -65,7 +65,25 @@ const oblasti = await Promise.all(
     .map(async (o) => ({ ...o, Obsah: (await render(o)).Content })),
 );
 
-const kandidati = (await getCollection('kandidati')).sort((a, b) => a.data.poradi - b.data.poradi);
+/*
+ * Ke kandidatum se nacita i telo jejich medailonku, aby se dalo pouzit jako
+ * slovo kandidata na letaku. Neni to druhy text: je to tentyz Markdown, ktery
+ * je na `/lide/`. Kdyby se na letak opsal zvlast, rozesel by se pri prvni
+ * uprave - a nikdo by si toho nevsiml, protoze letak se neotvira denne.
+ *
+ * Vygenerovana sablona kandidata obsahuje jen HTML komentar s pokyny, takze
+ * telo vypada vyplnene, i kdyz v nem nic neni. Komentare se proto pred
+ * merenim delky odstrani.
+ */
+const kandidati = await Promise.all(
+  (await getCollection('kandidati'))
+    .sort((a, b) => a.data.poradi - b.data.poradi)
+    .map(async (k) => ({
+      ...k,
+      Medailonek: (await render(k)).Content,
+      maMedailonek: (k.body ?? '').replace(/<!--[sS]*?-->/g, '').trim().length > 0,
+    })),
+);
 
 /**
  * Kolik lidí odshora dostane na letáku vlastní slovo — a tím i celou šířku
@@ -157,8 +175,20 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
 
       {/* ---------- Titulní strana ---------- */}
       <div class="stranka">
-        <img class="letak-logo" src={odkaz('/logo.svg')} alt={NAZEV} width="1073" height="155" />
-        <p class="letak-doplnek">{NAZEV_DOPLNEK}</p>
+        {/* Logo vlevo, volebni cislo vpravo nahore - stejne jako na inzerci.
+            Cislo je jedina vec, kterou si ctenar musi odnest do volebni
+            mistnosti, takze stoji tam, kde oko zacina. */}
+        <header class="letak-hlava">
+          <div>
+            <img class="letak-logo" src={odkaz('/logo.svg')} alt={NAZEV} width="1073" height="155" />
+            <p class="letak-doplnek">{NAZEV_DOPLNEK}</p>
+          </div>
+
+          <p class="letak-cislo">
+            <span class="letak-cislo-znak">{CISLO_STRANY}</span>
+            <span class="letak-cislo-popis">naše číslo<br />na lístku</span>
+          </p>
+        </header>
 
         <h1 class="letak-claim">
           <span class="letak-claim-zacatek">{HESLO_ZACATEK}</span>
@@ -193,11 +223,6 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
             <strong>{DATUM_VOLEB}</strong>
             pátek {HODINY_VOLEB.patek} · sobota {HODINY_VOLEB.sobota}<br />
             {VOLEBNI_MISTNOST.adresa} ({VOLEBNI_MISTNOST.vchod})
-          </p>
-
-          <p class="letak-cislo">
-            <span class="letak-cislo-znak">{CISLO_STRANY}</span>
-            <span class="letak-cislo-popis">naše číslo<br />na lístku</span>
           </p>
 
           {/* QR vede na web. Obrázek leží v repozitáři (`npm run qr`), nestahuje
@@ -285,7 +310,16 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
               <div class="clovek-text">
                 <p class="clovek-jmeno">
                   <span class="clovek-cislo">{k.data.poradi}</span>
-                  {jmenoBezTitulu(k.data.jmeno)}
+                  {/* S tituly, stejne jako na inzerci - letak je blizsi hlasovacimu
+                      listku nez karty na webu, kde se tituly odrezavaji. */}
+                  {/* Jmeno i rodne prijmeni musi byt v JEDNOM obalu. `.clovek-jmeno`
+                      je flex s mezerou mezi polozkami, takze holy text a vedle nej
+                      `<span>` byly dve polozky - a mezi „Ph.D." a „, roz." se
+                      objevila mezera. */}
+                  <span>
+                    {k.data.jmeno}
+                    {k.data.rozena && <span class="clovek-rozena">roz. {k.data.rozena}</span>}
+                  </span>
                 </p>
                 <p class="clovek-povolani">
                   {k.data.vek ? `${k.data.vek} let · ` : ''}
@@ -294,17 +328,22 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
                 </p>
 
                 {/* Slovo kandidáta má jen několik prvních lidí — u devíti by
-                    z letáku byla brožura. Text se bere z pole `citace`
+                    z letáku byla brožura. Text se bere z pole `citace`, a když
+                    je prázdné, použije se jejich medailonek z `/lide/`. Původní
                     v `src/content/kandidati/`. Dokud tam není, je vidět, že
                     chybí: vymyslet za člověka, co si myslí, nejde. */}
                 {poradi < SE_SLOVEM &&
                   (k.data.citace ? (
                     <p class="clovek-slovo">{k.data.citace}</p>
+                  ) : k.maMedailonek ? (
+                    <div class="clovek-slovo">
+                      <k.Medailonek />
+                    </div>
                   ) : (
                     <p class="clovek-slovo clovek-slovo-chybi">
                       <strong>Placeholder.</strong> Sem přijde slovo kandidáta. Doplňte ho do
-                      pole <code>citace</code> v souboru <code>{k.id}.md</code> — tenhle
-                      rámeček pak zmizí sám.
+                      pole <code>citace</code> v souboru <code>{k.id}.md</code>, nebo mu
+                      napište medailonek — tenhle rámeček pak zmizí sám.
                     </p>
                   ))}
               </div>
@@ -323,7 +362,6 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
 
         <p class="letak-pata-adresa">
           <strong>{adresaWebu}</strong> · {EMAIL}
-          {jeDraft && <span class="letak-zastupne"> (adresa je zatím zástupná)</span>}
         </p>
         <p class="letak-uplny-nazev">{NAZEV_UPLNY} · volby do {ZASTUPITELSTVO}</p>
       </section>
@@ -388,12 +426,20 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
 
   /* ---------- Titulní strana ---------- */
 
+  .letak-hlava {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 4mm;
+  }
+
   .letak-logo {
     width: 52mm;
     height: auto;
   }
 
   .letak-doplnek {
+    max-width: 62mm;
     margin: 2mm 0 0;
     font-size: 3.4mm;
     line-height: 1.35;
@@ -467,23 +513,25 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
     align-items: center;
     gap: 2.5mm;
     margin: 0;
+    /* Aby se ve flexove hlavicce nesmrsklo, kdyz je dovetek dlouhy. */
+    flex: none;
   }
 
   .letak-cislo-znak {
     display: grid;
     place-items: center;
-    width: 12mm;
-    height: 12mm;
+    width: 13mm;
+    height: 13mm;
     border-radius: 50%;
     background: var(--sedozelena);
     color: #fff;
-    font-size: 7mm;
+    font-size: 7.6mm;
     font-weight: 700;
     line-height: 1;
   }
 
   .letak-cislo-popis {
-    font-size: 2.9mm;
+    font-size: 3.1mm;
     line-height: 1.3;
     color: var(--inkoust-tlum);
   }
@@ -531,7 +579,7 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
      jinak seděl přímo na první fotce. `:last-child` tu nepomůže — za nadpisem
      stojí mřížka lidí, takže poslední není. */
   .tok-lide .letak-nadpis {
-    margin-bottom: 9mm;
+    margin-bottom: 5mm;
   }
 
   /* Oblast se rozdělit SMÍ. Původně se nesměla, jenže Doprava má 131 mm
@@ -686,6 +734,13 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
     font-weight: 650;
   }
 
+  /* Rodne prijmeni na vlastnim radku a netucne. Netucne ze stejneho duvodu
+     jako na webu a na inzerci: tucny rez odlisuje jmeno od udaju pod nim. */
+  .clovek-rozena {
+    display: block;
+    font-weight: 400;
+  }
+
   .clovek-cislo {
     flex: none;
     display: grid;
@@ -706,17 +761,27 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
     color: var(--inkoust-tlum);
   }
 
+  .clovek-slovo :global(p) {
+    margin: 0 0 1.5mm;
+  }
+
+  .clovek-slovo :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  /* Bez svischo prouzku vlevo - na prani tymu. Slovo kandidata se od udaju
+     nad nim odlisi uz odsazenim a mensim pismem. */
   .clovek-slovo {
     margin: 2mm 0 0;
-    padding-left: 3mm;
-    border-left: 0.8mm solid var(--zelena);
-    font-size: 3.3mm;
+    /* O neco mensi nez odrazky programu (3,3 mm), ale ne o moc - pri 3 mm
+       uz to na papire bylo drobne. */
+    font-size: 3.2mm;
     line-height: 1.45;
   }
 
   .clovek-slovo-chybi {
     padding: 2mm 3mm;
-    border-left-color: var(--navrh);
+    border-left: 0.8mm solid var(--navrh);
     background: rgb(160 90 0 / 0.06);
     color: var(--inkoust-tlum);
   }
@@ -746,10 +811,6 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
     margin: 0;
     padding-top: 4mm;
     border-top: 0.4mm solid var(--linka-vyrazna);
-  }
-
-  .letak-zastupne {
-    color: var(--navrh);
   }
 
   .letak-uplny-nazev {
