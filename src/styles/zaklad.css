@@ -296,6 +296,12 @@ ol {
   letter-spacing: 0.03em;
 }
 
+/* Slovo, které se nesmí zalomit — obal dosazuje `upravTypografii`
+   u slov typu „U-rampa". Proč obal, a ne pevný spojovník, je popsané tam. */
+.nedelit {
+  white-space: nowrap;
+}
+
 /* Skryté jen vizuálně — čtečky obrazovky to přečtou */
 .jen-pro-ctecky {
   position: absolute;

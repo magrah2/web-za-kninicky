@@ -2,15 +2,15 @@
 poradi: 4
 nazev: "Doprava"
 nadpis:
-shrnuti: "Bezpečná cesta do školy, zklidnění Ondrovy a nová cyklostezka."
+shrnuti: "Bezpečná cesta do spádové školy, zklidnění Ondrovy a nová cyklostezka."
 tema: Doprava
 ---
 
 - Budeme prosazovat realizaci pohodlné a bezpečné cesty pro pěší a cyklisty
   do spádové ZŠ v Bystrci v součinnosti s vlastníky pozemku a MČ Brno-Bystrc
-  vybudováním mlatové cesty, osvětlením tunelu a bezpečného průchodu oblastí
+  vybudováním mlatové cesty, osvětlení tunelu a bezpečného průchodu oblastí
   mezi tunelem a školou.
-- Prosadíme prioritní realizaci zklidnění dopravy ulice Ondrova zúžením
+- Prosadíme prioritní realizaci zklidnění dopravy v ulici Ondrova zúžením
   vozovky, výměnou obrusné vrstvy asfaltobetonu nahrazením tichým asfaltem,
   provedením protismykových úprav, instalací ochranných betonových svodidel,
   instalací nového VDZ, úpravou chodníků, lemováním hmatových prvků a úpravou

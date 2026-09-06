@@ -10,6 +10,8 @@
  */
 
 import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import { fotkaZameru } from '../lib/fotky-zameru';
 import { BARVA_TEMATU, TEMATA, temaDoAdresy } from '../lib/temata';
 import type { Tema } from '../lib/temata';
 import { naMape, jeVeVyrezu, ROZMER } from '../lib/mapa';
@@ -49,8 +51,30 @@ const zamery = vsechny.map((zamer, i) => {
 });
 
 const sObsahem = await Promise.all(
-  zamery.map(async (zamer) => ({ ...zamer, Obsah: (await render(zamer)).Content })),
+  zamery.map(async (zamer) => ({
+    ...zamer,
+    Obsah: (await render(zamer)).Content,
+    foto: fotkaZameru(zamer.id),
+  })),
 );
+
+/*
+ * Fotka bez popisku shodí sestavení. Je to záměr, stejný jako u bodu mimo
+ * výřez: chyba se má ukázat nám, ne návštěvníkovi. Bez popisku je fotka
+ * pro čtečku obrazovky prázdné místo a pro vidoucího tvrzení, které nikdo
+ * nenapsal — vedle volebního slibu se fotka čte jako „takhle to tady
+ * vypadá".
+ */
+for (const zamer of sObsahem) {
+  if (zamer.foto && !zamer.data.foto_popis) {
+    throw new Error(
+      `Zamer "${zamer.data.nazev}" (${zamer.id}) ma fotku, ale nema ` +
+        `\`foto_popis\`. Doplnte popisek do ` +
+        `src/content/zamery/${zamer.id}.md - patri do nej i to, ` +
+        'odkud fotka je, pokud neni nase.',
+    );
+  }
+}
 
 /** Nabízí se jen to, co je na mapě skutečně zastoupené. Pořadí drží podle
     `TEMATA`, aby filtry neskákaly podle toho, který bod přibyl první. */
@@ -188,6 +212,19 @@ const jsouNavrhy = zamery.some((z) => z.data.stav === 'navrh');
                 </summary>
                 <div class="zamer-text">
                   <zamer.Obsah />
+                  {zamer.foto && (
+                    <figure class="zamer-foto">
+                      <Image
+                        src={zamer.foto}
+                        alt={zamer.data.foto_popis!}
+                        widths={[320, 540]}
+                        sizes="(max-width: 900px) 92vw, 320px"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <figcaption>{zamer.data.foto_popis}</figcaption>
+                    </figure>
+                  )}
                 </div>
               </details>
             </li>
@@ -642,6 +679,32 @@ const jsouNavrhy = zamery.some((z) => z.data.stav === 'navrh');
     border-radius: 0;
     color: #e0a45c;
     font-size: var(--text-drobny);
+  }
+
+  /* Fotka v rozbaleném bodu. Leží na tmavém pruhu, takže popisek musí být
+     ve světlé tlumené barvě — `--inkoust-tlum` by na něm zmizel. */
+  .zamer-foto {
+    margin: 0.9rem 0 0;
+  }
+
+  /* Bez `max-height` a `object-fit` — fotka se ukazuje celá. Ořez na pevnou
+     výšku by u fotky na výšku uřízl horní i dolní část a nikdo by nepoznal,
+     co na ní chybí.
+
+     Užší než sloupec textu, zarovnaná doleva: fotka na výšku přes celou
+     šířku panelu je vysoká přes půl obrazovky a odsune text pod sebe.
+     Mezera vpravo ji zároveň odliší od textu, který ji obklopuje. */
+  .zamer-foto img {
+    width: 94%;
+    height: auto;
+    border-radius: var(--radius);
+  }
+
+  .zamer-foto figcaption {
+    margin-top: 0.4rem;
+    font-size: var(--text-drobny);
+    line-height: 1.4;
+    color: var(--na-noci-tlum);
   }
 
   .zamer-text {

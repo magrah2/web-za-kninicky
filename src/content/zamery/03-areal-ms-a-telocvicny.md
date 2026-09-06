@@ -11,5 +11,6 @@ Po vybudování nového vstupu do ZOO a MŠ bude možné v areálu vybudovat obe
 úřad. Půjde o velmi komplikovaný projekt, který bude mít návaznost na přilehlý
 park, hřiště a tělocvičnu.
 
-Budeme iniciovat provedení návrhu celého areálu a případnou etapizaci, aby
-bylo možné provést dílčí rekonstrukci hřiště a parku v předstihu.
+Budeme iniciovat zpracování návrhu celého areálu a zvážíme jeho případnou
+etapizaci, aby bylo možné dílčí rekonstrukci hřiště a parku provést
+v předstihu.

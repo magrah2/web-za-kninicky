@@ -9,9 +9,9 @@ tema: Sport a rekreace
 - Zajistíme výstavbu víceúčelového hřiště (nohejbal, volejbal, tenis)
   v blízkosti dětského hřiště Dolní Louky s cílem zlepšit další možnosti
   sportovního vyžití. Součástí tohoto projektu bude i vybudování
-  bezbariérové toalety a zastřešeného posezení s grilem. Pro teenagery
-  bychom rádi vybudovali pumptrack, workoutové hřiště, menší skatepark
-  (U-rampa).
+  bezbariérové toalety s přebalovacím pultem a zastřešeného posezení
+  s grilem. Pro teenagery bychom rádi vybudovali pumptrack, workoutové
+  hřiště, menší skatepark (U-rampa).
 - Naší městskou částí nám každodenně protéká mezi prsty potenciál řeky jako
   místa pro odpočinek a relaxaci. Chceme to změnit – vybudujeme pohodlné
   přístupy k řece a zpřístupníme ji pro odpočinkové účely, například formou

@@ -19,5 +19,4 @@ i divadelní představení pro děti.
 Zároveň zde chceme veřejnosti nabídnout přístup k internetu a možnost využít
 tiskárnu a kopírku.
 
-Ve stejném domě budeme iniciovat výstavbu obecních bytů městskou částí,
-v souladu s územním plánem města Brna.
+Ve stejném domě budeme iniciovat výstavbu obecních bytů městskou částí.

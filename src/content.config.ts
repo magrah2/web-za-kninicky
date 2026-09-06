@@ -83,6 +83,22 @@ const zamery = defineCollection({
      * Jakmile text potvrdíte, přepište na `overeno` a značka zmizí.
      */
     stav: z.enum(['navrh', 'overeno']).default('navrh'),
+    /**
+     * Popisek fotky. Samotná fotka se sem nepíše — stačí ji uložit do
+     * `src/assets/zamery/` pod stejným názvem, jaký má tenhle soubor
+     * (viz `src/lib/fotky-zameru.ts`).
+     *
+     * Popisek je POVINNÝ všude, kde fotka je, a sestavení to hlídá
+     * (MapaZameru.astro). Jsou pro to dva důvody a oba jsou vážné:
+     *
+     *  – Fotka bez popisku je pro čtečku obrazovky prázdné místo.
+     *  – Na volebním webu se fotka vedle slibu čte jako „takhle to tady
+     *    vypadá" nebo „tohle jsme postavili". U ilustrační fotky odjinud
+     *    to musí být napsané, ne domyšlené.
+     *
+     * Patří sem i zdroj a licence, pokud fotka není naše.
+     */
+    foto_popis: z.string().nullish(),
   }),
 });
 

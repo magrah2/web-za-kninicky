@@ -17,8 +17,8 @@ tema: Komunikace
   dopravy MMB, Odborem majetkovým MMB a s kanceláří architekta města (KAM)
   na efektivním využití pozemku bývalého areálu VUT a při přípravě nových
   investičních záměrů na území MČ Brno-Kníničky.
-- Při přípravě investičních záměrů budeme spolupracovat s odborníky a budeme
-  navržená řešení komunikovat a vysvětlovat občanům.
+- Při přípravě investičních záměrů budeme spolupracovat s odborníky
+  a navržená řešení komunikovat a vysvětlovat občanům.
 - Chceme posílit komunikaci s občany přes digitální média – vytvoříme
   srozumitelný a uživatelsky přívětivý web a posílíme naši přítomnost
   na sociálních sítích, kde chceme s občany komunikovat průběžně

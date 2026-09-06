@@ -150,7 +150,10 @@ const prvni = kandidati.slice(0, 6);
       <p class="nadtitulek">Náš program</p>
       <h2 class="program-nadpis">Co chceme v Kníničkách změnit</h2>
 
-      <div class="program-mrizka">
+      {/* Počet sloupců se řídí počtem oblastí. Napsaný v CSS natvrdo by po
+          přidání šesté oblasti nechal jednu dlaždici osiřelou na druhém
+          řádku — přesně to se dělo s pěti oblastmi ve čtyřech sloupcích. */}
+      <div class="program-mrizka" style={`--oblasti: ${programSObsahem.length}`}>
         {
           programSObsahem.map((oblast) => (
             <a
@@ -487,16 +490,27 @@ const prvni = kandidati.slice(0, 6);
     }
   }
 
+  /* Na počítači stojí všechny oblasti v jedné řadě — sloupce jsou proto
+     užší a dlaždice vyšší. `minmax(0, 1fr)` je tu podstatné: samotné `1fr`
+     znamená minimum `auto`, takže by nejdelší název sloupec rozšířil
+     a řada by přetekla přes okraj pruhu. */
   @media (min-width: 1000px) {
     .program-mrizka {
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(var(--oblasti), minmax(0, 1fr));
+    }
+
+    .dlazdice {
+      min-height: 13rem;
     }
   }
 
   /* Dlaždice sama nic nerozbaluje — jen odkazuje na svůj panel níž.
      Díky tomu se nikdy nemění výška mřížky, ať je otevřené cokoliv. */
   .dlazdice {
-    display: block;
+    /* Sloupec, aby šlo shrnutí odsunout k dolní hraně. Ve vyšší dlaždici by
+       jinak viselo hned pod názvem a pod ním zbyla prázdná plocha. */
+    display: flex;
+    flex-direction: column;
     background: var(--plocha);
     border: 1px solid var(--linka);
     border-radius: var(--radius);
@@ -535,6 +549,10 @@ const prvni = kandidati.slice(0, 6);
 
   .dlazdice-nazev {
     margin-right: auto;
+    /* Bez tohohle má flexová položka minimum `auto`, tedy šířku nejdelšího
+       slova, a to slovo pak vyleze z dlaždice ven. `overflow-wrap` tu
+       schválně není: rozsekal „Komunikace" na „Komunikac / e". */
+    min-width: 0;
     font-size: var(--text-nadpis-3);
     font-weight: 600;
     letter-spacing: -0.015em;
@@ -554,9 +572,41 @@ const prvni = kandidati.slice(0, 6);
     transform: translateX(0);
   }
 
+  /* Doladění jednořadého rozvržení. Stojí až tady, za základními pravidly
+     dlaždice: `@media` nezvyšuje specificitu, takže dřív v souboru by ho
+     `.dlazdice-nadpis { display: flex }` níž beze slova přebilo. */
+  @media (min-width: 1000px) {
+    /* Ikona jde nad název. Vedle něj ukrajovala ze sloupce 33 px a název je
+       v jedné řadě potřebuje: při plné velikosti se na laptopu (kolem
+       1000 px) samotné slovo „Komunikace" do sloupce nevešlo a vylezlo přes
+       okraj dlaždice. Jedno dlouhé slovo se nemá kde zalomit, takže mřížka
+       o tom mlčí a pozná se to až na obrázku.
+
+       Ikona přes celou šířku v prvním řádku, pod ní název a vedle něj šipka. */
+    .dlazdice-nadpis {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: start;
+    }
+
+    .dlazdice :global(.dlazdice-ikona) {
+      grid-column: 1 / -1;
+      margin-top: 0;
+      margin-bottom: 0.55rem;
+    }
+
+    /* A i tak se název drží zpátky — na 1000 px je sloupec jen 181 px. */
+    .dlazdice-nazev {
+      font-size: clamp(1.05rem, 1.7vw, var(--text-nadpis-3));
+    }
+  }
+
   .dlazdice-shrnuti {
     display: block;
-    margin-top: 0.45rem;
+    /* `auto` odsune shrnutí dolů, `padding` drží odstup od názvu i tam,
+       kde dlaždice na výšku nezbývá (mobil, dvousloupcová mřížka). */
+    margin-top: auto;
+    padding-top: 0.45rem;
     font-size: var(--text-maly);
     line-height: 1.5;
     color: var(--inkoust-tlum);
