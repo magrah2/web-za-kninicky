@@ -24,6 +24,16 @@ const kandidati = defineCollection({
     vek: z.number().int().optional(),
     povolani: z.string(),
     prislusnost: z.string().optional(),
+    /**
+     * Rodné příjmení, bez slova „roz.". Vypisuje se jen tam, kde má pomoct
+     * poznat člověka podle jména z dřívějška — dnes na inzerci ve zpravodaji.
+     *
+     * Je to samostatné pole, ne součást `jmeno`, schválně: `jmeno` se
+     * vypisuje i na zkušebním hlasovacím lístku a ten má ukazovat přesně to,
+     * co volič najde v obálce. Kdyby se rodné příjmení přidalo do `jmeno`,
+     * změnilo by se i tam.
+     */
+    rozena: z.string().nullish(),
     /** Jedna věta, která se na medailonku vytáhne velkým písmem. */
     citace: z.string().nullish(),
     /** Zapojení mimo práci — spolky, sdružení. */

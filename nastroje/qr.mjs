@@ -24,7 +24,13 @@ const KOREN = path.resolve(import.meta.dirname, '..');
 const CIL = 'public/qr-web.svg';
 
 const naostro = process.env.NAOSTRO === '1';
-const adresa = naostro ? 'https://zakninicky.cz/' : 'https://magrah2.github.io/web-za-kninicky/';
+/*
+ * S "www". Tym ho tak zadal a je to ta adresa, kterou lide znaji z letaku
+ * a vizitek. Musi ale skutecne fungovat: kdyz web pobezi jen na
+ * zakninicky.cz bez "www", musi z "www" vest presmerovani - jinak vytisteny
+ * QR kod skonci na chybove strance a opravit uz to nepujde.
+ */
+const adresa = naostro ? 'https://www.zakninicky.cz/' : 'https://magrah2.github.io/web-za-kninicky/';
 
 /*
  * Uroven oprav chyb `M` (asi 15 %) je bezny kompromis pro tisk: vyssi uroven

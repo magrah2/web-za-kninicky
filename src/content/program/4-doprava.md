@@ -2,7 +2,7 @@
 poradi: 4
 nazev: "Doprava"
 nadpis:
-shrnuti: "Bezpečná cesta do spádové školy, zklidnění Ondrovy a nová cyklostezka."
+shrnuti: "Bezpečná cesta do spádové školy, zklidnění ulice Ondrova a nová cyklostezka."
 tema: Doprava
 ---
 

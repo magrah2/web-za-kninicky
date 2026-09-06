@@ -1,0 +1,25 @@
+---
+/**
+ * Obal, který na svůj obsah pustí české typografické úpravy.
+ *
+ * Používá se na dvou místech a obě jsou důležitá:
+ *
+ *  – `Zaklad.astro` jím obaluje celý obsah stránky, takže úprava platí
+ *    pro celý web včetně textů z Markdownu.
+ *  – `letak.astro` jde mimo `Zaklad.astro` (nemá mít hlavičku ani patičku),
+ *    takže by o úpravu jinak přišel — a leták je právě to místo, kde se
+ *    předložka na konci řádku vytiskne na papír a už se neopraví.
+ *
+ * `Astro.slots.render` vrátí obsah jako HTML řetězec. Skripty komponent
+ * Astro vytahuje mimo obsah, takže se do řetězce nedostanou a úprava se jich
+ * nemůže dotknout; `upravTypografii` navíc obsah `<script>`, `<style>`,
+ * `<code>` a `<pre>` přeskakuje sama.
+ *
+ * Komponenta záměrně nekreslí žádnou vlastní značku — `Fragment` vloží
+ * obsah tam, kde stojí, takže se dá vložit i doprostřed mřížky.
+ */
+
+import { upravTypografii } from '../lib/typografie';
+---
+
+<Fragment set:html={upravTypografii(await Astro.slots.render('default'))} />

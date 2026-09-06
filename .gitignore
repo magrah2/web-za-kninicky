@@ -32,6 +32,12 @@ pnpm-debug.log*
 # nastaveni editoru JetBrains
 .idea/
 
+# tiskove podklady - vyrobi je `npm run letak` a `npm run inzerce`
+# ze stranek /letak/ a /inzerce/, takze v gitu by to byla druha kopie
+# tehoz obsahu, jen zastarala
+letak.pdf
+inzerce.pdf
+
 # stazena data OpenStreetMap - mezipamet generatoru mapy
 nastroje/.mapa-data-*.json
 

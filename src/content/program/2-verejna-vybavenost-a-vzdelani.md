@@ -4,7 +4,7 @@ poradi: 2
 # nese `nadpis`. Přesně na tohle je ta dvojice polí.
 nazev: "Vybavenost a vzdělání"
 nadpis: "Veřejná vybavenost a vzdělání"
-shrnuti: "Nová mateřská škola, dětská skupina a knihovna jako komunitní prostor."
+shrnuti: "Nová mateřská škola, dětská skupina, knihovna jako komunitní prostor a obchod."
 tema: Veřejná vybavenost
 ---
 

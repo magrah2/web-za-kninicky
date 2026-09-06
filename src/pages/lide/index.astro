@@ -11,9 +11,12 @@ const kandidati = (await getCollection('kandidati')).sort((a, b) => a.data.porad
 const sObsahem = await Promise.all(
   kandidati.map(async (clovek) => {
     const { Content } = await render(clovek);
-    // Vygenerovaná šablona obsahuje jen HTML komentář s pokyny. Než ji někdo
-    // vyplní, je tělo prakticky prázdné — a prázdný panel vypadá rozbitě,
-    // takže se místo něj ukáže poctivá poznámka.
+    // Vygenerovaná šablona obsahuje jen HTML komentář s pokyny, takže tělo
+    // vypadá vyplněné, i když v něm nic není. Bez tohohle by se u lidí bez
+    // medailonku vykreslil prázdný odstavec s odsazením.
+    //
+    // Dřív se místo prázdna psalo „Medailonek zatím doplňujeme."; na přání
+    // týmu je pryč. Panel bez textu ukáže jméno, věk a povolání a nic víc.
     const telo = (clovek.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim();
     return { ...clovek, Obsah: Content, maTelo: telo.length > 0 };
   }),
@@ -40,6 +43,7 @@ const sObsahem = await Promise.all(
           <KartaKandidata
             poradi={clovek.data.poradi}
             jmeno={clovek.data.jmeno}
+            rozena={clovek.data.rozena}
             vek={clovek.data.vek}
             povolani={clovek.data.povolani}
             foto={fotkaKandidata(clovek.id)}
@@ -77,7 +81,12 @@ const sObsahem = await Promise.all(
                 </div>
 
                 <div class="medailonek-text">
-                  <h2 id={`jmeno-${clovek.data.poradi}`}>{clovek.data.jmeno}</h2>
+                  <h2 id={`jmeno-${clovek.data.poradi}`}>
+                    {clovek.data.jmeno}
+                    {clovek.data.rozena && (
+                      <span class="medailonek-rozena">, roz. {clovek.data.rozena}</span>
+                    )}
+                  </h2>
 
                   <p class="medailonek-meta">
                     {clovek.data.vek ? `${clovek.data.vek} let · ` : ''}{clovek.data.povolani}
@@ -90,15 +99,11 @@ const sObsahem = await Promise.all(
 
                   {clovek.data.citace && <blockquote class="medailonek-citace">{clovek.data.citace}</blockquote>}
 
-                  {
-                    clovek.maTelo ? (
-                      <div class="medailonek-telo">
-                        <clovek.Obsah />
-                      </div>
-                    ) : (
-                      <p class="medailonek-chybi">Medailonek zatím doplňujeme.</p>
-                    )
-                  }
+                  {clovek.maTelo && (
+                    <div class="medailonek-telo">
+                      <clovek.Obsah />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -270,6 +275,11 @@ const sObsahem = await Promise.all(
     padding-right: 2.5rem;
   }
 
+  /* Netučně, ze stejného důvodu jako na kartě — viz `.karta-rozena`. */
+  .medailonek-rozena {
+    font-weight: 400;
+  }
+
   .medailonek-meta {
     margin: 0.55rem 0 0;
     font-size: var(--text-maly);
@@ -300,13 +310,6 @@ const sObsahem = await Promise.all(
 
   .medailonek-telo:empty {
     display: none;
-  }
-
-  .medailonek-chybi {
-    margin: 1.25rem 0 0;
-    font-size: var(--text-maly);
-    font-style: italic;
-    color: var(--inkoust-tlum);
   }
 
   .medailonek-sousede {

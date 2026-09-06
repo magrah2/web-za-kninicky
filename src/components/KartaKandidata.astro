@@ -13,12 +13,14 @@ import { odkaz, jmenoBezTitulu } from '../lib/odkaz';
 interface Props {
   poradi: number;
   jmeno: string;
+  /** Rodné příjmení bez slova „roz." — vypíše se za jménem, netučně. */
+  rozena?: string | null;
   vek?: number;
   povolani: string;
   foto?: ImageMetadata;
 }
 
-const { poradi, jmeno, vek, povolani, foto } = Astro.props;
+const { poradi, jmeno, rozena, vek, povolani, foto } = Astro.props;
 
 const cil = `${odkaz('/lide/')}#medailonek-${poradi}`;
 ---
@@ -33,7 +35,10 @@ const cil = `${odkaz('/lide/')}#medailonek-${poradi}`;
     </div>
 
     <span class="karta-text">
-      <span class="karta-jmeno">{jmenoBezTitulu(jmeno)}</span>
+      <span class="karta-jmeno">
+        {jmenoBezTitulu(jmeno)}
+        {rozena && <span class="karta-rozena">, roz. {rozena}</span>}
+      </span>
       <span class="karta-povolani">
         {vek ? `${vek} let · ` : ''}{povolani}
       </span>
@@ -100,6 +105,13 @@ const cil = `${odkaz('/lide/')}#medailonek-${poradi}`;
     line-height: 1.3;
     letter-spacing: -0.015em;
     text-wrap: balance;
+  }
+
+  /* Rodné příjmení patří ke jménu, ale netučně: tučný řez tady odlišuje
+     jméno od věku a povolání pod ním, a kdyby se do něj počítalo i „roz.",
+     přestalo by to rozlišení dělat. */
+  .karta-rozena {
+    font-weight: 400;
   }
 
   .karta-odkaz:hover .karta-jmeno {

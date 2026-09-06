@@ -2,6 +2,9 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
+/** Stránky, které existují jen kvůli tisku. Viz `filter` u sitemapy níž. */
+const TISKOVE_PODKLADY = ['/letak/', '/inzerce/'];
+
 // Draft běží na GitHub Pages v podsložce, ostrý web na vlastní doméně v kořeni.
 // Přepíná se proměnnou prostředí, aby se nemuselo sahat do odkazů.
 //
@@ -17,9 +20,14 @@ export default defineConfig({
   site: naostro ? 'https://zakninicky.cz' : 'https://magrah2.github.io',
   base: naostro ? '/' : '/web-za-kninicky',
   trailingSlash: 'always',
-  // Leták je podklad k tisku, ne stránka pro návštěvníky — do sitemapy
-  // a tím do vyhledávačů nepatří. `noindex` má i ve své hlavičce.
-  integrations: [sitemap({ filter: (adresa) => !adresa.includes('/letak/') })],
+  // Leták a inzerce jsou podklady k tisku, ne stránky pro návštěvníky —
+  // do sitemapy a tím do vyhledávačů nepatří. `noindex` mají i ve svých
+  // hlavičkách.
+  integrations: [
+    sitemap({
+      filter: (adresa) => !TISKOVE_PODKLADY.some((cesta) => adresa.includes(cesta)),
+    }),
+  ],
   build: {
     // Každá stránka jako složka s index.html — hezké adresy bez .html
     format: 'directory',

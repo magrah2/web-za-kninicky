@@ -18,7 +18,9 @@
     "zmensit-fotky": "node nastroje/zmensit-fotky.mjs",
     "logo": "node nastroje/logo.mjs",
     "mapa": "node nastroje/mapa.mjs",
-    "qr": "node nastroje/qr.mjs"
+    "qr": "node nastroje/qr.mjs",
+    "letak": "node nastroje/tisk.mjs letak",
+    "inzerce": "node nastroje/tisk.mjs inzerce"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",

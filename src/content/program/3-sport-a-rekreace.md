@@ -2,7 +2,7 @@
 poradi: 3
 nazev: "Sport a rekreace"
 nadpis:
-shrnuti: "Víceúčelové hřiště, přístupy k řece a areál u Sokolského koupaliště."
+shrnuti: "Víceúčelové hřiště, pumptrack, přístupy k řece a areál u Sokolského koupaliště."
 tema: Sport a rekreace
 ---
 

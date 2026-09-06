@@ -1,26 +1,40 @@
 ---
 /**
- * Volební leták do schránek — A5 oboustranně.
+ * Volební leták do schránek — A5, několik stran.
  *
- * Není to obrázek, ale stránka: vytiskne se z prohlížeče (Ctrl+P → formát A5,
- * bez okrajů, „Tisknout pozadí" zapnuté) nebo uloží do PDF pro tiskárnu.
+ * Není to obrázek, ale stránka: vytiskne se z prohlížeče (Ctrl+P → formát A5)
+ * nebo uloží do PDF pro tiskárnu.
  *
  * PROČ TAKHLE, a ne v grafickém programu: leták si bere obsah z týchž zdrojů
- * jako web — `strana.ts`, kolekce `program` a `kandidati`. Nemůže se s webem
- * rozejít. Když se změní datum voleb nebo přibude kandidát, změní se i leták.
- * V grafickém programu by to byla druhá kopie, která tiše zestárne.
+ * jako web — `strana.ts`, kolekce `program`, `kandidati` a `zamery`. Nemůže
+ * se s webem rozejít. Když se změní datum voleb, přibude kandidát nebo se
+ * přepíše odrážka programu, změní se i leták. V grafickém programu by to byla
+ * druhá kopie, která tiše zestárne — a zestárla by nepozorovaně, protože leták
+ * nikdo denně neotvírá.
+ *
+ * STRÁNKUJE PROHLÍŽEČ, NE MY. Titulní strana má pevnou výšku, protože je
+ * navržená. Všechno ostatní teče a láme se samo — program má přes dvacet
+ * odrážek a jejich délka se bude měnit. Kdyby se strany dělily ručně na pevnou
+ * výšku, první delší odrážka by text nechala vytéct za okraj papíru a na
+ * obrazovce by si toho nikdo nevšiml.
  *
  * Stránka záměrně nepoužívá `Zaklad.astro`: leták nemá mít hlavičku, patičku
- * ani pruh „Náhled". Tokeny a základní styly si bere sám, takže drží písmo
- * i barvy webu.
+ * ani pruh „Náhled". Tokeny si bere sám, takže drží písmo i barvy webu,
+ * a typografickou úpravu si vyžádá přes `<Typografie>` — jinak by mu jako
+ * jedinému na celém webu chyběla, a to zrovna na papíře, kde už se to
+ * neopraví.
  *
  * Do vyhledávačů nepatří — `noindex` níž a vyřazení ze sitemapy
  * v `astro.config.mjs`.
  */
 
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 import { Image } from 'astro:assets';
 import spolecnaFotka from '../assets/spolecna-fotka.jpg';
+import Portret from '../components/Portret.astro';
+import Typografie from '../components/Typografie.astro';
+import { fotkaKandidata } from '../lib/portrety';
+import { fotkaZameru } from '../lib/fotky-zameru';
 import { BARVA_TEMATU } from '../lib/temata';
 import type { Tema } from '../lib/temata';
 import {
@@ -32,25 +46,91 @@ import {
   HESLO_KONEC,
   DATUM_VOLEB,
   HODINY_VOLEB,
+  VOLEBNI_MISTNOST,
   EMAIL,
   ZASTUPITELSTVO,
 } from '../lib/strana';
-import { odkaz } from '../lib/odkaz';
-// Leták nejde přes `Zaklad.astro`, takže typografická úprava, která tam platí
-// pro celý web, se ho netýká — jednopísmenné předložky se tu lepí ručně.
-import { prilepPredlozky as typo } from '../lib/typografie';
+import { odkaz, jmenoBezTitulu } from '../lib/odkaz';
 import montserratLatin from '../pisma/montserrat-latin.woff2?url';
 import montserratLatinExt from '../pisma/montserrat-latin-ext.woff2?url';
 import '../styles/tokeny.css';
 
-const oblasti = (await getCollection('program')).sort((a, b) => a.data.poradi - b.data.poradi);
+/*
+ * Odrážky se na leták nepřepisují — vykreslí se tentýž Markdown, jaký je
+ * na `/program/`. Kdyby se opsaly, rozešly by se při první úpravě programu.
+ */
+const oblasti = await Promise.all(
+  (await getCollection('program'))
+    .sort((a, b) => a.data.poradi - b.data.poradi)
+    .map(async (o) => ({ ...o, Obsah: (await render(o)).Content })),
+);
+
 const kandidati = (await getCollection('kandidati')).sort((a, b) => a.data.poradi - b.data.poradi);
 
 /**
- * Adresa webu na letáku.
+ * Kolik lidí odshora dostane na letáku vlastní slovo — a tím i celou šířku
+ * strany. Zbytek stojí po dvou vedle sebe, aby leták nebyl o dvě strany delší
+ * jen kvůli prázdnému místu vedle jmen.
+ *
+ * Je to jedno číslo pro obojí schválně: kdyby se počet lidí se slovem a počet
+ * lidí přes celou šířku nastavoval zvlášť, dřív nebo později by se to
+ * rozešlo — a poznalo by se to až na vytištěném letáku, kde by někomu slovo
+ * přeteklo z úzkého sloupce.
+ */
+const SE_SLOVEM = 3;
+
+/*
+ * Dvě fotky ze záměrů v mapě.
+ *
+ * Vybrané ručně podle id, ne „první dvě, které mají fotku": na letáku jde
+ * o dvojici, která má vedle sebe fungovat, a to se z pořadí souborů odvodit
+ * nedá. Když se záměr přejmenuje nebo fotka zmizí, leták to nezhroutí —
+ * dvojice se prostě zkrátí.
+ *
+ * Popisky jsou tytéž jako na webu a začínají slovem „Ilustrační". Je to
+ * podstatné: na papíře vedle volebního slibu se fotka čte jako „takhle to
+ * tady vypadá" nebo „tohle jsme postavili", a ani na jednom z těch snímků
+ * nejsou Kníničky.
+ */
+const UKAZKY = ['07-sportovni-hriste', '01-pristup-k-rece'];
+
+/**
+ * Za kterou oblastí programu dvojice fotek stojí.
+ *
+ * Obě ukazují, co slibuje Sport a rekreace — pumptrack a přístup k vodě —
+ * takže patří k ní, ne na konec programu, kde by se četly jako ilustrace
+ * k Bydlení.
+ */
+const UKAZKY_ZA = '3-sport-a-rekreace';
+
+/**
+ * Oblasti, které mají začít na nové straně.
+ *
+ * Je to sazečské rozhodnutí, ne vlastnost programu — proto to stojí tady
+ * a ne v datech oblasti. Závisí na tom, jak dlouhé jsou zrovna texty nad ní:
+ * když se program přepíše, může být zlom najednou zbytečný nebo naopak
+ * chybět jinde. Po každé větší úpravě programu se to musí znovu prohlédnout
+ * na hotovém PDF (`npm run letak`).
+ *
+ * Chvíli tu bylo `5-bydleni`. Po přesunu fotek pod Sport a rekreaci se strany
+ * rozpadly jinak a zlom začal dělat díru místo pořádku — seznam je proto
+ * prázdný. Zůstává tu, protože se to stane znovu.
+ */
+const NOVA_STRANA: string[] = [];
+
+const zamery = await getCollection('zamery');
+const ukazky = UKAZKY.map((id) => {
+  const zamer = zamery.find((z) => z.id === id);
+  const foto = fotkaZameru(id);
+  return zamer && foto ? { zamer, foto } : null;
+}).filter((u) => u !== null);
+
+/**
+ * Adresa webu na letáku a v QR kódu.
  *
  * Dokud je doména zástupná, musí to být na letáku vidět — vytištěný leták
- * s adresou, která nikam nevede, je horší než leták bez adresy.
+ * s adresou, která nikam nevede, je horší než leták bez adresy. Samotný QR
+ * kód vyrábí `npm run qr` do `public/qr-web.svg`; za běhu se nikam nesahá.
  */
 const jeDraft = Astro.site?.hostname !== 'zakninicky.cz';
 const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
@@ -67,100 +147,187 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
   </head>
 
   <body>
-    {/* Návod se tiskne s ničím — `@media print` ho schová. */}
-    <p class="navod">
-      <strong>{typo(`Leták k tisku.`)}</strong> {typo(`Ctrl+P → formát`)} <strong>A5</strong>{typo(`, měřítko 100 %, okraje`)} <strong>{typo(`žádné`)}</strong> {typo(`a zapnuté`)}
-      <strong>{typo(`„Tisknout pozadí"`)}</strong>{typo(`. Dvě strany = přední a zadní.
-      Pro tisk doma se dva A5 vejdou na jeden list A4.`)}
-    </p>
-
-    {/* ---------- Přední strana ---------- */}
-    <div class="stranka strana-predni">
-      {/* Logo a pod ním zbytek úplného názvu — stejná dvojice jako v hlavičce
-          webu, jen pod sebou: na šířku A5 se vedle sebe nevejdou. */}
-      <img class="letak-logo" src={odkaz('/logo.svg')} alt={NAZEV} width="1073" height="155" />
-      <p class="letak-doplnek">{NAZEV_DOPLNEK}</p>
-
-      <h1 class="letak-claim">
-        <span class="letak-claim-zacatek">{HESLO_ZACATEK}</span>
-        <span class="letak-claim-konec">{HESLO_KONEC}</span>
-      </h1>
-
-      <Image
-        class="letak-foto"
-        src={spolecnaFotka}
-        alt={`Kandidáti sdružení ${NAZEV}`}
-        widths={[900]}
-        sizes="124mm"
-      />
-
-      <p class="letak-uvod">
-        {typo(`Jsme sdružení nezávislých kandidátů, kterým leží na srdci, aby se Kníničky
-        staly místem přívětivým pro všechny — bez ohledu na věk, zájmy nebo to,
-        jak dlouho tu žijí.`)}
+    <Typografie>
+      {/* Návod se sám netiskne — `@media print` ho schová. */}
+      <p class="navod">
+        <strong>Leták k tisku.</strong> Ctrl+P → formát <strong>A5</strong>, měřítko 100 %,
+        zapnuté <strong>„Tisknout pozadí"</strong>. Kde přesně padnou zlomy stran, ukáže
+        náhled tisku — na obrazovce text teče v jednom sloupci pod sebou.
       </p>
 
-      <div class="letak-pata-predni">
-        <p class="letak-volby">
-          <strong>{DATUM_VOLEB}</strong><br />
-          pátek {HODINY_VOLEB.patek} · sobota {HODINY_VOLEB.sobota}
+      {/* ---------- Titulní strana ---------- */}
+      <div class="stranka">
+        <img class="letak-logo" src={odkaz('/logo.svg')} alt={NAZEV} width="1073" height="155" />
+        <p class="letak-doplnek">{NAZEV_DOPLNEK}</p>
+
+        <h1 class="letak-claim">
+          <span class="letak-claim-zacatek">{HESLO_ZACATEK}</span>
+          <span class="letak-claim-konec">{HESLO_KONEC}</span>
+        </h1>
+
+        {/* `eager` u všech obrázků na letáku, i u těch dole na poslední straně.
+            Astro dává `<Image>` ve výchozím stavu `loading="lazy"` a to je pro
+            web správně — jenže tisk nikdo neroluje. Prohlížeč pošle do tiskárny
+            to, co má načtené, takže z líných obrázků vyjdou prázdná místa
+            a na obrazovce se to nepozná. */}
+        {/* Rozliseni pro tisk: 124 mm na 300 dpi je 1465 px, pri puvodnich
+            900 px z toho bylo 184 dpi. Jedina hodnota ve `widths` schvalne -
+            z vic kandidatu si prohlizec pri tisku vybere ten maly. */}
+        <Image
+          class="letak-foto"
+          src={spolecnaFotka}
+          alt={`Kandidáti sdružení ${NAZEV}`}
+          widths={[1600]}
+          sizes="124mm"
+          quality={90}
+          loading="eager"
+        />
+
+        <p class="letak-uvod">
+          Jsme sdružení nezávislých kandidátů, kterým leží na srdci, aby se Kníničky staly
+          místem přívětivým pro všechny — bez ohledu na věk, zájmy nebo to, jak dlouho tu žijí.
         </p>
-        <p class="letak-cislo">
-          <span class="letak-cislo-znak">{CISLO_STRANY}</span>
-          <span class="letak-cislo-popis">naše číslo<br />na lístku</span>
-        </p>
+
+        <div class="letak-pata-predni">
+          <p class="letak-volby">
+            <strong>{DATUM_VOLEB}</strong>
+            pátek {HODINY_VOLEB.patek} · sobota {HODINY_VOLEB.sobota}<br />
+            {VOLEBNI_MISTNOST.adresa} ({VOLEBNI_MISTNOST.vchod})
+          </p>
+
+          <p class="letak-cislo">
+            <span class="letak-cislo-znak">{CISLO_STRANY}</span>
+            <span class="letak-cislo-popis">naše číslo<br />na lístku</span>
+          </p>
+
+          {/* QR vede na web. Obrázek leží v repozitáři (`npm run qr`), nestahuje
+              se — leták ani web nesmí posílat požadavky na cizí servery. */}
+          <p class="letak-qr">
+            <img
+              src={odkaz('/qr-web.svg')}
+              alt={`QR kód s adresou ${adresaWebu}`}
+              width="200"
+              height="200"
+            />
+            <span>{adresaWebu}</span>
+          </p>
+        </div>
       </div>
-    </div>
 
-    {/* ---------- Zadní strana ---------- */}
-    <div class="stranka strana-zadni">
-      <p class="letak-nadtitulek">Naše priority pro Kníničky</p>
+      {/* ---------- Program ---------- */}
+      <section class="tok tok-program">
+        <h2 class="letak-nadpis">Naše priority pro Kníničky</h2>
+        <p class="letak-podnadpis">
+          Pět oblastí, ve kterých máme jasnou představu, kam by se Kníničky měly posunout.
+        </p>
 
-      <ol class="letak-oblasti">
         {
           oblasti.map((oblast) => (
-            <li style={`--barva: ${BARVA_TEMATU[oblast.data.tema as Tema]}`}>
-              <span class="letak-oblast-cislo">{String(oblast.data.poradi).padStart(2, '0')}</span>
-              <span>
-                <strong>{typo(oblast.data.nadpis ?? oblast.data.nazev)}</strong>
-                <span class="letak-oblast-shrnuti">{typo(oblast.data.shrnuti)}</span>
-              </span>
-            </li>
+            <article
+              class:list={['oblast', NOVA_STRANA.includes(oblast.id) && 'oblast-nova-strana']}
+              style={`--barva: ${BARVA_TEMATU[oblast.data.tema as Tema]}`}
+            >
+              <h3 class="oblast-nadpis">
+                <span class="oblast-cislo">{String(oblast.data.poradi).padStart(2, '0')}</span>
+                {oblast.data.nadpis ?? oblast.data.nazev}
+              </h3>
+              <div class="oblast-body">
+                <oblast.Obsah />
+              </div>
+
+              {oblast.id === UKAZKY_ZA && ukazky.length > 0 && (
+                <div class="ukazky">
+                  {ukazky.map(({ zamer, foto }) => (
+                    <figure class="ukazka">
+                      {/* 56 mm na 300 dpi je 661 px; 560 px davalo 254 dpi. */}
+                      <Image
+                        src={foto}
+                        alt={zamer.data.foto_popis!}
+                        widths={[700]}
+                        sizes="56mm"
+                        quality={90}
+                        loading="eager"
+                      />
+                      <figcaption>{zamer.data.foto_popis}</figcaption>
+                    </figure>
+                  ))}
+                </div>
+              )}
+            </article>
           ))
         }
-      </ol>
+      </section>
 
-      <p class="letak-nadtitulek">Kdo kandiduje</p>
-      {/* Jen jména, bez portrétů: fotky by na zadní straně sebraly místo
-          programu a tváře jsou na společné fotce vepředu. */}
-      <ol class="letak-lide">
+      {/* ---------- Kandidáti ---------- */}
+      <section class="tok tok-lide">
+        <h2 class="letak-nadpis">Kdo kandiduje</h2>
+
+        {/* Mřížka o dvou sloupcích. První tři lidé přes oba (`.clovek` bez
+            `.clovek-uzky`), protože mají slovo kandidáta a v půlce strany by
+            se z něj stal úzký proužek; zbytek po dvou vedle sebe, což ušetří
+            skoro celou stranu. */}
+        <div class="lide-mrizka">
         {
-          kandidati.map((k) => (
-            <li>
-              <span class="letak-lide-cislo">{k.data.poradi}</span>
-              <span class="letak-lide-jmeno">{typo(k.data.jmeno)}</span>
-              <span class="letak-lide-povolani">{typo(k.data.povolani)}</span>
-            </li>
+          kandidati.map((k, poradi) => (
+            <article class:list={['clovek', poradi >= SE_SLOVEM && 'clovek-uzky']}>
+              {/* Portrét je v obalu, ne oblečený vlastní třídou. Astro styly
+                  scopuje: `.clovek-portret` napsaná tady by dostala scope
+                  téhle stránky, kdežto ten `div` vykresluje komponenta
+                  `Portret` a nese scope její. Pravidlo by se nechytlo —
+                  a nepoznalo by se to jinak než na rozměru fotky. */}
+              <div class="clovek-portret">
+                {/* `detail`, ne `karta`: jen ta velikost se v `Portret.astro`
+                    načítá `eager` a jen ta sáhne po větším zdroji. Na kartě
+                    webu jsou portréty líné schválně, na papíře by z nich
+                    zbyla prázdná políčka. */}
+                <Portret foto={fotkaKandidata(k.id)} jmeno={k.data.jmeno} velikost="detail" />
+              </div>
+              <div class="clovek-text">
+                <p class="clovek-jmeno">
+                  <span class="clovek-cislo">{k.data.poradi}</span>
+                  {jmenoBezTitulu(k.data.jmeno)}
+                </p>
+                <p class="clovek-povolani">
+                  {k.data.vek ? `${k.data.vek} let · ` : ''}
+                  {k.data.povolani}
+                  {k.data.prislusnost ? ` · ${k.data.prislusnost}` : ''}
+                </p>
+
+                {/* Slovo kandidáta má jen několik prvních lidí — u devíti by
+                    z letáku byla brožura. Text se bere z pole `citace`
+                    v `src/content/kandidati/`. Dokud tam není, je vidět, že
+                    chybí: vymyslet za člověka, co si myslí, nejde. */}
+                {poradi < SE_SLOVEM &&
+                  (k.data.citace ? (
+                    <p class="clovek-slovo">{k.data.citace}</p>
+                  ) : (
+                    <p class="clovek-slovo clovek-slovo-chybi">
+                      <strong>Placeholder.</strong> Sem přijde slovo kandidáta. Doplňte ho do
+                      pole <code>citace</code> v souboru <code>{k.id}.md</code> — tenhle
+                      rámeček pak zmizí sám.
+                    </p>
+                  ))}
+              </div>
+            </article>
           ))
         }
-      </ol>
+        </div>
+      </section>
 
-      {/* Výzva z programové oblasti Komunikace, zkrácená. Zaplňuje místo,
-          které pod jmény zbývalo — a je to jediná věta na letáku, která
-          po člověku něco chce. */}
-      <p class="letak-vyzva">
-        {typo(`Nenechávejte to jen na nás. Pokud víte, že můžete něčím přispět — ať už
-        profesí, dobrovolnictvím, nebo jen dobrým nápadem — ozvěte se nám.`)}
-      </p>
+      {/* ---------- Patička letáku ---------- */}
+      <section class="tok tok-pata">
+        <p class="letak-vyzva">
+          Nenechávejte to jen na nás. Pokud víte, že můžete něčím přispět — ať už profesí,
+          dobrovolnictvím, nebo jen dobrým nápadem — ozvěte se nám.
+        </p>
 
-      <div class="letak-pata-zadni">
-        <p>
+        <p class="letak-pata-adresa">
           <strong>{adresaWebu}</strong> · {EMAIL}
           {jeDraft && <span class="letak-zastupne"> (adresa je zatím zástupná)</span>}
         </p>
-        <p class="letak-uplny-nazev">{typo(`${NAZEV_UPLNY} · volby do ${ZASTUPITELSTVO}`)}</p>
-      </div>
-    </div>
+        <p class="letak-uplny-nazev">{NAZEV_UPLNY} · volby do {ZASTUPITELSTVO}</p>
+      </section>
+    </Typografie>
   </body>
 </html>
 
@@ -169,13 +336,17 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
      v rem, změna základní velikosti písma v prohlížeči by rozhodila sazbu
      do tiskárny. */
 
+  /* Okraj papíru řeší `@page`, ne odsazení prvků. Díky tomu ho mají stejný
+     všechny strany — i ty, které vzniknou samy zalomením dlouhého programu
+     a o kterých při psaní nevíme. */
   @page {
     size: A5;
-    margin: 0;
+    margin: 12mm;
   }
 
   body {
     margin: 0;
+    padding: 0 0 10mm;
     background: #dfe3df;
     font-family: 'Montserrat', system-ui, sans-serif;
     color: var(--inkoust);
@@ -186,7 +357,7 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
   }
 
   .navod {
-    max-width: 148mm;
+    width: 124mm;
     margin: 8mm auto;
     padding: 4mm 5mm;
     border-left: 3px solid var(--navrh);
@@ -195,24 +366,30 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
     line-height: 1.5;
   }
 
-  .stranka {
-    position: relative;
-    width: 148mm;
-    height: 210mm;
+  /* Šířka 124 mm = A5 bez okrajů ze `@page`. Sloupec na obrazovce tím
+     odpovídá tomu, co vyjde z tiskárny, i když se na ní strany dělí jinde. */
+  .stranka,
+  .tok {
+    width: 124mm;
     margin: 0 auto 8mm;
-    padding: 11mm;
-    box-sizing: border-box;
+    padding: 12mm;
+    box-sizing: content-box;
+    background: var(--papir);
+    box-shadow: 0 2mm 8mm rgb(0 0 0 / 0.15);
+  }
+
+  /* Jediná strana s pevnou výškou — je navržená, ne tekoucí. */
+  .stranka {
+    height: 186mm;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background: var(--papir);
-    box-shadow: 0 2mm 8mm rgb(0 0 0 / 0.18);
   }
 
-  /* ---------- Přední strana ---------- */
+  /* ---------- Titulní strana ---------- */
 
   .letak-logo {
-    width: 46mm;
+    width: 52mm;
     height: auto;
   }
 
@@ -237,12 +414,12 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
   }
 
   .letak-claim-zacatek {
-    font-size: 16mm;
+    font-size: 13mm;
   }
 
   .letak-claim-konec {
     margin-top: 1mm;
-    font-size: 8.4mm;
+    font-size: 7mm;
     font-weight: 600;
     letter-spacing: -0.028em;
   }
@@ -250,12 +427,12 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
   .letak-foto {
     width: 100%;
     height: auto;
-    margin-top: 6mm;
+    margin-top: 5mm;
   }
 
   .letak-uvod {
-    margin: 5mm 0 0;
-    font-size: 3.7mm;
+    margin: 4mm 0 0;
+    font-size: 3.6mm;
     line-height: 1.5;
     color: var(--inkoust-tlum);
   }
@@ -268,20 +445,20 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
     justify-content: space-between;
     gap: 4mm;
     margin-top: auto;
-    padding-top: 5mm;
+    padding-top: 4mm;
     border-top: 0.4mm solid var(--linka-vyrazna);
   }
 
   .letak-volby {
     margin: 0;
-    font-size: 3.9mm;
+    font-size: 3.2mm;
     line-height: 1.45;
     color: var(--inkoust-tlum);
   }
 
   .letak-volby strong {
     display: block;
-    font-size: 4.6mm;
+    font-size: 4.2mm;
     color: var(--inkoust);
   }
 
@@ -295,128 +472,280 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
   .letak-cislo-znak {
     display: grid;
     place-items: center;
-    width: 13mm;
-    height: 13mm;
+    width: 12mm;
+    height: 12mm;
     border-radius: 50%;
     background: var(--sedozelena);
     color: #fff;
-    font-size: 7.5mm;
+    font-size: 7mm;
     font-weight: 700;
     line-height: 1;
   }
 
   .letak-cislo-popis {
-    font-size: 3.2mm;
+    font-size: 2.9mm;
     line-height: 1.3;
     color: var(--inkoust-tlum);
   }
 
-  /* ---------- Zadní strana ---------- */
+  /* QR potřebuje kolem sebe klidnou plochu, jinak ho čtečky hůř najdou.
+     Tichou zónu nese samo SVG (`margin: 2` v `nastroje/qr.mjs`), tady je
+     jen odstup od sousedů. */
+  .letak-qr {
+    margin: 0;
+    text-align: center;
+  }
 
-  .letak-nadtitulek {
-    margin: 0 0 3mm;
-    font-size: 3.1mm;
-    font-weight: 600;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
+  .letak-qr img {
+    width: 17mm;
+    height: 17mm;
+    display: block;
+  }
+
+  .letak-qr span {
+    display: block;
+    margin-top: 0.8mm;
+    font-size: 2.4mm;
+    color: var(--inkoust-tlum);
+  }
+
+  /* ---------- Tekoucí části ---------- */
+
+  .letak-nadpis {
+    margin: 0;
+    font-size: 6.5mm;
+    font-weight: 650;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
     color: var(--sedozelena-text);
   }
 
-  .letak-nadtitulek:not(:first-child) {
-    margin-top: 6mm;
-  }
-
-  .letak-oblasti {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: grid;
-    gap: 3mm;
-  }
-
-  .letak-oblasti li {
-    display: flex;
-    align-items: start;
-    gap: 3mm;
+  .letak-podnadpis {
+    margin: 2mm 0 6mm;
     font-size: 3.6mm;
-    line-height: 1.35;
+    line-height: 1.45;
+    color: var(--inkoust-tlum);
   }
 
-  .letak-oblast-cislo {
+  /* Nadpis „Kdo kandiduje" nemá pod sebou podnadpis jako program, takže by
+     jinak seděl přímo na první fotce. `:last-child` tu nepomůže — za nadpisem
+     stojí mřížka lidí, takže poslední není. */
+  .tok-lide .letak-nadpis {
+    margin-bottom: 9mm;
+  }
+
+  /* Oblast se rozdělit SMÍ. Původně se nesměla, jenže Doprava má 131 mm
+     a Komunikace 83 — na stranu vysokou 186 mm se dvě takové nevejdou,
+     takže se z letáku stalo třináct stran, z nichž polovina byla prázdná.
+     Zlomy proto hlídají jen dvě jemnější pravidla níž: nadpis nesmí zůstat
+     sám na konci strany a jednotlivá odrážka se nesmí roztrhnout. */
+  .oblast {
+    margin-bottom: 6mm;
+  }
+
+  /* Na obrazovce se strany nedělí, takže by zlom nebylo vidět. Mezera je tu
+     jen jako náhrada, aby bylo v náhledu poznat, že tady stránka končí. */
+  @media screen {
+    .oblast-nova-strana {
+      margin-top: 14mm;
+      padding-top: 6mm;
+      border-top: 0.4mm dashed var(--linka-vyrazna);
+    }
+  }
+
+  .oblast-nadpis {
+    /* Nadpis sám na konci strany je horší než mezera — jde s textem. */
+    break-after: avoid;
+    display: flex;
+    align-items: center;
+    gap: 3mm;
+    margin: 0 0 2mm;
+    font-size: 4.4mm;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+  }
+
+  .oblast-cislo {
     flex: none;
     display: grid;
     place-items: center;
-    width: 7mm;
-    height: 7mm;
-    border-radius: 50%;
+    width: 7.5mm;
+    height: 7.5mm;
     background: color-mix(in srgb, var(--barva) 16%, transparent);
     color: var(--barva);
-    font-size: 2.9mm;
+    font-size: 3mm;
     font-weight: 700;
   }
 
-  .letak-oblast-shrnuti {
-    display: block;
-    margin-top: 0.6mm;
-    font-size: 3.3mm;
-    color: var(--inkoust-tlum);
-  }
-
-  .letak-lide {
+  .oblast-body :global(ul) {
     margin: 0;
-    padding: 0;
-    list-style: none;
-    display: grid;
-    /* Dva sloupce: devět jmen pod sebou by zabralo celou stranu. */
-    grid-template-columns: 1fr 1fr;
-    gap: 1.8mm 5mm;
-  }
-
-  .letak-lide li {
-    display: grid;
-    grid-template-columns: 5mm 1fr;
-    gap: 0 1.8mm;
+    padding-left: 4.5mm;
     font-size: 3.3mm;
-    line-height: 1.3;
-  }
-
-  .letak-lide-cislo {
-    grid-row: span 2;
-    align-self: center;
-    text-align: right;
-    font-weight: 700;
-    color: var(--sedozelena-text);
-  }
-
-  .letak-lide-jmeno {
-    font-weight: 600;
-  }
-
-  .letak-lide-povolani {
-    font-size: 2.9mm;
-    color: var(--inkoust-tlum);
-  }
-
-  .letak-vyzva {
-    margin: 7mm 0 0;
-    padding: 4mm 5mm;
-    border-left: 1mm solid var(--zelena);
-    border-radius: 0;
-    background: var(--zelena-jemna);
-    font-size: 3.5mm;
     line-height: 1.45;
   }
 
-  .letak-pata-zadni {
-    margin-top: auto;
-    padding-top: 4mm;
-    border-top: 0.4mm solid var(--linka-vyrazna);
+  .oblast-body :global(li) {
+    margin-bottom: 1.6mm;
+    break-inside: avoid;
+  }
+
+  .oblast-body :global(li)::marker {
+    color: var(--barva);
+  }
+
+  /* ---------- Ukázkové fotky ---------- */
+
+  .ukazky {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4mm;
+    margin-top: 2mm;
+    break-inside: avoid;
+  }
+
+  .ukazka {
+    margin: 0;
+  }
+
+  /* Obě fotky mají jinou proporci (jedna na šířku, druhá na výšku), takže
+     se srovnají na společný poměr. Bez toho by dvojice vypadala jako dva
+     nesouvisející obrázky vedle sebe. */
+  .ukazka img {
+    width: 100%;
+    height: 34mm;
+    object-fit: cover;
+  }
+
+  .ukazka figcaption {
+    margin-top: 1.2mm;
+    font-size: 2.7mm;
+    line-height: 1.35;
+    color: var(--inkoust-tlum);
+  }
+
+  /* ---------- Kandidáti ---------- */
+
+  .lide-mrizka {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 5mm;
+  }
+
+  .clovek {
+    /* Ve výchozím stavu přes oba sloupce — to jsou ti tři se slovem. */
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 4mm;
+    margin-bottom: 5mm;
+    /* Ať se člověk nerozdělí mezi dvě strany — fotka nahoře, jméno dole. */
+    break-inside: avoid;
+  }
+
+  .clovek-uzky {
+    grid-column: auto;
+    gap: 3mm;
+  }
+
+  /* V polovině strany je na jméno o polovinu méně místa, takže musí zmenšit.
+     Bez toho se „Human Resources Senior Manager · KDU-ČSL" u devítky rozlil
+     na čtyři řádky a dvojice vedle sebe si přestaly odpovídat. */
+  .clovek-uzky .clovek-jmeno {
+    font-size: 3.5mm;
+    gap: 2mm;
+  }
+
+  .clovek-uzky .clovek-cislo {
+    width: 5.2mm;
+    height: 5.2mm;
+    font-size: 2.7mm;
+  }
+
+  .clovek-uzky .clovek-povolani {
+    font-size: 2.9mm;
+  }
+
+  .clovek-uzky .clovek-portret {
+    width: 20mm;
+  }
+
+  .clovek-portret {
+    flex: none;
+    width: 24mm;
+  }
+
+  .clovek-text {
+    min-width: 0;
+  }
+
+  .clovek-jmeno {
+    display: flex;
+    align-items: center;
+    gap: 2.5mm;
+    margin: 0;
+    font-size: 4mm;
+    font-weight: 650;
+  }
+
+  .clovek-cislo {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 6mm;
+    height: 6mm;
+    border-radius: 50%;
+    background: var(--sedozelena);
+    color: #fff;
+    font-size: 3mm;
+    font-weight: 700;
+  }
+
+  .clovek-povolani {
+    margin: 0.8mm 0 0;
+    font-size: 3.2mm;
+    line-height: 1.4;
+    color: var(--inkoust-tlum);
+  }
+
+  .clovek-slovo {
+    margin: 2mm 0 0;
+    padding-left: 3mm;
+    border-left: 0.8mm solid var(--zelena);
+    font-size: 3.3mm;
+    line-height: 1.45;
+  }
+
+  .clovek-slovo-chybi {
+    padding: 2mm 3mm;
+    border-left-color: var(--navrh);
+    background: rgb(160 90 0 / 0.06);
+    color: var(--inkoust-tlum);
+  }
+
+  .clovek-slovo-chybi :global(code) {
+    font-size: 3mm;
+  }
+
+  /* ---------- Patička letáku ---------- */
+
+  .letak-vyzva {
+    margin: 0 0 5mm;
+    padding: 4mm 5mm;
+    border-left: 1mm solid var(--zelena);
+    background: var(--zelena-jemna);
+    font-size: 3.4mm;
+    line-height: 1.45;
+    break-inside: avoid;
+  }
+
+  .tok-pata {
     font-size: 3.2mm;
     line-height: 1.4;
   }
 
-  .letak-pata-zadni p {
+  .letak-pata-adresa {
     margin: 0;
+    padding-top: 4mm;
+    border-top: 0.4mm solid var(--linka-vyrazna);
   }
 
   .letak-zastupne {
@@ -424,7 +753,7 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
   }
 
   .letak-uplny-nazev {
-    margin-top: 1.5mm !important;
+    margin: 1.5mm 0 0;
     font-size: 2.7mm;
     color: var(--inkoust-tlum);
   }
@@ -434,22 +763,34 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
   @media print {
     body {
       background: #fff;
+      padding: 0;
     }
 
     .navod {
       display: none;
     }
 
-    .stranka {
+    /* Okraje řeší `@page`, prvky už žádné mít nesmí — jinak by se sčítaly
+       a text by na každé straně začínal o 12 mm níž, než má. */
+    .stranka,
+    .tok {
+      width: auto;
       margin: 0;
+      padding: 0;
+      background: none;
       box-shadow: none;
-      /* Každá strana na svůj list. Bez tohohle by se zadní strana natiskla
-         na konec přední a leták by z tiskárny vyšel jako jedna dlouhá. */
+    }
+
+    .stranka {
+      /* Titulní strana si drží výšku jedné strany, zbytek začíná na další. */
+      height: 186mm;
       break-after: page;
     }
 
-    .stranka:last-child {
-      break-after: auto;
+    .tok-program,
+    .tok-lide,
+    .oblast-nova-strana {
+      break-before: page;
     }
   }
 </style>
