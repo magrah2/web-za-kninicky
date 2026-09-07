@@ -6,9 +6,10 @@ lon: 16.5119156
 stav: overeno
 # Fotka je v src/assets/zamery/05-sokolske-koupaliste.jpg.
 #
-# PLACEHOLDER: stejne jako u bodu 1 neni znamo, odkud fotka je. Pred ostrym
-# spustenim doplnit autora a licenci, nebo nahradit vlastni fotkou.
+# POZOR: ZDROJ NENI LICENCE. Vime, odkud snimek je, ale souhlas autora
+# s pouzitim na volebnim webu tim dany neni - to zustava k doreseni.
 foto_popis: "Ilustrační foto: motorikpark."
+foto_zdroj: "https://www.motorik-fun.com/"
 ---
 
 Budeme s městem komunikovat možnosti využití areálu pro účely sportovních

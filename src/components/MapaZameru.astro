@@ -222,7 +222,17 @@ const jsouNavrhy = zamery.some((z) => z.data.stav === 'navrh');
                         loading="lazy"
                         decoding="async"
                       />
-                      <figcaption>{zamer.data.foto_popis}</figcaption>
+                      <figcaption>
+                        {zamer.data.foto_popis}
+                        {zamer.data.foto_zdroj && (
+                          <>
+                            {' '}
+                            <a class="zamer-foto-zdroj" href={zamer.data.foto_zdroj} rel="nofollow noopener" target="_blank">
+                              zdroj
+                            </a>
+                          </>
+                        )}
+                      </figcaption>
                     </figure>
                   )}
                 </div>
@@ -698,6 +708,14 @@ const jsouNavrhy = zamery.some((z) => z.data.stav === 'navrh');
     width: 94%;
     height: auto;
     border-radius: var(--radius);
+  }
+
+  /* Odkaz na zdroj fotky. `target="_blank"` schvalne: bod v mape je
+     rozbaleny detail a kliknuti pryc by ho zavrelo. `noopener` k tomu patri
+     vzdycky - bez nej ma otevrena stranka pristup k te nasi. */
+  .zamer-foto-zdroj {
+    color: var(--sedozelena-na-noci);
+    text-decoration: underline;
   }
 
   .zamer-foto figcaption {

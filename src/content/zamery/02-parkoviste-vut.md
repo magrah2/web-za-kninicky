@@ -6,11 +6,10 @@ lon: 16.5271317
 stav: overeno
 # Fotka je v src/assets/zamery/02-parkoviste-vut.jpg.
 #
-# PLACEHOLDER: puvod fotky neni znamy a tahle je nejrizikovejsi ze vsech -
-# nejsou to Kninicky (nemecke znacky, chladici vez v pozadi), takze jde
-# nejspis o cizi snimek z webu vyrobce nebo z fotobanky. Pred ostrym
-# spustenim doplnit autora a licenci, nebo nahradit vlastni fotkou.
+# POZOR: ZDROJ NENI LICENCE. Vime, odkud snimek je, ale souhlas autora
+# s pouzitim na volebnim webu tim dany neni - to zustava k doreseni.
 foto_popis: "Ilustrační foto: parkoviště s propustným povrchem a zelení."
+foto_zdroj: "https://voda.tzb-info.cz/destova-voda/17351-polopropustne-a-propustne-zpevnene-plochy"
 ---
 
 Parkoviště je v současnosti v provizorním stavu – chceme usilovat o jeho

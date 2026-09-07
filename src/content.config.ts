@@ -109,6 +109,17 @@ const zamery = defineCollection({
      * Patří sem i zdroj a licence, pokud fotka není naše.
      */
     foto_popis: z.string().nullish(),
+    /**
+     * Odkud fotka je. Vypisuje se pod popiskem jako odkaz.
+     *
+     * POZOR, ZDROJ NENI LICENCE. Vedet, odkud snimek pochazi, jeste
+     * neznamena mit svoleni ho pouzit — u ilustracnich fotek prevzatych
+     * odjinud je potreba souhlas autora. Uvedeni zdroje je slusnost
+     * a stopa, po ktere se da autor dohledat, ne pravni podklad.
+     *
+     * Musi to byt cela adresa vcetne `https://`, aby sla pouzit jako odkaz.
+     */
+    foto_zdroj: z.string().url().nullish(),
   }),
 });
 

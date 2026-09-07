@@ -6,10 +6,10 @@ lon: 16.5279103
 stav: overeno
 # Fotka je v src/assets/zamery/07-sportovni-hriste.jpg.
 #
-# PLACEHOLDER: puvod fotky neni znamy. V souboru byla jen stopa po knihovne
-# gd-jpeg, tedy prosla nejakym webovym generatorem - o autorovi to nerika nic.
-# Pred ostrym spustenim doplnit autora a licenci, nebo nahradit vlastni.
+# POZOR: ZDROJ NENI LICENCE. Vime, odkud snimek je, ale souhlas autora
+# s pouzitim na volebnim webu tim dany neni - to zustava k doreseni.
 foto_popis: "Ilustrační foto: pumptrack."
+foto_zdroj: "https://www.instagram.com/p/DO8QzZzDDfM/"
 ---
 
 Zajistíme výstavbu víceúčelového hřiště (nohejbal, volejbal, tenis)

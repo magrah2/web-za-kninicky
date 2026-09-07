@@ -7,10 +7,10 @@ stav: overeno
 # Fotka je v src/assets/zamery/01-pristup-k-rece.jpg, do frontmatteru se
 # nevypisuje. Popisek povinny je - bez nej sestaveni spadne.
 #
-# PLACEHOLDER: neni znamo, odkud fotka pochazi ani kdo ji fotil. Nez web
-# pujde naostro, musi se doplnit autor a licence - nebo fotku nahradit
-# vlastni. Cizi fotka na volebnim webu je pravni problem, ne detail.
+# POZOR: ZDROJ NENI LICENCE. Vime, odkud snimek je, ale souhlas autora
+# s pouzitim na volebnim webu tim dany neni - to zustava k doreseni.
 foto_popis: "Ilustrační foto: pobytové schody k vodě."
+foto_zdroj: "https://www.facebook.com/groups/1099475564141008/posts/2012760746145814/"
 ---
 
 Naší městskou částí nám každodenně protéká mezi prsty potenciál řeky jako
