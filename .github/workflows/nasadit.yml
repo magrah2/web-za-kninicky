@@ -40,9 +40,10 @@ jobs:
         run: npm ci
 
       - name: Sestavit web
-        # NAOSTRO se tu záměrně NENASTAVUJE — tenhle běh vyrábí draft,
-        # takže web dostane noindex a pruh „Náhled". Až se bude přepínat
-        # na vlastní doménu, přibude sem `env: NAOSTRO: '1'`.
+        # Doména zakninicky.cz není v podsložce GitHub Pages. Bez tohohle
+        # by hotové HTML odkazovalo např. na /web-za-kninicky/_astro/... .
+        env:
+          NAOSTRO: '1'
         run: npm run build
 
       - name: Nahrát výsledek
