@@ -9,6 +9,12 @@ tema: Veřejná vybavenost
 lat: 49.237752
 lon: 16.528709
 stav: overeno
+# Fotka je v src/assets/zamery/04-nove-zakoupena-nemovitost.jpg.
+#
+# POZOR: ZDROJ NENI LICENCE. Vime, odkud snimek je, ale souhlas autora
+# s pouzitim na volebnim webu tim dany neni - to zustava k doreseni.
+foto_popis: "Ilustrační foto: obecní knihovna v Ostopovicích jako komunitní prostor."
+foto_zdroj: "https://archiv.denarchitektury.cz/program/ostopovice-nova-obecni-knihovna/"
 ---
 
 V nově zakoupené nemovitosti chceme vybudovat knihovnu, která nebude sloužit

@@ -35,8 +35,9 @@ const KOREN = path.resolve(import.meta.dirname, '..');
  * stranu v PDF nikdo nehleda - vsimne si ji az sazec ve zpravodaji.
  */
 const PODKLADY = {
-  letak: { cesta: 'letak/', soubor: 'letak.pdf', stran: null },
-  inzerce: { cesta: 'inzerce/', soubor: 'inzerce.pdf', stran: 1 },
+  letak: { cesta: 'letak/', soubor: 'letak.pdf', format: 'A5', stran: null },
+  inzerce: { cesta: 'inzerce/', soubor: 'inzerce.pdf', format: 'A5', stran: 1 },
+  'inzerce-a4': { cesta: 'inzerce-a4/', soubor: 'inzerce-a4.pdf', format: 'A4', stran: 1 },
 };
 
 const jmeno = process.argv[2];
@@ -75,7 +76,10 @@ await stranka.evaluate(() => document.fonts.ready);
 
 await stranka.pdf({
   path: cil,
-  format: 'A5',
+  // Format se bere z tabulky vys. `preferCSSPageSize` sice necha rozhodnout
+  // `@page` ve strance a vyhraje, ale mit tu natvrdo A5 i pro A4 podklad je
+  // past pro toho, kdo bude tabulku cist.
+  format: podklad.format,
   printBackground: true,
   // Okraje si urcuje `@page` na strance - tohle rekne prohlizeci, aby je
   // respektoval misto svych vlastnich.
@@ -92,7 +96,7 @@ await prohlizec.close();
 const obsah = fs.readFileSync(cil);
 const stran = (obsah.toString('latin1').match(/\/Type\s*\/Page[^s]/g) ?? []).length;
 
-console.log(`\n   ${podklad.soubor}  (${stran} stran A5, ${Math.round(obsah.length / 1024)} kB)`);
+console.log(`\n   ${podklad.soubor}  (${stran} stran ${podklad.format}, ${Math.round(obsah.length / 1024)} kB)`);
 console.log(`   z adresy:  ${adresa}`);
 
 if (podklad.stran !== null && stran !== podklad.stran) {

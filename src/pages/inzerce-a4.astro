@@ -1,0 +1,498 @@
+---
+/**
+ * Volební inzerce do zpravodaje — jedna strana A4, obsáhlejší varianta.
+ *
+ * PROČ DVĚ INZERCE A NE JEDNA ROZTAŽENÁ: A4 má dvojnásobnou plochu, ale
+ * nepoužívá se stejně. A5 vypráví jen to nejnutnější — kdo jsme, co chceme
+ * a jaké máme číslo. A4 k tomu přidá celou kandidátku s tituly, datum a místo
+ * voleb. Je to jiná skladba, ne větší písmo.
+ *
+ * Obě verze si obsah berou z týchž zdrojů jako web a leták (`strana.ts`,
+ * kolekce `program` a `kandidati`), takže se s nimi nemůžou rozejít.
+ *
+ * Rámeček kolem je schválně, ze stejného důvodu jako u A5: v tištěném
+ * zpravodaji leží inzerce vedle redakčního textu a čtenář má poznat, že
+ * tohle je náš text, ne text redakce.
+ *
+ * Do vyhledávačů nepatří — `noindex` níž a vyřazení ze sitemapy
+ * v `astro.config.mjs`.
+ */
+
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+import spolecnaFotka from '../assets/spolecna-fotka.jpg';
+import Typografie from '../components/Typografie.astro';
+import { BARVA_TEMATU } from '../lib/temata';
+import type { Tema } from '../lib/temata';
+import {
+  NAZEV,
+  NAZEV_DOPLNEK,
+  CISLO_STRANY,
+  HESLO_ZACATEK,
+  HESLO_KONEC,
+  DATUM_VOLEB,
+  HODINY_VOLEB,
+  VOLEBNI_MISTNOST,
+} from '../lib/strana';
+import { odkaz } from '../lib/odkaz';
+import montserratLatin from '../pisma/montserrat-latin.woff2?url';
+import montserratLatinExt from '../pisma/montserrat-latin-ext.woff2?url';
+import '../styles/tokeny.css';
+
+/*
+ * Shrnutí oblastí, ne celé odrážky.
+ *
+ * Celý program se sem zkoušel dát a NEVEJDE SE: ve dvousloupcové sazbě měřil
+ * 320 mm, zatímco na jedné A4 na něj zbývá 77 mm. Není to o kosmetice, je to
+ * čtyřnásobek — těch 23 odrážek jsou souvislé odstavce, ne hesla. Celý program
+ * je na webu, kam vede QR kód, a v letáku, který má osm stran.
+ *
+ * Proti A5 je tahle verze obsáhlejší jinak: má celou kandidátku s tituly,
+ * datum a místo voleb a víc vzduchu v sazbě. Úplný název strany nese
+ * hlavička (logo a dovětek pod ním), takže ho tiráž opakovat nemusí.
+ */
+const oblasti = (await getCollection('program')).sort((a, b) => a.data.poradi - b.data.poradi);
+
+const kandidati = (await getCollection('kandidati')).sort((a, b) => a.data.poradi - b.data.poradi);
+
+const jeDraft = Astro.site?.hostname !== 'zakninicky.cz';
+const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
+---
+
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Inzerce A4 do zpravodaje — {NAZEV}</title>
+    <link rel="preload" href={montserratLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={montserratLatinExt} as="font" type="font/woff2" crossorigin />
+  </head>
+
+  <body>
+    <Typografie>
+      {/* Návod se sám netiskne. */}
+      <p class="navod">
+        <strong>Inzerce do zpravodaje — jedna strana A4.</strong> Vyrobit PDF:
+        <code>npm run inzerce-a4</code>. Ručně: Ctrl+P → formát <strong>A4</strong>,
+        měřítko 100 %, zapnuté <strong>„Tisknout pozadí"</strong>.
+      </p>
+
+      <div class="inzerat">
+        <header class="hlava">
+          <div>
+            <img class="logo" src={odkaz('/logo.svg')} alt={NAZEV} width="1073" height="155" />
+            <p class="doplnek">{NAZEV_DOPLNEK}</p>
+          </div>
+
+          {/* Číslo je to jediné, co si čtenář musí odnést do volební místnosti,
+              takže stojí v rohu, kde ho oko najde první. */}
+          <p class="cislo">
+            <span class="cislo-znak">{CISLO_STRANY}</span>
+            <span class="cislo-popis">naše číslo<br />na lístku</span>
+          </p>
+        </header>
+
+        <h1 class="claim">
+          <span class="claim-zacatek">{HESLO_ZACATEK}</span>{' '}
+          <span class="claim-konec">{HESLO_KONEC}</span>
+        </h1>
+
+        {/* Fotka vlevo a široká, úvodní text vedle ní v užším sloupci.
+            Dřív to bylo obráceně (text široký, fotka 88 mm) — jenže fotka
+            devíti lidí potřebuje šířku víc než odstavec, který se v užším
+            sloupci čte dokonce líp. */}
+        <div class="uvodni-pas">
+          {/* Bez ořezu — viz `.fotka` v CSS. */}
+          <div class="fotka-ram">
+            {/* Rozlišení pro tisk: pruh je 88 mm široký, na 300 dpi je potřeba
+                1040 px. Jediná hodnota ve `widths` schválně — z víc kandidátů
+                si prohlížeč při tisku vybere ten malý. */}
+            <Image
+              class="fotka"
+              src={spolecnaFotka}
+              alt={`Kandidáti sdružení ${NAZEV}`}
+              widths={[1200]}
+              sizes="88mm"
+              quality={90}
+              loading="eager"
+            />
+          </div>
+
+          <p class="uvod">
+            Jsme sdružení nezávislých kandidátů, kterým leží na srdci, aby se Kníničky
+            staly místem přívětivým pro všechny — bez ohledu na věk, zájmy nebo to, jak
+            dlouho tu žijí. Chceme s vámi o Kníničkách mluvit a vysvětlovat, proč a jak
+            věci řešíme.
+          </p>
+        </div>
+
+        {/* Shrnutí, ne celé odrážky — proč, je vysvětlené u dat nahoře. */}
+        <section class="program">
+          <p class="nadpis-sekce">Naše priority pro Kníničky</p>
+
+          <ul class="oblasti">
+            {
+              oblasti.map((oblast) => (
+                <li style={`--barva: ${BARVA_TEMATU[oblast.data.tema as Tema]}`}>
+                  <strong>{oblast.data.nadpis ?? oblast.data.nazev}</strong>{' '}
+                  {oblast.data.shrnuti}
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+
+        <section class="kandidatka">
+          <p class="nadpis-sekce">Naši kandidáti</p>
+          <ol class="lide">
+            {
+              kandidati.map((k) => (
+                <li>
+                  <span class="lide-cislo">{k.data.poradi}</span>
+                  <span class="lide-radek">
+                    {/* S tituly — inzerce je nejblíž tomu, co bude na hlasovacím
+                        lístku, a tam jména stojí v plném tvaru. */}
+                    <span class="lide-jmeno">{k.data.jmeno}</span>
+                    {k.data.rozena && <span class="lide-rozena">, roz. {k.data.rozena}</span>}
+                    <span class="lide-udaje">
+                      {k.data.vek ? ` · ${k.data.vek} let` : ''} · {k.data.povolani}
+                    </span>
+                  </span>
+                </li>
+              ))
+            }
+          </ol>
+        </section>
+
+        <footer class="pata">
+          <p class="volby">
+            <strong>{DATUM_VOLEB}</strong>
+            pátek {HODINY_VOLEB.patek} · sobota {HODINY_VOLEB.sobota}<br />
+            {VOLEBNI_MISTNOST.adresa} ({VOLEBNI_MISTNOST.vchod})
+          </p>
+
+          <p class="qr">
+            <img
+              src={odkaz('/qr-web.svg')}
+              alt={`QR kód s adresou ${adresaWebu}`}
+              width="200"
+              height="200"
+            />
+            <span>
+              celý program<br />
+              a jak volit<br />
+              <strong>{adresaWebu}</strong>
+            </span>
+          </p>
+        </footer>
+      </div>
+    </Typografie>
+  </body>
+</html>
+
+<style>
+  /* Milimetry, ne rem — je to papír. Viz tentýž komentář v `letak.astro`. */
+
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  body {
+    margin: 0;
+    padding: 0 0 10mm;
+    background: #dfe3df;
+    font-family: 'Montserrat', system-ui, sans-serif;
+    color: var(--inkoust);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .navod {
+    width: 210mm;
+    margin: 8mm auto;
+    padding: 4mm 5mm;
+    box-sizing: border-box;
+    border-left: 3px solid var(--navrh);
+    background: rgb(160 90 0 / 0.08);
+    font-size: 3.4mm;
+    line-height: 1.5;
+  }
+
+  /* Celá A4 včetně okrajů. Zpravodaj dostane jeden hotový obdélník a sám si
+     ho umístí, takže si okraj nese inzerát v sobě.
+
+     Pevná výška a `overflow: hidden`: kdyby text přetekl, je lepší, aby to
+     bylo vidět jako uříznuté písmeno, než aby PDF tiše mělo dvě strany.
+     Hlídá to `npm run inzerce-a4`, které počet stran zkontroluje. */
+  .inzerat {
+    width: 210mm;
+    height: 297mm;
+    margin: 0 auto;
+    padding: 15mm;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--papir);
+    border: 0.5mm solid var(--sedozelena);
+    box-shadow: 0 2mm 8mm rgb(0 0 0 / 0.15);
+  }
+
+  /* ---------- Hlavička ---------- */
+
+  .hlava {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 6mm;
+  }
+
+  .logo {
+    width: 62mm;
+    height: auto;
+  }
+
+  .doplnek {
+    margin: 2mm 0 0;
+    font-size: 3.6mm;
+    line-height: 1.35;
+    white-space: nowrap;
+    color: var(--inkoust-tlum);
+  }
+
+  .cislo {
+    display: flex;
+    align-items: center;
+    gap: 2.5mm;
+    margin: 0;
+    flex: none;
+  }
+
+  .cislo-znak {
+    display: grid;
+    place-items: center;
+    width: 16mm;
+    height: 16mm;
+    border-radius: 50%;
+    background: var(--sedozelena);
+    color: #fff;
+    font-size: 9.5mm;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .cislo-popis {
+    font-size: 3.4mm;
+    line-height: 1.3;
+    color: var(--inkoust-tlum);
+  }
+
+  /* ---------- Claim, úvod a fotka vedle sebe ----------
+     Na A5 stojí pod sebou, protože na šířku není místo. Na A4 se vedle sebe
+     vejdou a ušetří tím výšku pro program, kvůli kterému tahle verze je. */
+
+  /* Fotka dostane většinu šířky, text zbytek. Sloupec o 118 mm dělá z fotky
+     70,7 mm na výšku — o pětinu víc než dřívějších 58,7 mm. */
+  .uvodni-pas {
+    display: grid;
+    grid-template-columns: 106mm 1fr;
+    align-items: start;
+    gap: 7mm;
+    margin-top: 4mm;
+  }
+
+  .claim {
+    margin: 3mm 0 0;
+    font-weight: 650;
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    color: var(--sedozelena-text);
+  }
+
+  .claim-zacatek,
+  .claim-konec {
+    font-size: 9.5mm;
+  }
+
+  .claim-konec {
+    font-weight: 550;
+  }
+
+  .uvod {
+    margin: 0;
+    font-size: 3.4mm;
+    line-height: 1.5;
+    color: var(--inkoust-tlum);
+  }
+
+  /* Fotka se ukazuje CELÁ, bez ořezu — jinak přišli lidé na kraji o nohy.
+     Nic to nestálo: sloupec je 88 mm široký a fotka 3 : 2, takže celá měří
+     58,7 mm, tedy prakticky tolik, kolik měl dřívější oříznutý pruh. */
+  .fotka-ram {
+    line-height: 0;
+  }
+
+  .fotka {
+    width: 100%;
+    height: auto;
+  }
+
+  /* ---------- Společné nadpisy sekcí ---------- */
+
+  .nadpis-sekce {
+    margin: 0 0 3mm;
+    font-size: 3.2mm;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sedozelena-text);
+  }
+
+  /* ---------- Program ---------- */
+
+  .program {
+    margin-top: 5mm;
+    padding-top: 4mm;
+    border-top: 0.4mm solid var(--linka-vyrazna);
+  }
+
+  .oblasti {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 2.6mm;
+  }
+
+  .oblasti li {
+    padding-left: 5mm;
+    /* Barevný proužek místo odrážky — drží stejné barvy oblastí jako web
+       a mapa, jen v šířce, která na papíře nezmizí. */
+    border-left: 1.2mm solid var(--barva);
+    font-size: 3.7mm;
+    line-height: 1.45;
+    color: var(--inkoust-tlum);
+  }
+
+  .oblasti strong {
+    color: var(--inkoust);
+  }
+
+  /* ---------- Kandidátka ---------- */
+
+  .kandidatka {
+    margin-top: 5mm;
+    padding-top: 4mm;
+    border-top: 0.4mm solid var(--linka-vyrazna);
+  }
+
+  /* Jeden člověk = jeden řádek přes celou šířku. Ve dvou sloupcích by se
+     nejdelší řádek lámal a úspora by se hned ztratila. */
+  .lide {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 1.3mm;
+  }
+
+  .lide li {
+    display: flex;
+    align-items: baseline;
+    gap: 2mm;
+    font-size: 3.2mm;
+    line-height: 1.3;
+  }
+
+  .lide-cislo {
+    flex: none;
+    width: 4.5mm;
+    text-align: right;
+    font-weight: 700;
+    color: var(--sedozelena-text);
+  }
+
+  .lide-radek {
+    min-width: 0;
+  }
+
+  .lide-jmeno {
+    font-weight: 600;
+  }
+
+  /* Rodné příjmení netučně — tučný řez odlišuje jméno od údajů za tečkou. */
+  .lide-rozena {
+    font-weight: 400;
+  }
+
+  .lide-udaje {
+    font-size: 3mm;
+    color: var(--inkoust-tlum);
+  }
+
+  /* ---------- Patička ---------- */
+
+  /* `margin-top: auto` přitlačí patičku ke spodní hraně — na papíře se
+     mezera nedorovnává od oka. */
+  .pata {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6mm;
+    margin-top: auto;
+    padding-top: 4mm;
+    border-top: 0.4mm solid var(--linka-vyrazna);
+  }
+
+  .volby {
+    margin: 0;
+    font-size: 3.6mm;
+    line-height: 1.45;
+    color: var(--inkoust-tlum);
+  }
+
+  .volby strong {
+    display: block;
+    font-size: 5mm;
+    color: var(--inkoust);
+  }
+
+  .qr {
+    display: flex;
+    align-items: center;
+    gap: 3mm;
+    margin: 0;
+    text-align: right;
+  }
+
+  .qr img {
+    order: 2;
+    width: 22mm;
+    height: 22mm;
+    flex: none;
+  }
+
+  .qr span {
+    font-size: 3mm;
+    line-height: 1.35;
+    color: var(--inkoust-tlum);
+  }
+
+  @media print {
+    body {
+      background: #fff;
+      padding: 0;
+    }
+
+    .navod {
+      display: none;
+    }
+
+    .inzerat {
+      margin: 0;
+      box-shadow: none;
+    }
+  }
+</style>

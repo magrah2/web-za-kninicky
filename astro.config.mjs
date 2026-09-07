@@ -3,7 +3,7 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
 /** Stránky, které existují jen kvůli tisku. Viz `filter` u sitemapy níž. */
-const TISKOVE_PODKLADY = ['/letak/', '/inzerce/'];
+const TISKOVE_PODKLADY = ['/letak/', '/inzerce/', '/inzerce-a4/'];
 
 // Draft běží na GitHub Pages v podsložce, ostrý web na vlastní doméně v kořeni.
 // Přepíná se proměnnou prostředí, aby se nemuselo sahat do odkazů.

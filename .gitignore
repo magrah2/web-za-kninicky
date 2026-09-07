@@ -37,6 +37,7 @@ pnpm-debug.log*
 # tehoz obsahu, jen zastarala
 letak.pdf
 inzerce.pdf
+inzerce-a4.pdf
 
 # stazena data OpenStreetMap - mezipamet generatoru mapy
 nastroje/.mapa-data-*.json
