@@ -190,11 +190,11 @@ týmu — obrázek k němu zatím žádný nepatří.
 ## ODS a KDU-ČSL jen tam, kde to žádá zákon
 
 Úplný název strany je „Za Kníničky nezávislí kandidáti s podporou ODS
-a KDU-ČSL". V běžném textu se používá **jen „Za Kníničky"** (`NAZEV`);
-úplný název (`NAZEV_UPLNY`) patří na čtyři místa: na zkušební hlasovací
-lístek, do oznámení o transparentnosti, jako správce osobních údajů — tam
-všude ho žádá zákon nebo věcná správnost — a na úvodní stránku pod údaje
-o volbách, kam ho na přání týmu doplnila i podpora obou stran.
+a KDU-ČSL“. V běžném textu se používá **jen „Za Kníničky"** (`NAZEV`);
+úplný název (`NAZEV_UPLNY`) patří na tři místa: na zkušební hlasovací
+lístek, jako správce osobních údajů — tam ho žádá zákon nebo věcná
+správnost — a na úvodní stránku pod údaje o volbách, kam ho na přání týmu
+doplnila i podpora obou stran.
 
 Politická příslušnost jednotlivců (ODS u č. 1 a 7, KDU-ČSL u č. 9) se
 vypisuje jen v medailonku. Kdo je bez příslušnosti, nemá pole `prislusnost`

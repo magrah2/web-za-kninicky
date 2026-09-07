@@ -391,7 +391,6 @@ Zkráceně:
 - [ ] **Body na mapě** — na mapě je jediný zástupný bod
 - [ ] **Heslo strany** a **e-mail** (`src/lib/strana.ts`)
 - [ ] **Adresa volební místnosti** podle vyhlášky (`src/pages/jak-volit.astro`)
-- [ ] **Údaje do oznámení o transparentnosti** — kontaktní osoba, období, částka
 - [ ] **Správce osobních údajů** na stránce `/soukromi/`
 - [ ] **Odkazy na sociální sítě** (`src/pages/kontakt.astro`) — dokud jsou
       prázdné, sekce se na webu neukáže

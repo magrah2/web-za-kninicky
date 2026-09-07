@@ -19,9 +19,8 @@ import { prilepPredlozky } from './typografie';
  *
  * Úplný registrovaný název (`NAZEV_UPLNY`) je dlouhý a nese jména dvou
  * politických stran; v běžném textu by přebil všechno ostatní. Používá se
- * proto jen na čtyřech místech — na hlasovacím lístku, v oznámení
- * o transparentnosti, jako správce údajů a na úvodní stránce pod údaji
- * o volbách.
+ * proto jen na třech místech — na hlasovacím lístku, jako správce údajů
+ * a na úvodní stránce pod údaji o volbách.
  */
 export const NAZEV = 'Za Kníničky';
 

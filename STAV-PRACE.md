@@ -65,7 +65,6 @@ v `src/lib/odpocet.ts`, počítá kalendářní dny v pražské zóně a hlídaj
 | Kde | Co |
 |---|---|
 | `src/pages/jak-volit.astro` | `MISTNOST` — adresa volební místnosti podle vyhlášky |
-| `src/pages/transparentnost.astro` | kontaktní osoba, období, částka |
 | `src/pages/kontakt.astro` | odkazy na sociální sítě (prázdné = sekce se neukáže) |
 | `astro.config.mjs` + `src/layouts/Zaklad.astro` | doména, teď zástupná `zakninicky.cz` |
 
@@ -102,9 +101,8 @@ přeskočila. Kdyby se přeskakovala, nikdo by nepoznal, že už se dá měřit.
   přidat něco dalšího.
 - **Politická příslušnost** (ODS u č. 1 a 7, KDU-ČSL u č. 9) se vypisuje
   jen v medailonku, nikde jinde. Úplný název strany včetně ODS a KDU-ČSL
-  je jen tam, kde ho žádá zákon: na zkušebním lístku, v oznámení
-  o transparentnosti a jako správce údajů. **Rozhodnout, jestli i tohle
-  není moc.**
+  je jen tam, kde ho žádá zákon: na zkušebním lístku a jako správce údajů.
+  **Rozhodnout, jestli i tohle není moc.**
 - **Zelená `#5bae39` se nesmí použít na text** (kontrast 2,9 : 1). Od toho
   je `--zelena-text`. Platí to i v logu — „Za" je proto tmavší zelenou.
 - **Draft běží v podsložce `/web-za-kninicky/`**, ne v kořeni. Odkazy vždy
