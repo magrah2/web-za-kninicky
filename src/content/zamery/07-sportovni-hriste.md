@@ -9,7 +9,7 @@ stav: overeno
 # POZOR: ZDROJ NENI LICENCE. Vime, odkud snimek je, ale souhlas autora
 # s pouzitim na volebnim webu tim dany neni - to zustava k doreseni.
 foto_popis: "Ilustrační foto: pumptrack."
-foto_zdroj: "https://www.instagram.com/p/DO8QzZzDDfM/"
+foto_zdroj: "https://www.rokycany.cz/rokycany-rozsirily-sportovni-infrastrukturu-v-patek-21-cervna-se-slavnostne-otevre-pumptrack-v-arealu-skateparku/d-912278"
 ---
 
 Zajistíme výstavbu víceúčelového hřiště (nohejbal, volejbal, tenis)

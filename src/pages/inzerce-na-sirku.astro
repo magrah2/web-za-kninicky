@@ -1,0 +1,15 @@
+---
+/**
+ * Volební inzerce 190 × 134 mm na šířku: fotka vlevo, priority vpravo.
+ *
+ * Obsah i sazbu drží `InzerceNaSirku`; tahle stránka jen říká, které
+ * rozvržení vyrobit. Proč je to jedna komponenta a ne tři stránky se
+ * zkopírovaným obsahem, je vysvětlené v ní.
+ *
+ * PDF: `npm run inzerce-na-sirku`
+ */
+
+import InzerceNaSirku from '../components/InzerceNaSirku.astro';
+---
+
+<InzerceNaSirku />

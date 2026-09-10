@@ -1,0 +1,881 @@
+---
+/**
+ * Volební inzerce na šířku — 190 × 134 mm.
+ *
+ * PROČ NENÍ JEN „OTOČENÁ A5": na ležatém formátu je vzácná výška, ne šířka.
+ * Po hlavičce, claimu a patičce zbývá na obsah asi 75 mm, tedy míň než
+ * polovina toho, co má A5. Sazba se proto neskládá pod sebe, ale do pásů,
+ * ve kterých stojí vedle sebe co nejvíc: claim vedle loga, fotka vedle
+ * priorit, kandidáti ve dvou sloupcích místo devíti řádků pod sebou a QR kód
+ * vedle nich místo vlastní patičky.
+ *
+ * První pokus tohle nerespektoval a vyšel o 45 mm delší, než je papír —
+ * `overflow: hidden` zbytek ukrojil, PDF mělo poslušně jednu stranu a chyběli
+ * na ní poslední kandidáti i celý spodek. Proto se výška měří skriptem,
+ * neodhaduje z náhledu.
+ *
+ * NEJMENŠÍ PÍSMO 2,5 mm. Zadání od tiskárny; hlídá to `npm run
+ * inzerce-na-sirku`, které projde všechny prvky nesoucí text a nejmenší
+ * velikost vypíše. Bez měření by se místo dalo snadno „ušetřit" tím, že se
+ * něco zmenší pod mez — a na obrazovce by to vypadalo v pořádku.
+ *
+ * Obsah si bere z týchž zdrojů jako web a leták (`strana.ts`, kolekce
+ * `program` a `kandidati`), takže se s nimi nemůže rozejít.
+ *
+ * Rámeček kolem je schválně, stejně jako u ostatních inzercí: ve zpravodaji
+ * leží inzerce vedle redakčního textu a čtenář má poznat, že tohle je náš
+ * text, ne text redakce.
+ *
+ * TŘI VARIANTY ROZVRŽENÍ, jeden obsah:
+ *
+ *   1. fotka vlevo, priority vpravo, kandidáti ve dvou sloupcích dole
+ *   2. totéž zrcadlově — fotka vpravo
+ *   3. kandidáti v jednom sloupci vlevo, fotka a priority pod sebou vpravo
+ *
+ * Je to jedna komponenta, ne tři stránky se zkopírovaným obsahem: varianty
+ * přeskládávají tytéž bloky a tři kopie by se při první úpravě textu
+ * rozešly. Stránky `/inzerce-na-sirku/`, `-2` a `-3` z ní jen vyrobí
+ * ty tři podklady.
+ *
+ * Do vyhledávačů nepatří — `noindex` níž a vyřazení ze sitemapy
+ * v `astro.config.mjs`.
+ */
+
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+import spolecnaFotka from '../assets/spolecna-fotka.jpg';
+import Typografie from './Typografie.astro';
+import { BARVA_TEMATU } from '../lib/temata';
+import type { Tema } from '../lib/temata';
+/*
+ * Datum ani volební místnost se tu nevypisují — na přání týmu. Zpravodaj
+ * s termínem voleb vyjde tak jako tak a inzerce má místo toho dýchat.
+ * Obojí zůstává na webu, kam vede QR kód.
+ */
+import { NAZEV, NAZEV_DOPLNEK, CISLO_STRANY, HESLO_ZACATEK, HESLO_KONEC } from '../lib/strana';
+import { odkaz } from '../lib/odkaz';
+/*
+ * QR kód se sem vkládá jako kus SVG, ne přes `<img>` jako na ostatních
+ * podkladech. Do obrázku načteného zvenčí se barva z CSS nedostane a tady
+ * má být kód v zelené barvě značky, ne černý. `stroke="currentColor"`
+ * pak barvu vezme z `.qr-kod` níž — tedy z tokenu, ne natvrdo.
+ */
+import qrKod from '../../public/qr-web.svg?raw';
+import montserratLatin from '../pisma/montserrat-latin.woff2?url';
+import montserratLatinExt from '../pisma/montserrat-latin-ext.woff2?url';
+import '../styles/tokeny.css';
+
+interface Props {
+  /** 1 = fotka vlevo, 2 = fotka vpravo, 3 = kandidáti v jednom sloupci vlevo. */
+  varianta?: 1 | 2 | 3;
+}
+
+const { varianta = 1 } = Astro.props;
+
+/*
+ * Ve variantě 3 se „mateřská škola" krátí na „MŠ" — na přání týmu a jen tady.
+ * Program má v ní pět úzkých sloupečků a delší tvar je zbytečně láme. Data
+ * zůstávají beze změny: web, leták i ostatní inzerce mají plný tvar, protože
+ * tam se vypsané znění výslovně žádalo.
+ */
+const proUzkeSloupce = (text: string) =>
+  varianta === 3 ? text.replace("mateřská škola", "MŠ") : text;
+
+const POPIS_VARIANTY = {
+  1: '',
+  2: ' — varianta 2, fotka vpravo',
+  3: ' — varianta 3, kandidáti v jednom sloupci',
+}[varianta];
+
+/* Číslo varianty se objevuje v titulku i v návodu, ať je z náhledu poznat,
+   který podklad je na obrazovce. */
+const PRIPONA = varianta === 1 ? '' : `-${varianta}`;
+
+/*
+ * Shrnutí oblastí, ne celé odrážky — ze stejného důvodu jako na A4: celý
+ * program měří ve dvousloupcové sazbě 320 mm a sem se nevejde ani zdaleka.
+ * Je na webu, kam vede QR kód, a v letáku, který má osm stran.
+ */
+const oblasti = (await getCollection('program')).sort((a, b) => a.data.poradi - b.data.poradi);
+
+const kandidati = (await getCollection('kandidati')).sort((a, b) => a.data.poradi - b.data.poradi);
+
+/*
+ * Dovětek pod logem na dva řádky: zlom patří před „s podporou", aby druhý
+ * řádek nesl obě podporující strany. Mezera za tím „s" je nezlomitelná
+ * (dělá to `prilepPredlozky` ve `strana.ts`), takže se hledá ta obyčejná
+ * mezera před ním — první v celém dovětku. Zůstává ve
+ * výsledku i před značkou zlomu: v sazbě zanikne, ale při kopírování textu
+ * z PDF by se bez ní slova slepila.
+ */
+const DOPLNEK_DVA_RADKY = NAZEV_DOPLNEK.replace(' s', ' <br />s');
+
+const jeDraft = Astro.site?.hostname !== 'zakninicky.cz';
+const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
+---
+
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Inzerce 190 × 134 mm{varianta === 1 ? '' : `, varianta ${varianta}`} — {NAZEV}</title>
+    <link rel="preload" href={montserratLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={montserratLatinExt} as="font" type="font/woff2" crossorigin />
+  </head>
+
+  <body>
+    <Typografie>
+      {/* Návod se sám netiskne. */}
+      <p class="navod">
+        <strong>Inzerce 190 × 134 mm, na šířku{POPIS_VARIANTY}.</strong>{' '}
+        Vyrobit PDF: <code>npm run inzerce-na-sirku{PRIPONA}</code> — skript zároveň ověří, že se sazba
+        vešla na jednu stranu a že nejmenší písmo má aspoň 2,5 mm. Ručně: Ctrl+P →
+        vlastní formát <strong>190 × 134 mm</strong>, měřítko 100 %, zapnuté
+        <strong>„Tisknout pozadí"</strong>.
+      </p>
+
+      <div class:list={['inzerat', { 'fotka-vpravo': varianta === 2, 'jeden-sloupec': varianta === 3 }]}>
+        <header class="hlava">
+          <div class="znacka">
+            <img class="logo" src={odkaz('/logo.svg')} alt={NAZEV} width="1073" height="155" />
+            {/* Zlom je záležitost sazby, ne dat — proč, je u `DOPLNEK_DVA_RADKY`. */}
+            <p class="doplnek" set:html={DOPLNEK_DVA_RADKY} />
+          </div>
+
+          {/* Claim stojí vedle loga, ne pod ním — na výšku by si vzal vlastní
+              pás a ten tu není z čeho vzít. Ve variantě 3 se stěhuje dolů nad
+              úvodní větu, kde má celý pravý sloupec pro sebe. */}
+          {varianta !== 3 && (
+            <h1 class="claim">
+              <span class="claim-zacatek">{HESLO_ZACATEK}</span>{' '}
+              <span class="claim-konec">{HESLO_KONEC}</span>
+            </h1>
+          )}
+
+          {/* Číslo je to jediné, co si čtenář musí odnést do volební místnosti,
+              takže stojí v rohu, kde ho oko najde první. */}
+          <p class="cislo">
+            <span class="cislo-znak">{CISLO_STRANY}</span>
+            <span class="cislo-popis">naše číslo<br />na lístku</span>
+          </p>
+        </header>
+
+        {/* Obal existuje kvůli variantě 3, kde oba pásy stojí vedle sebe.
+            Ve zbylých dvou má `display: contents`, takže se v sazbě chová,
+            jako by tam nebyl, a nic v nich neposouvá. */}
+        <div class="telo">
+          {varianta === 3 && (
+            <h1 class="claim claim-v-tele">
+              <span class="claim-zacatek">{HESLO_ZACATEK}</span>{' '}
+              <span class="claim-konec">{HESLO_KONEC}</span>
+            </h1>
+          )}
+
+          {/* Ve variantách 1 a 2 stojí přes celou šířku nad fotkou, ve třetí
+              vedle ní. Ve zdroji je proto uvnitř obalu — ten se ve zbylých
+              variantách chová, jako by tam nebyl. */}
+          <p class="uvod">
+            Jsme sdružení nezávislých kandidátů, kterým leží na srdci, aby se
+            Kníničky staly místem přívětivým pro všechny&nbsp;— bez ohledu na věk,
+            zájmy nebo to, jak dlouho tu žijí.
+          </p>
+
+        <div class="pas-horni">
+          {/* Bez ořezu — jinak přijdou lidé na kraji o nohy. */}
+          <div class="fotka-ram">
+            {/* Rozlišení pro tisk: sloupec je 104 mm široký, na 300 dpi je
+                potřeba 1228 px. Jediná hodnota ve `widths` schválně — z víc
+                kandidátů si prohlížeč při tisku vybere ten malý. */}
+            <Image
+              class="fotka"
+              src={spolecnaFotka}
+              alt={`Kandidáti sdružení ${NAZEV}`}
+              widths={[1300]}
+              sizes="104mm"
+              quality={90}
+              loading="eager"
+            />
+          </div>
+
+          <section class="program">
+            <p class="nadpis-sekce">Naše priority pro Kníničky</p>
+
+            <ul class="oblasti">
+              {
+                oblasti.map((oblast) => (
+                  <li style={`--barva: ${BARVA_TEMATU[oblast.data.tema as Tema]}`}>
+                    <strong>{oblast.data.nadpis ?? oblast.data.nazev}</strong>{' '}
+                    {proUzkeSloupce(oblast.data.shrnuti)}
+                  </li>
+                ))
+              }
+            </ul>
+          </section>
+        </div>
+
+        <section class="kandidatka">
+          <p class="nadpis-sekce">Naši kandidáti</p>
+
+          {/* Dva sloupce po pěti a čtyřech, čtou se odshora dolů. QR kód stojí
+              vedle nich: po vyškrtnutí data a místa voleb by z patičky zbyl
+              jen on sám a pruh přes celou šířku kvůli jednomu čtverečku
+              nestojí za to. */}
+          <ol class="lide">
+            {
+              kandidati.map((k) => (
+                <li>
+                  <span class="lide-cislo">{k.data.poradi}</span>
+                  <span class="lide-radek">
+                    {/* S tituly — inzerce je nejblíž tomu, co bude na hlasovacím
+                        lístku, a tam jména stojí v plném tvaru. */}
+                    <span class="lide-jmeno">{k.data.jmeno}</span>
+                    {k.data.rozena && <span class="lide-rozena">, roz. {k.data.rozena}</span>}
+                    <span class="lide-udaje">
+                      {/* Věk drží pohromadě: u Barbory Jelínkové zůstávala „38"
+                          na konci řádku a „let" se přesunulo na další. */}
+                      {k.data.vek && (
+                        <Fragment>
+                          {' · '}
+                          <span class="lide-vek">{k.data.vek} let</span>
+                        </Fragment>
+                      )}{' · '}{k.data.povolani}
+                    </span>
+                  </span>
+                </li>
+              ))
+            }
+          </ol>
+
+          <p class="qr">
+            <span class="qr-popis">celý program<br />a jak volit</span>
+            <strong class="qr-adresa">{adresaWebu}</strong>
+            <span class="qr-kod" role="img" aria-label={`QR kód s adresou ${adresaWebu}`}>
+              <Fragment set:html={qrKod.replace(/stroke="[^"]*"/g, 'stroke="currentColor"')} />
+            </span>
+          </p>
+        </section>
+        </div>
+      </div>
+    </Typografie>
+  </body>
+</html>
+
+<style>
+  /* Milimetry, ne rem — je to papír. Viz tentýž komentář v `letak.astro`. */
+
+  @page {
+    /* Ležatý formát se zapisuje jako šířka a výška, ne přes `landscape` —
+       190 × 134 není otočená A-řada, je to vlastní rozměr od zpravodaje. */
+    size: 190mm 134mm;
+    margin: 0;
+  }
+
+  body {
+    margin: 0;
+    padding: 0 0 10mm;
+    background: #dfe3df;
+    font-family: 'Montserrat', system-ui, sans-serif;
+    color: var(--inkoust);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .navod {
+    width: 190mm;
+    margin: 8mm auto;
+    padding: 4mm 5mm;
+    box-sizing: border-box;
+    border-left: 3px solid var(--navrh);
+    background: rgb(160 90 0 / 0.08);
+    font-size: 3.4mm;
+    line-height: 1.5;
+  }
+
+  /* Celý inzerát včetně okrajů. Zpravodaj dostane hotový obdélník a sám si
+     ho umístí, takže si okraj nese v sobě.
+
+     Okraj 5 mm místo patnácti jako na A4: na 134 mm výšky by patnáctka snědla
+     skoro čtvrtinu plochy. Stažený je až na pětku na přání týmu — co ušetří,
+     dostane fotka.
+
+     Pevná výška a `overflow: hidden`: kdyby text přetekl, je lepší, aby to
+     bylo vidět jako uříznuté písmeno, než aby PDF tiše mělo dvě strany. */
+  .inzerat {
+    width: 190mm;
+    height: 134mm;
+    margin: 0 auto;
+    /* Dole užší okraj než po stranách: spodní text má jít blíž k hraně
+       a s ním se posune dolů i dělicí čára nad ním. */
+    padding: 5mm 5mm 2mm;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Jemná zelená místo papírové bílé, na přání týmu — ve zpravodaji
+       plném bílých sloupců inzerát okamžitě odliší. Odstín je z palety
+       (`--sedozelena-jemna`), ne namíchaný natvrdo. */
+    background: var(--sedozelena-jemna);
+    border: 0.5mm solid var(--sedozelena);
+    box-shadow: 0 2mm 8mm rgb(0 0 0 / 0.15);
+  }
+
+  /* ---------- Hlavička: logo, claim a číslo v jednom pásu ---------- */
+
+  /* Pořadí je claim — číslo — značka, na přání týmu. V kódu zůstává značka
+     první, aby stránka začínala tím, čí to je; přeskládává to `order`.
+
+     Tři sloupce, ne pružný řádek: krajní `1fr` jsou stejně široké, takže
+     číslo sedí uprostřed strany bez ohledu na to, jak dlouhý je claim nebo
+     dovětek pod logem. S `space-between` viselo o 17 mm vlevo. */
+  .hlava {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 5mm;
+  }
+
+  .znacka {
+    order: 3;
+    justify-self: end;
+    text-align: right;
+  }
+
+  .logo {
+    width: 42mm;
+    height: auto;
+  }
+
+  .doplnek {
+    margin: 0.4mm 0 0;
+    font-size: 2.5mm;
+    line-height: 1.3;
+    color: var(--inkoust-tlum);
+  }
+
+  .claim {
+    order: 1;
+    justify-self: start;
+    margin: 0;
+    font-weight: 650;
+    line-height: 0.78;
+    letter-spacing: -0.035em;
+    color: var(--sedozelena-text);
+  }
+
+  /* Dva řádky a dvě velikosti, na přání týmu: výzva nahlas, odpověď na ni
+     tišeji. Stupně jsou dopočítané tak, aby oba řádky vyšly stejně široké
+     (obojí 37,8 mm) — „Povídejte," má deset znaků, „my nasloucháme." patnáct,
+     takže stejná velikost by dala dva různě dlouhé řádky. Když se text hesla
+     změní, musí se čísla přeměřit. */
+  .claim-zacatek {
+    display: block;
+    font-size: 8mm;
+  }
+
+  .claim-konec {
+    font-size: 4.65mm;
+  }
+
+  .claim-konec {
+    font-weight: 550;
+  }
+
+  /* Popisek je vytažený z toku, takže šířku bloku určuje jen kolečko — jen
+     tak sedí číslo přesně uprostřed strany. V toku ho táhlo o 7 mm doleva. */
+  .cislo {
+    order: 2;
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin: 0;
+  }
+
+  .cislo-popis {
+    position: absolute;
+    left: 100%;
+    margin-left: 2.2mm;
+    white-space: nowrap;
+  }
+
+  .cislo-znak {
+    display: grid;
+    place-items: center;
+    width: 13mm;
+    height: 13mm;
+    border-radius: 50%;
+    background: var(--sedozelena);
+    color: #fff;
+    font-size: 7.8mm;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .cislo-popis {
+    font-size: 2.5mm;
+    line-height: 1.3;
+    color: var(--inkoust-tlum);
+  }
+
+  /* ---------- Horní pás: fotka s úvodem vedle priorit ---------- */
+
+  .pas-horni {
+    display: grid;
+    grid-template-columns: 104mm 1fr;
+    gap: 5mm;
+    margin-top: 1.8mm;
+  }
+
+  /* Varianta 2: fotka vpravo, priority vlevo. Mění se jen šířky sloupců
+     a pořadí — obsah i všechny rozměry zůstávají stejné, takže se varianty
+     nemůžou rozejít. */
+  .fotka-vpravo .pas-horni {
+    grid-template-columns: 1fr 104mm;
+  }
+
+  .fotka-vpravo .fotka-ram {
+    order: 2;
+  }
+
+  .fotka-ram {
+    line-height: 0;
+  }
+
+  /* Fotka je širší, než jaký na ni zbývá kus výšky, takže se maličko ořízne.
+     `object-position: center bottom` znamená, že se ubírá VÝHRADNĚ shora,
+     z nebe a korun stromů — dolní hrana zůstává celá, aby nikdo nepřišel
+     o nohy. */
+  .fotka {
+    width: 100%;
+    /* Pevná výška, ne poměr stran: o tom, kolik výšky fotka dostane,
+       rozhoduje zbytek sazby. Po všech úpravách hlavičky a spodní
+       části na ni zbylo 60 mm. */
+    height: 62.4mm;
+    object-fit: cover;
+    object-position: center bottom;
+  }
+
+  /* Přes celou šířku pod claimem, ne ve sloupci s fotkou. Linka odděluje
+     hlavičku od zbytku inzerátu, takže úvodní věta patří až pod ni. */
+  .uvod {
+    margin: 3mm 0 0;
+    padding-top: 1.5mm;
+    border-top: 0.4mm solid var(--linka-vyrazna);
+    font-size: 3.05mm;
+    line-height: 1.4;
+    color: var(--inkoust-tlum);
+  }
+
+  /* ---------- Společné nadpisy sekcí ---------- */
+
+  .nadpis-sekce {
+    margin: 0 0 1.8mm;
+    font-size: 2.5mm;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sedozelena-text);
+  }
+
+  /* ---------- Priority ---------- */
+
+  /* Priority se rozprostrou po celé výšce sloupce, aby pás končil vlevo
+     i vpravo ve stejné výšce. Fotka s úvodem je o kus vyšší než pět odrážek
+     a bez tohohle zůstala vpravo dole prázdná plocha přes celou šířku. */
+  .program {
+    display: flex;
+    flex-direction: column;
+    /* Nezačíná v jedné rovině s horní hranou fotky: nadpis sekce je drobný
+       a vedle velké fotky vypadal přilepený nahoře. */
+    margin-top: 0.8mm;
+  }
+
+  .oblasti {
+    flex: 1;
+    align-content: start;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 1.5mm;
+  }
+
+  .oblasti li {
+    padding-left: 3mm;
+    /* Barevný proužek místo odrážky — drží stejné barvy oblastí jako web
+       a mapa, jen v šířce, která na papíře nezmizí. */
+    border-left: 0.9mm solid var(--barva);
+    font-size: 2.9mm;
+    line-height: 1.3;
+    color: var(--inkoust-tlum);
+  }
+
+  .oblasti strong {
+    color: var(--inkoust);
+  }
+
+  /* ---------- Kandidátka ---------- */
+
+  /* `margin-top: auto` přitlačí spodní pás k dolní hraně — na papíře se
+     mezera nedorovnává od oka. */
+  .kandidatka {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    column-gap: 6mm;
+    margin-top: auto;
+    padding-top: 1.2mm;
+    border-top: 0.4mm solid var(--linka-vyrazna);
+  }
+
+  /* QR kód má vlastní sloupec přes obě řádky sekce, takže začíná nahoře
+     u nadpisu, ne až u prvního jména. Kdyby stál až vedle seznamu, visel by
+     o výšku nadpisu níž a spodní hrana by se tlačila k okraji. */
+  .kandidatka .nadpis-sekce,
+  .lide {
+    grid-column: 1;
+  }
+
+  .kandidatka .qr {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: start;
+    /* Půl cesty mezi nadpisem sekce a prvním jménem: úplně nahoře u nadpisu
+       byl kód vysoko a dole u seznamu se tlačil k hraně papíru. */
+    margin-top: 2.4mm;
+  }
+
+  /* Dva sloupce sazbou do sloupců, ne mřížkou. V mřížce určuje výšku řádku
+     ten delší ze dvojice, takže pod kratším jménem zůstala díra — u pětky
+     skoro na dva řádky. Ve sloupcích jména jen tečou pod sebe a mezery jsou
+     všude stejné. */
+  .lide {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    columns: 2;
+    column-gap: 6mm;
+  }
+
+  .lide li {
+    display: flex;
+    align-items: baseline;
+    gap: 1.4mm;
+    /* Jméno se nesmí roztrhnout mezi sloupce. */
+    break-inside: avoid;
+    margin-bottom: 1.2mm;
+    font-size: 2.6mm;
+    line-height: 1.22;
+  }
+
+  .lide-cislo {
+    flex: none;
+    width: 3.4mm;
+    text-align: right;
+    font-weight: 700;
+    color: var(--sedozelena-text);
+  }
+
+  .lide-radek {
+    min-width: 0;
+  }
+
+  .lide-jmeno {
+    font-weight: 600;
+  }
+
+  /* Rodné příjmení netučně — tučný řez odlišuje jméno od údajů za tečkou. */
+  .lide-rozena {
+    font-weight: 400;
+  }
+
+  .lide-vek {
+    white-space: nowrap;
+  }
+
+  .lide-udaje {
+    /* 2,5 mm je spodní mez zadaná tiskárnou. Níž se jít nesmí ani o desetinu,
+       i kdyby se místo nedostávalo — pak se ubírá jinde. */
+    font-size: 2.5mm;
+    color: var(--inkoust-tlum);
+  }
+
+  /* ---------- Varianta 3: kandidáti v jednom sloupci ----------
+
+     Jiné rozvržení, ne jiný obsah. Nahoře dva pruhy — fotka vlevo, devět jmen
+     pod sebou vpravo — a dole přes celou šířku pás pěti programových bodů
+     vedle sebe. Devět jmen pod sebou je vysoký sloupec a priority naopak
+     snesou úzké sloupečky, takže se rozdělí opačně než ve variantách 1 a 2. */
+
+  .telo {
+    /* Ve variantách 1 a 2 obal nic nedělá — pásy zůstávají přímými položkami
+       inzerátu a chovají se přesně jako předtím. */
+    display: contents;
+  }
+
+  /* Bez dělicích čar — varianta 3 je dělí sazbou: prázdným místem mezi pásy
+     a barevnými proužky u programových bodů. Linky navíc dělaly z inzerátu
+     tabulku. */
+  .jeden-sloupec .uvod,
+  .jeden-sloupec .program {
+    border-top: 0;
+  }
+
+  /* Širší boční okraje než u variant 1 a 2: tahle je sázená do dvou pruhů
+     a bez vzduchu po stranách vypadala natěsno. Nahoře a dole zůstává
+     původní okraj. */
+  .inzerat.jeden-sloupec {
+    padding-left: 7mm;
+    padding-right: 7mm;
+  }
+
+  /* Hlavička varianty 3: značka vlevo, číslo uprostřed, QR kód vpravo.
+     Claim v ní není — ten se stěhuje dolů nad úvodní větu. */
+  .jeden-sloupec .znacka {
+    order: 1;
+    justify-self: start;
+    text-align: left;
+  }
+
+  .jeden-sloupec .telo {
+    display: grid;
+    /* Obal se roztáhne do zbytku výšky a pás programu sedne na spodní okraj;
+     horní řádek si tím bere všechno, co zbyde, a fotka v něm vyroste. */
+    flex: 1;
+    grid-template-rows: auto auto 1fr auto;
+    /* Předěl mezi hlavičkou a tělem inzerátu — jediná linka, kterou tahle
+       varianta má. */
+    /* Odsazení pod předělem: fotka i text začínají níž, ne hned pod linkou. */
+    padding-top: 2.5mm;
+    border-top: 0.4mm solid var(--linka-vyrazna);
+    /* Fotka vlevo, sloupec se jmény vpravo. Fotka je užší, než jaký má
+       poměr stran, takže se ořízne po stranách — na jméno s tituly, věkem
+       a povoláním je potřeba přes sto milimetrů, jinak se láme na dva řádky. */
+    grid-template-columns: 70mm 1fr;
+    gap: 4mm;
+    margin-top: 2.5mm;
+  }
+
+  /* Pás s fotkou se rozpustí, aby si fotka i priority mohly sednout do mřížky
+     samy — každá do jiného řádku. */
+  .jeden-sloupec .pas-horni {
+    display: contents;
+  }
+
+  /* V pravém sloupci je claim menší než v hlavičce ostatních variant: má
+     na sebe jen 101 mm místo celé šířky strany a musí se vejít nad úvodní
+     větu i devět jmen. */
+  .jeden-sloupec .claim-v-tele {
+    grid-area: 1 / 2;
+    margin-bottom: 2mm;
+  }
+
+  /* Na jeden řádek a jedním stupněm — v pravém sloupci je na to místo
+     a dvě velikosti nad sebou tu působily jako druhá hlavička. */
+  .jeden-sloupec .claim-zacatek,
+  .jeden-sloupec .claim-konec {
+    /* Víc už ne: na jeden řádek má claim 101 mm a při 6,8 mm měří 90. */
+    font-size: 6.8mm;
+  }
+
+  .jeden-sloupec .claim-zacatek {
+    display: inline;
+  }
+
+  .jeden-sloupec .uvod {
+    grid-area: 2 / 2;
+    margin: 0 0 1.5mm;
+    font-size: 3.1mm;
+    padding-top: 0;
+  }
+
+  .jeden-sloupec .kandidatka {
+    grid-area: 3 / 2;
+    /* Poslední jméno končí ve stejné rovině jako spodní hrana fotky —
+       jinak sloupec visel nahoře a pod ním zůstávala díra. */
+    align-self: end;
+    /* Zpátky na obyčejný blok: mřížka pro jména a QR kód vedle nich tu není
+       potřeba a její prázdná druhá dráha i s mezerou ukrajovala jménům 6 mm,
+       kvůli kterým se nejdelší z nich lámalo na dva řádky. */
+    display: block;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  /* Jeden sloupec jmen — o to v téhle variantě jde. */
+  .jeden-sloupec .lide {
+    columns: 1;
+  }
+
+  /* Čísla zarovnaná doleva, ne doprava: v jednom sloupci stojí pod nadpisem
+     sekce a s pravým zarovnáním v pevné šířce visela o dva milimetry vpravo
+     od něj. Kandidátů je devět, takže dvouciferné číslo nehrozí a řada
+     zůstane rovná. */
+  .jeden-sloupec .lide-cislo {
+    text-align: left;
+  }
+
+  /* Každý kandidát na jeden řádek. Na to je potřeba nejmenší povolený stupeň
+     — 2,5 mm je mez od tiskárny a tady se jí sazba dotýká. */
+  .jeden-sloupec .lide li {
+    font-size: 2.5mm;
+    /* Těsnější řádkování než ve variantách 1 a 2: devět jmen pod sebou
+       a nad nimi claim s úvodní větou jsou na 134 mm výšky tak akorát. */
+    margin-bottom: 1mm;
+    /* Užší sloupeček s číslem a menší mezera za ním: nejdelší jméno potřebuje
+       100,4 mm a bez toho by se do sloupce nevešlo na jeden řádek. */
+    gap: 1.2mm;
+  }
+
+  .jeden-sloupec .lide-cislo {
+    width: 3mm;
+  }
+
+  /* Fotka sahá od úvodní věty po poslední jméno a vlevo lícuje s claimem
+     v hlavičce i s pásem programu pod sebou — všechno začíná na stejné svislici. */
+  .jeden-sloupec .fotka-ram {
+    grid-area: 1 / 1 / 4 / 2;
+  }
+
+  /* QR kód dolů do rohu inzerátu, mimo tok. Ve sloupci se jmény ukrajoval
+     26 mm šířky a kvůli tomu se tři jména lámala na dva řádky; v rohu
+     nezabírá nic. Místo pro něj dělá `padding-right` u pásu programu. */
+  .jeden-sloupec {
+    position: relative;
+  }
+
+  /* QR kód patří do pravého horního rohu, k hlavičce. Je vytažený z toku
+     (`position: absolute`), protože ve zdroji sedí u kandidátky — v toku by
+     ukrajoval šířku sloupci se jmény a ta by se lámala na dva řádky. */
+  .jeden-sloupec .qr {
+    position: absolute;
+    top: 5mm;
+    right: 7mm;
+    margin: 0;
+    /* Popisek a adresa nalevo od kódu, ne nad ním — v hlavičce je málo výšky
+       a vedle sebe se to čte jako jeden celek. */
+    display: grid;
+    grid-template-columns: auto auto;
+    align-items: center;
+    column-gap: 2mm;
+    text-align: right;
+  }
+
+  .jeden-sloupec .qr-popis {
+    grid-area: 1 / 1;
+  }
+
+  .jeden-sloupec .qr-adresa {
+    grid-area: 2 / 1;
+  }
+
+  .jeden-sloupec .qr-kod {
+    grid-area: 1 / 2 / 3 / 3;
+  }
+
+  .jeden-sloupec .program {
+    padding-right: 0;
+  }
+
+  /* Fotka se přizpůsobí výšce sloupce se jmény, aby oba pruhy končily
+     ve stejné rovině. Ořez jde jen shora, nohy zůstávají celé. */
+  /* Výška se řídí sloupcem se jmény, ale nesmí klesnout pod 58 mm — devět
+     jednořádkových jmen je nízký sloupec a fotka by vedle nich byla proužek.
+     Zbytek výšky pod ní si vezme pás programu. */
+  .jeden-sloupec .fotka {
+    /* Pevná výška místo plné výšky pásu: čím je rámeček vyšší, tím víc
+       `cover` ukrajuje ze stran. Při 64 mm zbývá po stranách postav asi
+       půl centimetru vzduchu — na přání týmu, ať nikdo nestojí na hraně. */
+    height: 64mm;
+    align-self: center;
+    /* Nejtěsnější ořez, který ještě nechá všechny postavy celé. Vyzkoušeno
+       na čtyřech výřezech vedle sebe: při okně 16-84 % šířky jsou lidé celí,
+       při 24-88 % přijde krajní kandidát o rameno. Při výšce pásu vychází
+       viditelných zhruba 64 % šířky a `45%` je posadí tak, aby se ubralo
+       16 % zleva a zbytek zprava, kde je jen alej. */
+    object-fit: cover;
+    object-position: 42% center;
+    /* Bez tohohle by fotka v roztaženém řádku zůstala vysoká jako jména. */
+    align-self: stretch;
+  }
+
+  /* Pás programu u dolní hrany, přes obě mřížkové dráhy. */
+  .jeden-sloupec .program {
+    grid-area: 4 / 1 / 5 / 3;
+    margin-top: 0;
+    padding-top: 1.5mm;
+    /* Kousek nad spodní hranou, ne úplně na líci — jinak se pás tiskne
+       těsně u okraje papíru. */
+    margin-bottom: 5mm;
+  }
+
+  /* Pět bodů vedle sebe. Sloupečky vyjdou po 33 mm — na dvě až tři slova
+     na řádek, což tenhle text unese, protože jsou to hesla, ne odstavce. */
+  .jeden-sloupec .oblasti {
+    grid-template-columns: repeat(5, 1fr);
+    align-content: start;
+    gap: 0 3.5mm;
+  }
+
+  .jeden-sloupec .oblasti li {
+    /* O desetinu menší než v ostatních variantách: v úzkém sloupečku se text
+       láme častěji. Pořád je nad mezí 2,5 mm. */
+    font-size: 2.7mm;
+    line-height: 1.22;
+  }
+
+  /* ---------- QR kód ---------- */
+
+  /* Popis nad kódem, adresa pod ním — vedle sebe si popis a kód braly
+     šířku, kterou potřebují jména kandidátů. */
+  .qr {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6mm;
+    margin: 0;
+    flex: none;
+    text-align: center;
+  }
+
+  /* Tmavší odstín z dvojice, i když jde o plochu, ne o text: čtečka kód
+     hledá podle kontrastu proti papíru a `--sedozelena` dává jen 5 : 1,
+     zatímco `--sedozelena-text` 7,4 : 1. Zelený zůstává tak jako tak. */
+  .qr-kod {
+    display: block;
+    color: var(--sedozelena-text);
+  }
+
+  .qr-kod :global(svg) {
+    display: block;
+    width: 14mm;
+    height: 14mm;
+  }
+
+  .qr-popis {
+    font-size: 2.6mm;
+    line-height: 1.3;
+    color: var(--inkoust-tlum);
+  }
+
+  .qr-adresa {
+    font-size: 2.6mm;
+    line-height: 1.3;
+  }
+
+  @media print {
+    body {
+      background: #fff;
+      padding: 0;
+    }
+
+    .navod {
+      display: none;
+    }
+
+    .inzerat {
+      margin: 0;
+      box-shadow: none;
+    }
+  }
+</style>

@@ -21,7 +21,10 @@
     "qr": "node nastroje/qr.mjs",
     "letak": "node nastroje/tisk.mjs letak",
     "inzerce": "node nastroje/tisk.mjs inzerce",
-    "inzerce-a4": "node nastroje/tisk.mjs inzerce-a4"
+    "inzerce-a4": "node nastroje/tisk.mjs inzerce-a4",
+    "inzerce-na-sirku": "node nastroje/tisk.mjs inzerce-na-sirku",
+    "inzerce-na-sirku-2": "node nastroje/tisk.mjs inzerce-na-sirku-2",
+    "inzerce-na-sirku-3": "node nastroje/tisk.mjs inzerce-na-sirku-3"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",

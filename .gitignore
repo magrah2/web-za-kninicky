@@ -38,6 +38,9 @@ pnpm-debug.log*
 letak.pdf
 inzerce.pdf
 inzerce-a4.pdf
+inzerce-na-sirku.pdf
+inzerce-na-sirku-2.pdf
+inzerce-na-sirku-3.pdf
 
 # stazena data OpenStreetMap - mezipamet generatoru mapy
 nastroje/.mapa-data-*.json

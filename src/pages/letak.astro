@@ -51,6 +51,13 @@ import {
   ZASTUPITELSTVO,
 } from '../lib/strana';
 import { odkaz } from '../lib/odkaz';
+/*
+ * QR kód se vkládá jako kus SVG, ne přes `<img>`. Do obrázku načteného
+ * zvenčí se barva z CSS nedostane a na titulce má být kód v zelené barvě
+ * značky, ne černý. `stroke="currentColor"` pak barvu vezme z `.letak-qr`,
+ * tedy z tokenu, ne natvrdo.
+ */
+import qrKod from '../../public/qr-web.svg?raw';
 import montserratLatin from '../pisma/montserrat-latin.woff2?url';
 import montserratLatinExt from '../pisma/montserrat-latin-ext.woff2?url';
 import '../styles/tokeny.css';
@@ -110,16 +117,13 @@ const SE_SLOVEM = 3;
  * tady vypadá" nebo „tohle jsme postavili", a ani na jednom z těch snímků
  * nejsou Kníničky.
  */
-const UKAZKY = ['07-sportovni-hriste', '01-pristup-k-rece'];
-
-/**
- * Za kterou oblastí programu dvojice fotek stojí.
- *
- * Obě ukazují, co slibuje Sport a rekreace — pumptrack a přístup k vodě —
- * takže patří k ní, ne na konec programu, kde by se četly jako ilustrace
- * k Bydlení.
- */
-const UKAZKY_ZA = '3-sport-a-rekreace';
+const UKAZKY: Record<string, string[]> = {
+  // Pumptrack a přístup k vodě ukazují, co slibuje Sport a rekreace — patří
+  // k ní, ne na konec programu, kde by se četly jako ilustrace k Bydlení.
+  '3-sport-a-rekreace': ['07-sportovni-hriste', '01-pristup-k-rece'],
+  // Knihovna v Ostopovicích k poslednímu bodu veřejné vybavenosti.
+  '2-verejna-vybavenost-a-vzdelani': ['04-nove-zakoupena-nemovitost'],
+};
 
 /**
  * Oblasti, které mají začít na nové straně.
@@ -136,12 +140,36 @@ const UKAZKY_ZA = '3-sport-a-rekreace';
  */
 const NOVA_STRANA: string[] = [];
 
+/**
+ * Kudy vést svislý řez čtvercovou fotkou, když je původní snímek na výšku
+ * nebo na šířku.
+ *
+ * Bez záznamu se čtverec bere ze středu. Zapisuje se hodnota pro
+ * `object-position`, tedy 0 % = horní okraj, 100 % = dolní.
+ */
+const VYREZ_FOTKY: Record<string, string> = {
+  // Nahoře je jen les, dole schody a hladina — tedy to, o čem fotka je.
+  '01-pristup-k-rece': 'center 85%',
+  // Přes celou šířku se ořezává shora, kde je u knihovny jen strop.
+  '04-nove-zakoupena-nemovitost': 'center bottom',
+};
+
 const zamery = await getCollection('zamery');
-const ukazky = UKAZKY.map((id) => {
-  const zamer = zamery.find((z) => z.id === id);
-  const foto = fotkaZameru(id);
-  return zamer && foto ? { zamer, foto } : null;
-}).filter((u) => u !== null);
+
+/* Tytéž dvojice, jen připravené k vykreslení a bez záměrů, které mezitím
+   zmizely nebo přišly o fotku. */
+const ukazkyOblasti = Object.fromEntries(
+  Object.entries(UKAZKY).map(([oblast, idcka]) => [
+    oblast,
+    idcka
+      .map((id) => {
+        const zamer = zamery.find((z) => z.id === id);
+        const foto = fotkaZameru(id);
+        return zamer && foto ? { zamer, foto } : null;
+      })
+      .filter((u) => u !== null),
+  ]),
+);
 
 /**
  * Adresa webu na letáku a v QR kódu.
@@ -191,7 +219,9 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
         </header>
 
         <h1 class="letak-claim">
-          <span class="letak-claim-zacatek">{HESLO_ZACATEK}</span>
+          {/* Mezera musí být zapsaná, jinak ji Astro mezi značkami na dvou
+              řádcích zahodí a slova se slepí. */}
+          <span class="letak-claim-zacatek">{HESLO_ZACATEK}</span>{" "}
           <span class="letak-claim-konec">{HESLO_KONEC}</span>
         </h1>
 
@@ -228,12 +258,9 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
           {/* QR vede na web. Obrázek leží v repozitáři (`npm run qr`), nestahuje
               se — leták ani web nesmí posílat požadavky na cizí servery. */}
           <p class="letak-qr">
-            <img
-              src={odkaz('/qr-web.svg')}
-              alt={`QR kód s adresou ${adresaWebu}`}
-              width="200"
-              height="200"
-            />
+            <span class="letak-qr-kod" role="img" aria-label={`QR kód s adresou ${adresaWebu}`}>
+              <Fragment set:html={qrKod.replace(/stroke="[^"]*"/g, 'stroke="currentColor"')} />
+            </span>
             <span>{adresaWebu}</span>
           </p>
         </div>
@@ -260,25 +287,33 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
                 <oblast.Obsah />
               </div>
 
-              {oblast.id === UKAZKY_ZA && ukazky.length > 0 && (
+              {(ukazkyOblasti[oblast.id]?.length ?? 0) > 0 && (
                 <div class="ukazky">
-                  {ukazky.map(({ zamer, foto }) => (
-                    <figure class="ukazka">
-                      {/* 56 mm na 300 dpi je 661 px; 560 px davalo 254 dpi. */}
+                  {ukazkyOblasti[oblast.id].map(({ zamer, foto }, i, vse) => (
+                    /* Samotná fotka se sází přes celou šířku strany, dvojice
+                       vedle sebe po polovinách. */
+                    <figure class:list={['ukazka', vse.length === 1 && 'ukazka-siroka']}>
+                      {/* 56 mm na 300 dpi je 661 px, 122 mm potřebuje 1441 px.
+                          Jediná hodnota ve `widths` schválně — z víc kandidátů
+                          si prohlížeč při tisku vybere ten malý. */}
                       <Image
                         src={foto}
                         alt={zamer.data.foto_popis!}
-                        widths={[700]}
-                        sizes="56mm"
+                        widths={[vse.length === 1 ? 1500 : 700]}
+                        sizes={vse.length === 1 ? '122mm' : '56mm'}
                         quality={90}
                         loading="eager"
+                        style={`object-position: ${VYREZ_FOTKY[zamer.id] ?? 'center'}`}
                       />
                       {/* Na papire nema odkaz smysl, tiskne se jen domena -
                           aby slo dohledat, odkud snimek je. */}
                       <figcaption>
-                        {zamer.data.foto_popis}
-                        {zamer.data.foto_zdroj &&
-                          ` Zdroj: ${new URL(zamer.data.foto_zdroj).hostname.replace(/^www\./, '')}`}
+                        {zamer.data.foto_popis}{" "}
+                        {zamer.data.foto_zdroj && (
+                          <span class="ukazka-zdroj">
+                            Zdroj: {new URL(zamer.data.foto_zdroj).hostname.replace(/^www\./, '')}
+                          </span>
+                        )}
                       </figcaption>
                     </figure>
                   ))}
@@ -448,7 +483,7 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
      volebni cislo - a lamalo dovetek na dva radky, i kdyz se cely vejde.
      `nowrap` je pojistka pro pripad jineho pisma. */
   .letak-doplnek {
-    margin: 2mm 0 0;
+    margin: 0.8mm 0 0;
     font-size: 3.2mm;
     white-space: nowrap;
     line-height: 1.35;
@@ -456,37 +491,56 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
   }
 
   .letak-claim {
-    margin: 9mm 0 0;
+    /* Níž od hlavičky a blíž k fotce, na přání týmu. */
+    margin: 12mm 0 0;
     font-weight: 650;
     line-height: 0.98;
     letter-spacing: -0.04em;
     color: var(--sedozelena-text);
   }
 
+  /* Na jeden řádek, na přání týmu. Stupně jsou stažené tak, aby se obě
+     části vešly na 124 mm šířky titulky: 12 mm dá 57 mm a 6,5 mm dalších
+     53 mm, dohromady s mezerou 113 mm. */
   .letak-claim-zacatek,
   .letak-claim-konec {
-    display: block;
+    display: inline;
   }
 
+  .letak-claim-zacatek,
+  .letak-claim-konec {
+    /* Jeden stupeň pro celé heslo, na přání týmu. Strop je tady: po ztučnění
+       prvního slova na 800 měří věta při 8,9 mm už 123,2 mm ze 124 mm sazby,
+       takže by se při nejmenší změně textu zalomila. Při 8,7 mm zbývají
+       necelé čtyři milimetry rezervy. */
+    font-size: 8.7mm;
+  }
+
+  /* Výzva tučněji než odpověď na ni, na přání týmu. Montserrat je proměnné
+     písmo (100-900), takže 800 je skutečný řez, ne nasimulované ztučnění. */
   .letak-claim-zacatek {
-    font-size: 13mm;
+    font-weight: 800;
   }
 
   .letak-claim-konec {
-    margin-top: 1mm;
-    font-size: 7mm;
     font-weight: 600;
     letter-spacing: -0.028em;
   }
 
+  /* Ořez 1 cm zleva a 1,5 cm zprava, na přání týmu. Rámeček zůstává na plné
+     šířce sazby (124 mm) a fotka se do něj vejde zvětšená o těch 25 mm, takže
+     lidé jsou větší. Výška 99,3 mm plyne z poměru stran (149 / 1,5)
+     a `object-position: 40%` rozděluje ořez v poměru 10 : 15. */
   .letak-foto {
     width: 100%;
-    height: auto;
-    margin-top: 5mm;
+    height: 99.3mm;
+    object-fit: cover;
+    object-position: 40% center;
+    margin-top: 4mm;
   }
 
   .letak-uvod {
-    margin: 4mm 0 0;
+    margin: 3.5mm 0 0;
     font-size: 3.6mm;
     line-height: 1.5;
     color: var(--inkoust-tlum);
@@ -500,7 +554,9 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
     justify-content: space-between;
     gap: 4mm;
     margin-top: auto;
-    padding-top: 4mm;
+    /* Dva milimetry místo původních čtyř: patička je přichycená ke spodní
+       hraně, takže zúžení odsazení posouvá dělicí čáru níž a text zůstává. */
+    padding-top: 2mm;
     border-top: 0.4mm solid var(--linka-vyrazna);
   }
 
@@ -553,10 +609,20 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
     text-align: center;
   }
 
-  .letak-qr img {
+  /* Tmavší z obou zelených, i když jde o plochu, ne o text: čtečka kód hledá
+     podle kontrastu proti papíru a `--sedozelena` dává jen 5 : 1, zatímco
+     `--sedozelena-text` 7,4 : 1. Zelený zůstává tak jako tak. */
+  /* Dvě třídy: `.letak-qr span` níž má vyšší specificitu a obarvilo by kód
+     tlumeným inkoustem. */
+  .letak-qr .letak-qr-kod {
+    display: block;
+    color: var(--sedozelena-text);
+  }
+
+  .letak-qr-kod :global(svg) {
+    display: block;
     width: 17mm;
     height: 17mm;
-    display: block;
   }
 
   .letak-qr span {
@@ -664,20 +730,42 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
     margin: 0;
   }
 
+  .ukazka-siroka {
+    grid-column: 1 / -1;
+  }
+
+  /* Přes celou šířku by fotka v původním poměru měřila 81 mm na výšku a snědla
+     půl strany. Ořez jde shora, kde je u knihovny jen strop — a je držený
+     na minimu, aby z prostoru zůstalo co nejvíc. */
+  /* Dvě třídy schválně: `.ukazka img` níž má stejnou specificitu a stojí
+     v souboru pozdějí, takže by jinak vyhrálo ono. */
+  .ukazka.ukazka-siroka img {
+    height: 55mm;
+  }
+
   /* Obě fotky mají jinou proporci (jedna na šířku, druhá na výšku), takže
      se srovnají na společný poměr. Bez toho by dvojice vypadala jako dva
      nesouvisející obrázky vedle sebe. */
+  /* Čtvercový formát, na přání týmu: obě fotky mají jiný poměr stran
+     (jedna na šířku, druhá na výšku) a ve čtverci vedle sebe drží řádek. */
   .ukazka img {
     width: 100%;
-    height: 34mm;
+    aspect-ratio: 1;
+    height: auto;
     object-fit: cover;
   }
 
   .ukazka figcaption {
-    margin-top: 1.2mm;
+    margin-top: 0.7mm;
     font-size: 2.7mm;
     line-height: 1.35;
     color: var(--inkoust-tlum);
+  }
+
+  /* Zdroj na samostatný řádek: za popiskem v jedné větě splýval s tím,
+     co je na fotce vidět. */
+  .ukazka-zdroj {
+    display: block;
   }
 
   /* ---------- Kandidáti ---------- */

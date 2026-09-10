@@ -1,0 +1,15 @@
+---
+/**
+ * Volební inzerce 190 × 134 mm na šířku — varianta 3: kandidáti v jednom sloupci vlevo, fotka a priority vpravo.
+ *
+ * Obsah i sazbu drží `InzerceNaSirku`; tahle stránka jen říká, které
+ * rozvržení vyrobit. Proč je to jedna komponenta a ne tři stránky se
+ * zkopírovaným obsahem, je vysvětlené v ní.
+ *
+ * PDF: `npm run inzerce-na-sirku-3`
+ */
+
+import InzerceNaSirku from '../components/InzerceNaSirku.astro';
+---
+
+<InzerceNaSirku varianta={3} />

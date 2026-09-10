@@ -64,7 +64,13 @@ const HLAVA = {
   '01-pavel-jankuj': { temeno: 0.13, vysoka: 0.16 },
   '02-barbora-jelinkova': { temeno: 0.283, vysoka: 0.13 },
   '03-karolina-pokorna': { temeno: 0.287, vysoka: 0.15 },
-  '04-petr-krejci': { temeno: 0.21, vysoka: 0.13 },
+  /*
+   * Nova fotka ze zari 2026. Cisla jsou odectena z mrizky po jednom procentu
+   * vysky prilozene na hlavu: temeno vlasu vychazi na 17,5 % a brada na 35 %,
+   * takze hlava je vysoka 17,5 %. Puvodni fotka mela 0,21 a 0,13 - clovek na ni
+   * stal dal od objektivu.
+   */
+  '04-petr-krejci': { temeno: 0.225, vysoka: 0.149 },
   '06-milos-steffl': { temeno: 0.157, vysoka: 0.16 },
   '07-pavel-jankuj': { temeno: 0.213, vysoka: 0.15 },
   /*
@@ -272,6 +278,28 @@ async function ztmavitPozadi(obrazek, prah) {
  * se vyrez bere ze stredu, protoze na nich clovek uprostred uz stoji.
  */
 const VODOROVNE = {
+  /*
+   * Posun vyrezu doprava o 3 mm hotoveho portretu, na prani tymu: vlevo se
+   * orizne o 3 mm vic, vpravo o 3 mm min.
+   *
+   * Portret ma na karte 56,5 mm sirky a vyrez 708 px, takze 3 mm je 38 px.
+   * Vule mezi vyrezem a fotkou je 657 px, z toho 38 px dela 0,057 - odtud
+   * 0,557 misto stredovych 0,5.
+   */
+  '01-pavel-jankuj': 0.557,
+  // Posun o 3 mm doprava. Vyrez 664 px, vule 701 px, 3 mm = 35 px = 0,050.
+  '03-karolina-pokorna': 0.55,
+  /*
+   * Posunuti o 5 mm doprava, ve dvou krocich po 3 a 2 mm. Jeho vyrez je
+   * 664 px siroky a vule 701 px, takze 1 mm dela 11,8 px, tedy 0,0168 vule;
+   * pet milimetru je 0,084.
+   */
+  '07-pavel-jankuj': 0.584,
+  /*
+   * Posun o 2 mm doprava. Jeho vyrez je siroky 760 px (ma vlastni
+   * VYREZ_NA_HLAVY 2,9) a vule jen 605 px, takze 2 mm (27 px) dela 0,044.
+   */
+  '06-milos-steffl': 0.544,
   // 1,0 = VSECHNA dokreslena sirka jde nalevo, napravo nic. Presne o to
   // slo: „pridej nalevo 1 cm".
   '09-tomas-leder': 1,
