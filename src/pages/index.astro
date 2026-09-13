@@ -29,6 +29,14 @@ const stavVoleb = odpocet(ZACATEK_VOLEB, KONEC_VOLEB);
 
 const program = (await getCollection('program')).sort((a, b) => a.data.poradi - b.data.poradi);
 
+/*
+ * V dlaždicích „Co chceme v Kníničkách změnit" se „mateřská škola" krátí na
+ * „MŠ" — na přání týmu a jen tady. Dlaždice jsou úzké a pět vedle sebe musí
+ * držet stejnou výšku. Data zůstávají s plným tvarem: stránka Program, leták
+ * i inzerce ho mají vypsaný, protože tam se o to tým výslovně prosil.
+ */
+const doDlazdice = (text: string) => text.replace('mateřská škola', 'MŠ');
+
 const programSObsahem = await Promise.all(
   program.map(async (oblast) => ({ ...oblast, Obsah: (await render(oblast)).Content })),
 );
@@ -170,7 +178,7 @@ const prvni = kandidati.slice(0, 6);
                 <span class="dlazdice-nazev">{oblast.data.nazev}</span>
                 <span class="dlazdice-znak" aria-hidden="true">→</span>
               </span>
-              <span class="dlazdice-shrnuti">{oblast.data.shrnuti}</span>
+              <span class="dlazdice-shrnuti">{doDlazdice(oblast.data.shrnuti)}</span>
             </a>
           ))
         }
