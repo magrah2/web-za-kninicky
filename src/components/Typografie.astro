@@ -20,6 +20,17 @@
  */
 
 import { upravTypografii } from '../lib/typografie';
+
+interface Props {
+  /**
+   * Slova, do kterých se mají vložit měkké spojovníky. Klíč je slovo, hodnota
+   * totéž slovo s měkkými spojovníky v místech, kde se smí zlomit.
+   * Používá to jen leták, kde je text sázený do bloku.
+   */
+  deleniSlov?: Record<string, string>;
+}
+
+const { deleniSlov = {} } = Astro.props;
 ---
 
-<Fragment set:html={upravTypografii(await Astro.slots.render('default'))} />
+<Fragment set:html={upravTypografii(await Astro.slots.render('default'), deleniSlov)} />

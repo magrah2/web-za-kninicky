@@ -23,6 +23,11 @@
  * rozbila. `code` a `pre` zobrazují přesně to, co je v nich napsané,
  * takže do nich taky nepatří.
  */
+/** Před slovem a za ním nesmí stát další písmeno — jinak by se dělení
+    vložilo i doprostřed delšího slova. */
+const HRANICE_PRED = '(?<!\\p{L})';
+const HRANICE_ZA = '(?!\\p{L})';
+
 const NETKNUTE = new Set(['script', 'style', 'code', 'pre', 'textarea']);
 
 /**
@@ -99,11 +104,38 @@ function neomezitDeleni(text: string): string {
 }
 
 /**
+ * Vloží do vyjmenovaných slov měkké spojovníky (U+00AD).
+ *
+ * Měkký spojovník je neviditelný, dokud se na něm slovo opravdu nezlomí —
+ * pak se vytiskne jako běžný spojovník. Používá to jen leták, kde je text
+ * sázený do bloku: když se dlouhé slovo nevejde na konec řádku a musí celé
+ * spadnout na další, zůstanou po něm v řádku dvojnásobné mezery.
+ *
+ * PROČ SLOVNÍK, A NE AUTOMATICKÉ DĚLENÍ: `hyphens: auto` v CSS zapnuté je,
+ * jenže Chrome, který leták sází do PDF, česká dělicí pravidla nemá —
+ * ověřeno měřením, text s dělením i bez něj vyjde na stejný počet řádků.
+ * Slovník je proto jediný způsob, jak dělení dostat na papír, a zároveň drží
+ * počet dělených slov na minimu: dělí se jen to, co tým vybere jmenovitě.
+ */
+function pridatDeleni(text: string, slovnik: Record<string, string>): string {
+  let vysledek = text;
+
+  for (const [slovo, sDelenim] of Object.entries(slovnik)) {
+    // Hranice slova hlídá, aby se nenašlo uvnitř delšího slova.
+    vysledek = vysledek.replace(new RegExp(HRANICE_PRED + slovo + HRANICE_ZA, "gu"), sDelenim);
+  }
+
+  return vysledek;
+}
+/**
  * Projde HTML a upraví jen text mezi značkami — ne samotné značky ani jejich
  * atributy. Kdyby se pravidlo pustilo na celý řetězec, přepsalo by i adresy
  * v `href` a názvy tříd.
  */
-export function upravTypografii(html: string): string {
+export function upravTypografii(
+  html: string,
+  slovnikDeleni: Record<string, string> = {},
+): string {
   // Rozdělí řetězec na značky (`<...>`) a text mezi nimi. Liché prvky pole
   // jsou značky, sudé text — `split` se zachytávající skupinou to tak vrací.
   const casti = html.split(/(<[^>]*>)/);
@@ -120,7 +152,8 @@ export function upravTypografii(html: string): string {
         }
         return cast;
       }
-      return vNetknutem > 0 ? cast : neomezitDeleni(prilepPredlozky(cast));
+      if (vNetknutem > 0) return cast;
+      return pridatDeleni(neomezitDeleni(prilepPredlozky(cast)), slovnikDeleni);
     })
     .join('');
 }

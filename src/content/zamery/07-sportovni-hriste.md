@@ -17,5 +17,4 @@ v blízkosti dětského hřiště Dolní Louky s cílem zlepšit další možnos
 sportovního vyžití. Součástí projektu bude i vybudování bezbariérové toalety
 a zastřešeného posezení s grilem.
 
-Pro teenagery bychom rádi vybudovali pumptrack, workoutové hřiště a menší
-skatepark (U-rampa).
+Pro teenagery bychom rádi vybudovali pumptrack a menší skatepark (U-rampa).

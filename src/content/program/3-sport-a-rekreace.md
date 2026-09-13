@@ -10,8 +10,8 @@ tema: Sport a rekreace
   v blízkosti dětského hřiště Dolní Louky s cílem zlepšit další možnosti
   sportovního vyžití. Součástí tohoto projektu bude i vybudování
   bezbariérové toalety s přebalovacím pultem a zastřešeného posezení
-  s grilem. Pro teenagery bychom rádi vybudovali pumptrack, workoutové
-  hřiště, menší skatepark (U-rampa).
+  s grilem. Pro teenagery bychom rádi vybudovali pumptrack a menší skatepark
+  (U-rampa).
 - Naší městskou částí nám každodenně protéká mezi prsty potenciál řeky jako
   místa pro odpočinek a relaxaci. Chceme to změnit – vybudujeme pohodlné
   přístupy k řece a zpřístupníme ji pro odpočinkové účely, například formou

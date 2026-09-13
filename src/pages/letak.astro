@@ -154,6 +154,22 @@ const VYREZ_FOTKY: Record<string, string> = {
   '04-nove-zakoupena-nemovitost': 'center bottom',
 };
 
+/**
+ * Slova, která se na letáku smějí rozdělit na konci řádku.
+ *
+ * Seznam je krátký schválně. Blokové zarovnání dělá řídké řádky jen tam, kde
+ * se na konec řádku nevejde jedno dlouhé slovo — a rozsekat kvůli tomu text
+ * po celém letáku by bylo horší než ta mezera. Dělí se proto jen to, co tým
+ * vybere jmenovitě, a v místě, které určí.
+ *
+ * Zápis: klíč je slovo, hodnota totéž slovo s měkkým spojovníkem (U+00AD)
+ * tam, kde se smí zlomit. Na obrazovce ani v textu není vidět; vytiskne se
+ * jen tehdy, když se na něm slovo opravdu zlomí.
+ */
+const DELENI_SLOV = {
+  protipovodňových: 'proti\u00ADpovodňových',
+};
+
 const zamery = await getCollection('zamery');
 
 /* Tytéž dvojice, jen připravené k vykreslení a bez záměrů, které mezitím
@@ -193,7 +209,7 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
   </head>
 
   <body>
-    <Typografie>
+    <Typografie deleniSlov={DELENI_SLOV}>
       {/* Návod se sám netiskne — `@media print` ho schová. */}
       <p class="navod">
         <strong>Leták k tisku.</strong> Ctrl+P → formát <strong>A5</strong>, měřítko 100 %,
@@ -499,20 +515,14 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
     color: var(--sedozelena-text);
   }
 
-  /* Na jeden řádek, na přání týmu. Stupně jsou stažené tak, aby se obě
-     části vešly na 124 mm šířky titulky: 12 mm dá 57 mm a 6,5 mm dalších
-     53 mm, dohromady s mezerou 113 mm. */
+  /* Heslo na jeden řádek a jedním stupněm, na přání týmu.
+
+     8,7 mm je strop: po ztučnění prvního slova na 800 měří věta při 8,9 mm
+     už 123,2 mm ze 124 mm sazby, takže by se při nejmenší změně textu
+     zalomila. Takhle zbývají necelé čtyři milimetry rezervy. */
   .letak-claim-zacatek,
   .letak-claim-konec {
     display: inline;
-  }
-
-  .letak-claim-zacatek,
-  .letak-claim-konec {
-    /* Jeden stupeň pro celé heslo, na přání týmu. Strop je tady: po ztučnění
-       prvního slova na 800 měří věta při 8,9 mm už 123,2 mm ze 124 mm sazby,
-       takže by se při nejmenší změně textu zalomila. Při 8,7 mm zbývají
-       necelé čtyři milimetry rezervy. */
     font-size: 8.7mm;
   }
 
@@ -537,6 +547,26 @@ const adresaWebu = jeDraft ? 'zakninicky.cz' : Astro.site!.hostname;
     object-fit: cover;
     object-position: 40% center;
     margin-top: 4mm;
+  }
+
+  /* Souvislé texty na letáku se sázejí do bloku, na přání týmu.
+
+     ŠIROKÉ MEZERY JSOU ZNÁMÁ CENA, NE PŘEHLÉDNUTÍ. Sloupec má 120 mm a čeština
+     má dlouhá slova, takže bez dělení slov vychází ze 99 řádků 70 s nápadně
+     širšími mezerami (48 z nich 2,2× a víc, nejhorší 7,8×). Tým to takhle chce
+     — nabízené alternativy byly praporek nebo dělení slov v celém letáku.
+
+     `hyphens: auto` tu zůstává, i když Chrome česká dělicí pravidla nemá:
+     kdyby je někdy dostal, sazba se tím jen zlepší. Dělení konkrétních slov
+     řeší slovník `DELENI_SLOV` nahoře.
+
+     Měřit se to musí na obrazovkové sazbě — emulace tisku stránku roztáhne
+     na 339 mm a čísla z ní neplatí. */
+  .letak-uvod,
+  .oblast-body :global(li),
+  .clovek-slovo {
+    text-align: justify;
+    hyphens: auto;
   }
 
   .letak-uvod {
