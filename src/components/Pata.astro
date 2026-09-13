@@ -4,7 +4,14 @@ import Krivka from './Krivka.astro';
 // Patička leží mimo <main>, takže na ni typografická úprava v Zaklad.astro
 // nedosáhne — jednopísmenné předložky se tu proto lepí ručně.
 import { prilepPredlozky as typo } from '../lib/typografie';
-import { NAZEV, HESLO, EMAIL, ZASTUPITELSTVO, DATUM_VOLEB } from '../lib/strana';
+import {
+  NAZEV,
+  HESLO_ZACATEK,
+  HESLO_KONEC,
+  EMAIL,
+  ZASTUPITELSTVO,
+  DATUM_VOLEB,
+} from '../lib/strana';
 
 const rok = new Date().getFullYear();
 ---
@@ -19,7 +26,12 @@ const rok = new Date().getFullYear();
 <footer class="pata">
   <div class="pruh pata-vnitrek">
     <div class="pata-hlavni">
-      <p class="pata-heslo">{HESLO}</p>
+      {/* Dva řádky stejné šířky: výzva velká, odpověď menší. Mezera mezi
+          nimi musí být zapsaná — čtečka by jinak slova slepila. */}
+      <p class="pata-heslo">
+        <span class="pata-heslo-zacatek">{HESLO_ZACATEK}</span>{' '}
+        <span class="pata-heslo-konec">{HESLO_KONEC}</span>
+      </p>
     </div>
 
     <nav class="pata-navigace" aria-label="Patička">
@@ -88,9 +100,31 @@ const rok = new Date().getFullYear();
   .pata-heslo {
     margin: 0;
     font-size: var(--text-nadpis-2);
-    font-weight: 600;
+    line-height: 1;
     letter-spacing: -0.025em;
     color: var(--sedozelena-text);
+  }
+
+  /* Oba řádky stejně široké, na přání týmu. „Povídejte," má deset znaků
+     a „my nasloucháme." patnáct, takže stejná šířka znamená dva různé stupně.
+     Poměr je naměřený na hotové stránce, ne odhadnutý — a platí jen pro tyhle
+     řezy (650 a 550) a tohle znění hesla. Když se heslo změní, musí se
+     přeměřit. */
+  .pata-heslo-zacatek,
+  .pata-heslo-konec {
+    display: block;
+    width: max-content;
+  }
+
+  .pata-heslo-zacatek {
+    font-size: 1.45em;
+    font-weight: 650;
+  }
+
+  .pata-heslo-konec {
+    margin-top: 0.15em;
+    font-size: 0.843em;
+    font-weight: 550;
   }
 
   .pata-navigace ul {
