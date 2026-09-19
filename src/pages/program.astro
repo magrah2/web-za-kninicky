@@ -199,5 +199,13 @@ const sObsahem = await Promise.all(
     .oblast-nadpis :global(.oblast-ikona) {
       display: none;
     }
+
+    /* Nadpis se s kolečkem čísla srovná na střed. Nahoře (`start`, jako na
+       počítači) seděl jednořádkový nadpis o 10 px výš než střed
+       kolečka a dvojice vypadala rozhozeně — na počítači to nevadí, protože
+       nadpis je tam o dost vyšší. */
+    .oblast-hlava {
+      align-items: center;
+    }
   }
 </style>
