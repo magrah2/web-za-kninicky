@@ -219,7 +219,11 @@ const pripravene = await Promise.all(
      písmo dá na řádek víc slov a odstavec se čte líp. Nadpis otázky zůstává,
      jaký byl — ten má nad odpovědí vyčnívat. */
   @media (max-width: 560px) {
-    .otazka-odpoved {
+    .otazka-odpoved,
+    /* Názvy dokumentů se zmenšují spolu s odpovědí: dlouhé názvy se na mobilu
+       lámaly na tři řádky a v původní velikosti by teď byly nápadnější než
+       text, ke kterému patří. Štítek PDF zůstává — je už o dva stupně menší. */
+    .priloha {
       font-size: var(--text-maly);
     }
   }
