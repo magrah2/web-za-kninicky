@@ -157,8 +157,12 @@ const sObsahem = await Promise.all(
     color: var(--barva);
   }
 
+  /* O půldruhého centimetru širší než běžný textový sloupec webu, na přání
+     týmu: odrážky programu jsou dlouhá souvětí a v základní šířce se každá
+     lámala o řádek víc. Je to výjimka jen pro tuhle stránku — `--sirka-textu`
+     jinde platí dál, aby se běžný text četl po zhruba sedmdesáti znacích. */
   .oblast-obsah {
-    max-width: var(--sirka-textu);
+    max-width: calc(var(--sirka-textu) + 1.5cm);
     margin-top: 1.1rem;
     margin-left: var(--odsazeni-textu);
   }
