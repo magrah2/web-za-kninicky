@@ -286,6 +286,24 @@ const prvni = kandidati.slice(0, 6);
     </div>
   </section>
 
+  {/* ---------- Jak volit ---------- */}
+  <section class="sekce pas-noc jak-volit">
+    <div class="pruh jak-volit-vnitrek">
+      <div>
+        <p class="nadtitulek">Jak volit</p>
+        <h2>Do zastupitelstva máte {POCET_ZASTUPITELU} křížků. Věděli jste to?</h2>
+        <p class="perex">
+          Komunální volby fungují jinak než všechny ostatní a většina lidí to neví.
+          Můžete dát hlas celé kandidátce, vybírat jednotlivce napříč stranami, nebo obojí
+          zkombinovat. Ukážeme vám to na hlasovacím lístku, který si můžete vyzkoušet.
+        </p>
+        <p class="jak-volit-tlacitko">
+          <a class="tlacitko tlacitko-hlavni" href={odkaz('/jak-volit/')}>Vyzkoušet lístek</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
   {/* ---------- Otázky a odpovědi ---------- */}
   {posledniOtazky.length > 0 && (
     <section class="sekce otazky">
@@ -318,24 +336,6 @@ const prvni = kandidati.slice(0, 6);
       </div>
     </section>
   )}
-
-  {/* ---------- Jak volit ---------- */}
-  <section class="sekce pas-noc jak-volit">
-    <div class="pruh jak-volit-vnitrek">
-      <div>
-        <p class="nadtitulek">Jak volit</p>
-        <h2>Do zastupitelstva máte {POCET_ZASTUPITELU} křížků. Věděli jste to?</h2>
-        <p class="perex">
-          Komunální volby fungují jinak než všechny ostatní a většina lidí to neví.
-          Můžete dát hlas celé kandidátce, vybírat jednotlivce napříč stranami, nebo obojí
-          zkombinovat. Ukážeme vám to na hlasovacím lístku, který si můžete vyzkoušet.
-        </p>
-        <p class="jak-volit-tlacitko">
-          <a class="tlacitko tlacitko-hlavni" href={odkaz('/jak-volit/')}>Vyzkoušet lístek</a>
-        </p>
-      </div>
-    </div>
-  </section>
 </Zaklad>
 
 <style>
