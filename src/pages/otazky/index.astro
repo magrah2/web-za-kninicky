@@ -214,6 +214,16 @@ const pripravene = await Promise.all(
     margin-top: 0.35rem;
   }
 
+  /* Na úzkém displeji je odpověď o stupeň menší než jinde na webu. Odpovědi
+     jsou dlouhé a v základní velikosti z nich na mobilu byla zeď textu; menší
+     písmo dá na řádek víc slov a odstavec se čte líp. Nadpis otázky zůstává,
+     jaký byl — ten má nad odpovědí vyčnívat. */
+  @media (max-width: 560px) {
+    .otazka-odpoved {
+      font-size: var(--text-maly);
+    }
+  }
+
   /* ---------- Přílohy ---------- */
 
   .prilohy {
