@@ -18,6 +18,8 @@ Web je statický — žádný server, žádná databáze, žádné cookies ani m
 | `src/content/kandidati/` | **Kandidáti** — jeden soubor na člověka, tady se vyplňují medailonky |
 | `src/content/program/` | **Program** — jedna oblast na soubor, odrážky na stránce `/program/` |
 | `src/content/zamery/` | **Body na mapě záměrů** — jeden soubor na místo |
+| `src/content/otazky/` | **Otázky a odpovědi** — jeden soubor na dotaz, stránka `/otazky/` |
+| `public/dokumenty/` | Dokumenty ke stažení (projektová dokumentace, zápisy), které se přikládají k odpovědím |
 | `src/assets/portrety/` | Portrétní fotky, jeden soubor na kandidáta pojmenovaný podle jeho id |
 | `src/pages/` | Jednotlivé stránky webu |
 | `src/pages/letak.astro` | **Leták k tisku** (A5 oboustranně) na adrese `/letak/`. Není v nabídce ani ve vyhledávačích — je to podklad pro tiskárnu. Bere obsah z týchž zdrojů jako web, takže se s ním nemůže rozejít. Tisk: Ctrl+P → A5, měřítko 100 %, bez okrajů, zapnuté „Tisknout pozadí" |
@@ -67,6 +69,49 @@ Pár pravidel, která web hlídá sám a upozorní, když se poruší:
 - `poradi` musí být vyplněné.
 
 Fotky se do frontmatteru nepíšou vůbec — viz další oddíl.
+
+---
+
+## Jak přidat otázku a odpověď
+
+Dotazy z volební debaty a z e-mailů jsou na stránce **Otázky a odpovědi**
+(`/otazky/`). Dva nejnovější se ukazují i na úvodní stránce.
+
+Zkopírujte `src/content/otazky/_SABLONA.md` pod novým názvem ve tvaru
+`RRRR-MM-DD-kratky-popis.md` — třeba `2026-09-17-parkovani-u-skoly.md`.
+Název souboru se nikde nevypisuje, slouží jen k orientaci.
+
+```
+---
+otazka: "Kdy se bude rekonstruovat ulice Ondrova?"
+datum: 2026-09-17
+poradi:                # nepovinné; řadí otázky ze stejného dne, menší číslo je výš
+na_uvod: false         # true = ukáže se na úvodní stránce (je tam místo na dvě)
+puvod: debata          # debata = z volební debaty, mail = e-mail od občana
+tema: Doprava          # nepovinné; barevný štítek podle programové oblasti
+stav: navrh            # navrh = rozepsané, na web se to nedostane
+prilohy:
+  - nazev: "Projektová dokumentace — Ondrova"
+    soubor: ondrova-dokumentace.pdf
+    popis: "Situační výkres a technická zpráva."
+---
+
+Sem přijde odpověď. Klidně na několik odstavců, může mít i odrážky.
+```
+
+**Dokument ke stažení** nahrajte do složky `public/dokumenty/` a do `soubor:`
+napište jeho přesný název i s příponou. Velikost a typ (PDF, DOCX…) dopíše web
+sám, takže se nemůžou rozejít se skutečností. Když soubor ve složce chybí,
+sestavení se zastaví a řekne to — odkaz, který nikam nevede, je horší než
+žádný odkaz.
+
+**Dokud je `stav: navrh`, otázka se na web nedostane.** Můžete si ji tedy
+v klidu rozepsat a nechat ležet. Jakmile odpověď někdo z týmu potvrdí,
+přepište `stav` na `overeno` a otázka se objeví na stránce i na úvodu.
+
+Otázky se řadí od nejnovější podle `datum`, přečíslovávat se nic nemusí.
+Každá má vlastní adresu (odkaz na ni získáte kliknutím na otázku), takže
+se dá poslat e-mailem.
 
 ---
 

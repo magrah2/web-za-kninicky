@@ -30,6 +30,28 @@ const stavVoleb = odpocet(ZACATEK_VOLEB, KONEC_VOLEB);
 const program = (await getCollection('program')).sort((a, b) => a.data.poradi - b.data.poradi);
 
 /*
+ * Poslední dotazy od lidí. Na úvodní stránce jsou jen dva a jen jako ochutnávka
+ * — celá odpověď patří na /otazky/, tady by z ní byla zeď textu.
+ *
+ * Když kolekce ještě nic neobsahuje, pás se nevykreslí vůbec. Prázdná sekce
+ * s nadpisem „Ptáte se" a ničím pod ním by vypadala jako chyba.
+ */
+const zverejneneOtazky = (await getCollection('otazky'))
+  .filter((o) => o.data.stav === 'overeno')
+  .sort(
+    (a, b) =>
+      b.data.datum.getTime() - a.data.datum.getTime() ||
+      (a.data.poradi ?? 0) - (b.data.poradi ?? 0),
+  );
+
+/* Vybrané otázky (`na_uvod: true`); když žádná vybraná není, vezmou se dvě
+   nahoře ze seznamu, aby pás nezůstal prázdný. */
+const vybrane = zverejneneOtazky.filter((o) => o.data.na_uvod);
+const posledniOtazky = (vybrane.length > 0 ? vybrane : zverejneneOtazky).slice(0, 2);
+
+/* Datum ani původ dotazu se nevypisují — stejně jako na stránce /otazky/. */
+
+/*
  * V dlaždicích „Co chceme v Kníničkách změnit" se „mateřská škola" krátí na
  * „MŠ" — na přání týmu a jen tady. Dlaždice jsou úzké a pět vedle sebe musí
  * držet stejnou výšku. Data zůstávají s plným tvarem: stránka Program, leták
@@ -264,6 +286,39 @@ const prvni = kandidati.slice(0, 6);
     </div>
   </section>
 
+  {/* ---------- Otázky a odpovědi ---------- */}
+  {posledniOtazky.length > 0 && (
+    <section class="sekce otazky">
+      <div class="pruh">
+        <div class="otazky-hlava">
+          <div>
+            <p class="nadtitulek">Ptáte se, odpovídáme</p>
+            <h2>Otázky z debaty i z vašich e-mailů</h2>
+          </div>
+          <a class="tlacitko tlacitko-vedlejsi" href={odkaz('/otazky/')}>
+            Všechny otázky →
+          </a>
+        </div>
+
+        <p class="perex otazky-perex">
+          Na volební debatě padla řada dotazů a další nám chodí e-mailem.
+          Naše odpovědi najdete pohromadě na jedné stránce včetně dokumentů
+          ke stažení.
+        </p>
+
+        <ul class="otazky-seznam">
+          {posledniOtazky.map((o) => (
+            <li>
+              <a href={odkaz(`/otazky/#otazka-${o.id}`)}>
+                <span class="otazky-text">{o.data.otazka}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )}
+
   {/* ---------- Jak volit ---------- */}
   <section class="sekce pas-noc jak-volit">
     <div class="pruh jak-volit-vnitrek">
@@ -284,6 +339,58 @@ const prvni = kandidati.slice(0, 6);
 </Zaklad>
 
 <style>
+  /* ---------- Otázky a odpovědi ---------- */
+
+  .otazky-hlava {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+  }
+
+  .otazky-perex {
+    margin-top: 0.9rem;
+    max-width: 60ch;
+  }
+
+  .otazky-seznam {
+    margin: clamp(1.25rem, 3vw, 1.75rem) 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 1rem;
+  }
+
+  @media (min-width: 720px) {
+    .otazky-seznam {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .otazky-seznam a {
+    display: grid;
+    gap: 0.35rem;
+    height: 100%;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid var(--linka);
+    border-left: 4px solid var(--sedozelena);
+    background: var(--plocha);
+    color: var(--inkoust);
+    text-decoration: none;
+  }
+
+  .otazky-seznam a:hover {
+    border-color: var(--sedozelena);
+    background: var(--sedozelena-jemna);
+  }
+
+  .otazky-text {
+    font-size: var(--text-nadpis-3);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
   /* ---------- Hero ---------- */
 
   .hero {

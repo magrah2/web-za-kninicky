@@ -56,3 +56,8 @@ nastroje/.pisma/
 # stazeni repozitare by neexistovala a nikdo by nepoznal, kam fotky patri.
 /fotky-original/*
 !/fotky-original/.gitkeep
+
+# puvodni podklady k otazkam, jak je dodal tym (stovky MB, jeden soubor
+# ma 105 MB a GitHub nad 100 MB odmita). Do gitu jde jen to, co se
+# skutecne nabizi ke stazeni - zmensene kopie v public/dokumenty/.
+/OTÁZKY - DOKUMENTY/

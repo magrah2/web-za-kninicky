@@ -19,11 +19,15 @@ import { NAZEV, NAZEV_DOPLNEK } from '../lib/strana';
 // „Kde volit" tu schválně není: Kníničky mají jediný volební okrsek, takže
 // vyhledávač volební místnosti by odpovídal všem stejně. Adresa místnosti
 // patří na /jak-volit/, ne na vlastní stránku.
+// „Vaše dotazy" jsou jako jediná položka v zeleném obdélníčku — na přání
+// týmu: otázky z debaty přibývají a mají být v hlavičce vidět. Zvýrazněná je
+// schválně jen jedna; kdyby jich bylo víc, nezvýrazňovala by se žádná.
 const POLOZKY = [
   { text: 'Program', cil: '/program/' },
   { text: 'Mapa', cil: '/mapa/' },
   { text: 'Kandidáti', cil: '/lide/' },
   { text: 'Jak volit', cil: '/jak-volit/' },
+  { text: 'Vaše dotazy', cil: '/otazky/', zvyraznena: true },
   { text: 'Kontakt', cil: '/kontakt/' },
 ];
 
@@ -60,7 +64,11 @@ const jeAktivni = (cil: string) => zdeCesta.endsWith(cil.replace(/\/+$/, ''));
         {
           POLOZKY.map((polozka) => (
             <li>
-              <a href={odkaz(polozka.cil)} aria-current={jeAktivni(polozka.cil) ? 'page' : undefined}>
+              <a
+                class={polozka.zvyraznena ? 'zvyraznena' : undefined}
+                href={odkaz(polozka.cil)}
+                aria-current={jeAktivni(polozka.cil) ? 'page' : undefined}
+              >
                 {polozka.text}
               </a>
             </li>
@@ -81,7 +89,11 @@ const jeAktivni = (cil: string) => zdeCesta.endsWith(cil.replace(/\/+$/, ''));
           {
             POLOZKY.map((polozka) => (
               <li>
-                <a href={odkaz(polozka.cil)} aria-current={jeAktivni(polozka.cil) ? 'page' : undefined}>
+                <a
+                  class={polozka.zvyraznena ? 'zvyraznena' : undefined}
+                  href={odkaz(polozka.cil)}
+                  aria-current={jeAktivni(polozka.cil) ? 'page' : undefined}
+                >
                   {polozka.text}
                 </a>
               </li>
@@ -219,6 +231,32 @@ const jeAktivni = (cil: string) => zdeCesta.endsWith(cil.replace(/\/+$/, ''));
     border-bottom-color: var(--sedozelena);
   }
 
+  /* Zelený obdélníček. Bílá na `--sedozelena` má kontrast 5,3 : 1 — stejně
+     jako hlavní tlačítko, odkud je ta dvojice barev vzatá. Značková zelená
+     `--zelena` by pod bílým textem spadla pod normu, proto tu není. */
+  .hlavicka nav a.zvyraznena {
+    background: var(--sedozelena);
+    color: #fff;
+    border-radius: var(--radius-maly);
+    font-weight: 600;
+  }
+
+  .hlavicka nav a.zvyraznena:hover {
+    background: var(--sedozelena-text);
+    color: #fff;
+  }
+
+  /* Podtržení otevřené stránky se u obdélníčku vypíná: uvnitř zelené plochy
+     by čára jen rozbíjela tvar. Že je stránka otevřená, nese `aria-current`
+     a samotné zvýraznění. */
+  .nabidka-siroka a.zvyraznena,
+  .nabidka-siroka a.zvyraznena:hover,
+  .nabidka-siroka a.zvyraznena[aria-current='page'] {
+    padding: 0.4rem 0.8rem;
+    border-bottom-color: transparent;
+    color: #fff;
+  }
+
   @media (max-width: 859px) {
     .nabidka-siroka {
       display: none;
@@ -305,6 +343,15 @@ const jeAktivni = (cil: string) => zdeCesta.endsWith(cil.replace(/\/+$/, ''));
   .nabidka-uzka nav a[aria-current='page'] {
     background: var(--sedozelena-jemna);
     color: var(--sedozelena-text);
+  }
+
+  /* Jemné pozadí z řádku výš je specifičtější než `.hlavicka nav a.zvyraznena`,
+     takže by zelený obdélníček při najetí zbělel a text by zmizel. */
+  .nabidka-uzka nav a.zvyraznena,
+  .nabidka-uzka nav a.zvyraznena:hover,
+  .nabidka-uzka nav a.zvyraznena[aria-current='page'] {
+    background: var(--sedozelena);
+    color: #fff;
   }
 </style>
 

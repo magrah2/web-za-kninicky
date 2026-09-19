@@ -123,4 +123,89 @@ const zamery = defineCollection({
   }),
 });
 
-export const collections = { kandidati, program, zamery };
+/**
+ * Otázky od lidí a naše odpovědi.
+ *
+ * Jeden soubor = jedna otázka. Text souboru (pod čárou) je odpověď, takže
+ * se dá psát jako běžný text včetně odstavců a odrážek.
+ *
+ * Datum a původ nejsou ozdoba: na volebním webu je rozdíl mezi otázkou,
+ * která zazněla veřejně na debatě před lidmi, a otázkou, kterou někdo
+ * poslal e-mailem. Čtenář má vědět, co čte.
+ */
+const otazky = defineCollection({
+  loader: glob({ pattern: ['**/*.md', '!_*.md'], base: './src/content/otazky' }),
+  schema: z.object({
+    /** Otázka tak, jak padla. Krátit se dá, měnit smysl ne. */
+    otazka: z.string(),
+    /** Kdy otázka zazněla nebo přišla. Řadí se podle toho, od nejnovější. */
+    datum: z.date(),
+    /**
+     * Pořadí mezi otázkami ze stejného dne. Nepovinné, menší číslo je výš.
+     *
+     * Otázky z jedné debaty mají všechny stejné datum, takže by o pořadí
+     * jinak rozhodoval název souboru — což nikdo nečeká a mění se to
+     * přejmenováním. Vyplňuje se jen tam, kde na pořadí záleží; ostatní
+     * zůstanou v pořadí, v jakém jsou soubory.
+     */
+    poradi: z.number().int().nullish(),
+    /**
+     * Ukázat tuhle otázku na úvodní stránce?
+     *
+     * Na úvodu je místo na dvě a nemusí to být zrovna ty nejnovější — vybírá
+     * se, co člověka, který web otevře poprvé, zajímá nejvíc. Když není
+     * označená žádná, vezmou se dvě nahoře ze seznamu, aby pás nezůstal
+     * prázdný.
+     */
+    na_uvod: z.boolean().default(false),
+    /** Odkud přišla: `debata` = volební debata, `mail` = e-mail od občana. */
+    puvod: z.enum(['debata', 'mail']),
+    /**
+     * Programová oblast, které se otázka týká. Nepovinné — ne každý dotaz
+     * do některé spadá. Když se vyplní, dostane otázka barevný štítek
+     * ve stejné barvě jako ta oblast v programu i na mapě.
+     */
+    tema: z.enum(TEMATA).nullish(),
+    /**
+     * `navrh` = odpověď zatím nikdo z týmu nepotvrdil. Vykreslí se
+     * s viditelnou značkou, aby si ji nikdo nespletl se závazkem.
+     * Po potvrzení se přepíše na `overeno` a značka zmizí.
+     */
+    stav: z.enum(['navrh', 'overeno']).default('navrh'),
+    /**
+     * Dokumenty ke stažení — projektová dokumentace, zápis, studie.
+     *
+     * Soubor se nahraje do `public/dokumenty/` a sem se napíše jen jeho
+     * název; velikost a typ si web dopočítá sám (src/lib/prilohy.ts).
+     * Když soubor chybí, sestavení spadne — odkaz na nic je horší než
+     * žádný odkaz.
+     */
+    prilohy: z
+      .array(
+        z
+          .object({
+            /** Název, který uvidí člověk — ne název souboru. */
+            nazev: z.string(),
+            /** Přesný název souboru ve složce `public/dokumenty/`. */
+            soubor: z.string().nullish(),
+            /**
+             * Adresa dokumentu, který leží jinde na internetu — třeba na webu
+             * města. Používá se u velkých souborů: strategie cyklodopravy má
+             * 100 MB a takový soubor do repozitáře nepatří. Navíc na cizím
+             * webu je vždycky poslední verze.
+             */
+            odkaz: z.string().url().nullish(),
+            /** Doplňující věta pod názvem, třeba čím dokument je. */
+            popis: z.string().nullish(),
+          })
+          /* Buď soubor u nás, nebo odkaz jinam — obojí naráz nedává smysl
+             a ani jedno by byl odkaz, který nikam nevede. */
+          .refine((p) => Boolean(p.soubor) !== Boolean(p.odkaz), {
+            message: 'Priloha musi mit bud soubor, nebo odkaz — prave jedno z toho.',
+          }),
+      )
+      .nullish(),
+  }),
+});
+
+export const collections = { kandidati, program, zamery, otazky };

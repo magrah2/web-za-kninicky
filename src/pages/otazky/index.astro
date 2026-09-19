@@ -1,0 +1,312 @@
+---
+/**
+ * Otázky a odpovědi — co se lidé ptali na volební debatě a e-mailem.
+ *
+ * Jedna otázka = jeden soubor v `src/content/otazky/`, takže přidání dotazu
+ * je stejná práce jako přidání medailonku a nikdo kvůli tomu nemusí sahat
+ * do téhle stránky.
+ *
+ * Řadí se od nejnovější. Pořadí schválně nedrží číslo v datech (jako
+ * u programu), ale datum: dotazy přibývají v čase a přečíslovávat je při
+ * každém novém by byla práce navíc, na kterou se dřív nebo později zapomene.
+ */
+
+import { getCollection, render } from 'astro:content';
+import Zaklad from '../../layouts/Zaklad.astro';
+import { pripravPrilohu } from '../../lib/prilohy';
+import { odkaz } from '../../lib/odkaz';
+import { EMAIL } from '../../lib/strana';
+
+/*
+ * Na web jdou jen potvrzené odpovědi.
+ *
+ * Značka „návrh odpovědi" u nepotvrzených byla na přání týmu zrušena, takže
+ * by nepotvrzený text vypadal na stránce stejně jako hotový — a to je přesně
+ * to, co se na volebním webu stát nesmí. Rozhoduje proto `stav`: dokud je
+ * `navrh`, otázka se nevykreslí vůbec. Po přepsání na `overeno` se objeví.
+ */
+const otazky = (await getCollection('otazky'))
+  .filter((o) => o.data.stav === 'overeno')
+  /* Od nejnovější; mezi otázkami ze stejného dne rozhoduje `poradi`. */
+  .sort(
+    (a, b) =>
+      b.data.datum.getTime() - a.data.datum.getTime() ||
+      (a.data.poradi ?? 0) - (b.data.poradi ?? 0),
+  );
+
+/* Odpověď je text souboru, přílohy se dopočítají z disku (velikost, typ).
+   Obojí se musí připravit tady: uvnitř šablony se `await` použít nedá. */
+const pripravene = await Promise.all(
+  otazky.map(async (o) => ({
+    ...o,
+    Odpoved: (await render(o)).Content,
+    prilohy: (o.data.prilohy ?? []).map(pripravPrilohu),
+  })),
+);
+
+/*
+ * Datum, původ dotazu ani název oblasti se u otázky NEVYPISUJÍ — na přání
+ * týmu. Datum v datech zůstává, řadí se podle něj; oblast se zatím nikde
+ * neprojeví. Kdyby se měly vrátit na stránku, je to jen pár řádků v šabloně
+ * níž (historie v gitu).
+ */
+---
+
+<Zaklad
+  titulek="Otázky a odpovědi"
+  popis="Dotazy, které padly na volební debatě a které nám lidé poslali e-mailem, i s našimi odpověďmi a podklady ke stažení."
+>
+  <div class="pruh">
+    <p class="nadtitulek">Ptáte se, odpovídáme</p>
+    <h1 class="nadpis">Otázky a odpovědi</h1>
+    <p class="perex uvod">
+      Děkujeme všem, kdo přišli na volební debatu, a za otázky, které tam
+      padly — díky nim víme, co je pro vás v Kníničkách důležité a co je
+      potřeba řešit.
+    </p>
+    <p class="perex uvod uvod-dalsi">
+      Dotazy z debaty i ty, které jste nám poslali e-mailem, sbíráme
+      a odpovídáme na ně na jednom místě, aby se k odpovědím dostal každý.
+      K některým z nich přikládáme dokumenty, které si můžete stáhnout.
+    </p>
+
+    {
+      pripravene.length === 0 ? (
+        /* Prázdná kolekce není chyba — jen ještě nikdo nic nepřidal. */
+        <p class="perex">
+          Zatím tu nic není. Jakmile odpovíme na první dotazy, objeví se
+          na téhle stránce.
+        </p>
+      ) : (
+        <ol class="otazky">
+          {pripravene.map((o) => (
+            <li class="otazka" id={`otazka-${o.id}`}>
+              <h2 class="otazka-text">
+                {/* Odkaz sám na sebe: dotaz se dá poslat e-mailem přímo. */}
+                <a href={`#otazka-${o.id}`}>{o.data.otazka}</a>
+              </h2>
+
+              <div class="otazka-odpoved">
+                <o.Odpoved />
+              </div>
+
+              {o.prilohy.length > 0 && (
+                <div class="prilohy">
+                  {/* Nadpis se na přání týmu netiskne na stránku — štítek PDF
+                      u každého odkazu mluví sám za sebe. Pro čtečky obrazovky
+                      ale zůstává: bez něj by byl seznam odkazů bez uvození. */}
+                  <h3 class="prilohy-nadpis jen-pro-ctecky">Ke stažení</h3>
+                  <ul>
+                    {o.prilohy.map((p) => (
+                      <li>
+                        <a
+                          class="priloha"
+                          href={p.externi ? p.cesta : odkaz(p.cesta)}
+                          download={p.externi ? undefined : true}
+                          target={p.externi ? '_blank' : undefined}
+                          rel={p.externi ? 'noopener' : undefined}
+                        >
+                          <span class="priloha-typ" aria-hidden="true">
+                            {p.typ}
+                          </span>
+                          <span class="priloha-text">
+                            <span class="priloha-nazev">{p.nazev}</span>
+                            {p.popis && <span class="priloha-popis">{p.popis}</span>}
+                          </span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </li>
+          ))}
+        </ol>
+      )
+    }
+
+    <aside class="zeptejte-se">
+      <h2>Nenašli jste svou otázku?</h2>
+      <p>
+        Napište nám. Odpovíme vám e-mailem a odpověď, která může zajímat
+        i ostatní, doplníme sem na web.
+      </p>
+      <p class="zeptejte-se-mail">
+        <a class="tlacitko tlacitko-hlavni" href={`mailto:${EMAIL}`}>{EMAIL}</a>
+      </p>
+    </aside>
+  </div>
+</Zaklad>
+
+<style>
+  .nadpis {
+    max-width: 20ch;
+  }
+
+  /* Perex má nad sebou vlastní mezeru: `.perex` ji globálně nemá a nadpis
+     s ním jinak splývá do jednoho bloku. */
+  .uvod {
+    margin-top: clamp(1rem, 2.5vw, 1.6rem);
+    max-width: 60ch;
+  }
+
+  /* Druhý odstavec úvodu má menší mezeru než ta pod nadpisem: patří k tomu
+     prvnímu, jen je oddělený, aby se poděkování nemíchalo s vysvětlením. */
+  .uvod-dalsi {
+    margin-top: 0.8rem;
+  }
+
+  .otazky {
+    margin: clamp(2rem, 5vw, 3rem) 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.25rem);
+  }
+
+  /* Proužek vlevo je v hlavní barvě webu, ne v barvě oblasti.
+     `BARVA_TEMATU` je pořád modrá (kvůli odznakům na tmavé mapě) a modrý
+     proužek na šedozeleném webu svítil jako cizí prvek — u otázek navíc
+     oblast nikde nestojí, takže barva neměla co vysvětlovat. */
+  .otazka {
+    padding: clamp(1.25rem, 3vw, 1.75rem);
+    border: 1px solid var(--linka);
+    border-left: 4px solid var(--sedozelena);
+    border-radius: var(--radius);
+    background: var(--plocha);
+  }
+
+  .otazka-text {
+    margin: 0;
+    font-size: var(--text-nadpis-3);
+    line-height: 1.3;
+  }
+
+  .otazka-text a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .otazka-text a:hover {
+    text-decoration: underline;
+  }
+
+  .otazka-odpoved {
+    margin-top: 0.9rem;
+    color: var(--inkoust-tlum);
+  }
+
+  .otazka-odpoved :global(p) {
+    margin: 0.7rem 0 0;
+  }
+
+  .otazka-odpoved :global(p:first-child) {
+    margin-top: 0;
+  }
+
+  .otazka-odpoved :global(ul),
+  .otazka-odpoved :global(ol) {
+    margin: 0.7rem 0 0;
+    padding-left: 1.2rem;
+  }
+
+  .otazka-odpoved :global(li + li) {
+    margin-top: 0.35rem;
+  }
+
+  /* ---------- Přílohy ---------- */
+
+  .prilohy {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--linka);
+  }
+
+  .prilohy-nadpis {
+    margin: 0 0 0.6rem;
+    font-size: var(--text-drobny);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--inkoust-tlum);
+  }
+
+  .prilohy ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .priloha {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--linka);
+    border-radius: var(--radius);
+    color: var(--inkoust);
+    text-decoration: none;
+  }
+
+  .priloha:hover {
+    border-color: var(--sedozelena);
+    background: var(--sedozelena-jemna);
+  }
+
+  /* Přípona místo ikony: řekne rovnou, co se stáhne, a nepotřebuje obrázek. */
+  .priloha-typ {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius);
+    background: var(--sedozelena);
+    color: #fff;
+    font-size: var(--text-drobny);
+    font-weight: 700;
+  }
+
+  .priloha-text {
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  /* Kurzíva a běžný řez místo tučného, na přání týmu: název dokumentu se
+     tak odliší od nadpisů kolem, aniž by přetahoval pozornost. */
+  .priloha-nazev {
+    font-style: italic;
+  }
+
+  .priloha-popis,
+  .priloha-udaje {
+    font-size: var(--text-drobny);
+    color: var(--inkoust-tlum);
+  }
+
+  /* ---------- Výzva na konci ---------- */
+
+  .zeptejte-se {
+    margin-top: clamp(2.5rem, 6vw, 4rem);
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    border-radius: var(--radius);
+    background: var(--sedozelena-jemna);
+  }
+
+  .zeptejte-se h2 {
+    margin: 0;
+    font-size: var(--text-nadpis-3);
+  }
+
+  .zeptejte-se p {
+    margin: 0.6rem 0 0;
+    max-width: 55ch;
+    color: var(--inkoust-tlum);
+  }
+
+  .zeptejte-se-mail {
+    margin-top: 1.1rem;
+  }
+</style>
