@@ -197,6 +197,18 @@ const NEPLATNY = [
     margin-top: 1.5rem;
   }
 
+  /* Nadpisy web sází s `text-wrap: balance`, aby měly řádky podobnou délku.
+     Tenhle je ale dlouhý a na telefonu se kvůli vyvažování lámal hned za
+     slovem „zakřížkuju", takže první řádek zbytečně končil v půlce otázky.
+     `pretty` řádek doplní až k okraji a pohlídá jen osamocené slovo na konci.
+     Platí jen na úzkém displeji — na širokém se nadpis vejde na jeden řádek
+     a vyvažování tam nic nekazí. */
+  @media (max-width: 560px) {
+    .past-druha {
+      text-wrap: pretty;
+    }
+  }
+
   .zpusoby {
     display: grid;
     gap: 0.85rem;
