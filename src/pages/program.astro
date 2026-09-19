@@ -77,12 +77,22 @@ const sObsahem = await Promise.all(
 </Zaklad>
 
 <style>
+  /* Šířka textového sloupce celé stránky — o půldruhého centimetru větší než
+     běžný text webu, na přání týmu: odrážky programu jsou dlouhá souvětí
+     a v základní šířce se každá lámala o řádek víc. Drží ji úvodní věta,
+     shrnutí oblastí i odrážky, aby měly stejně dlouhý řádek. Jinde na webu
+     platí `--sirka-textu` dál, aby se běžný text četl po zhruba 70 znacích. */
+  .pruh {
+    --sirka-bloku: calc(var(--sirka-textu) + 1.5cm);
+  }
+
   .nadpis {
     max-width: 20ch;
   }
 
   .uvod {
     margin-top: 1rem;
+    max-width: var(--sirka-bloku);
   }
 
   .oblasti {
@@ -140,7 +150,7 @@ const sObsahem = await Promise.all(
   /* Zalícované s textem odrážek pod sebou, ne s jejich puntíky — proto
      k odsazení textu přibývá ještě odsazení uvnitř seznamu. */
   .oblast-shrnuti {
-    max-width: 48ch;
+    max-width: var(--sirka-bloku);
     margin: 0.45rem 0 0 var(--odsazeni-textu);
     padding-left: var(--odsazeni-odrazky);
     font-size: var(--text-maly);
@@ -163,12 +173,8 @@ const sObsahem = await Promise.all(
     color: var(--barva);
   }
 
-  /* O půldruhého centimetru širší než běžný textový sloupec webu, na přání
-     týmu: odrážky programu jsou dlouhá souvětí a v základní šířce se každá
-     lámala o řádek víc. Je to výjimka jen pro tuhle stránku — `--sirka-textu`
-     jinde platí dál, aby se běžný text četl po zhruba sedmdesáti znacích. */
   .oblast-obsah {
-    max-width: calc(var(--sirka-textu) + 1.5cm);
+    max-width: var(--sirka-bloku);
     margin-top: 1.1rem;
     margin-left: var(--odsazeni-textu);
   }
