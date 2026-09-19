@@ -60,9 +60,12 @@ const sObsahem = await Promise.all(
                   />
                   <span>{oblast.data.nadpis ?? oblast.data.nazev}</span>
                 </h2>
-                <p class="oblast-shrnuti">{oblast.data.shrnuti}</p>
               </div>
             </div>
+            {/* Shrnutí stojí mimo hlavičku, aby se dalo odsadit stejně jako
+                odrážky pod ním — uvnitř hlavičky by ho držel sloupec vedle
+                kolečka s číslem a na mobilu by viselo vpravo. */}
+            <p class="oblast-shrnuti">{oblast.data.shrnuti}</p>
             <div class="oblast-obsah">
               <oblast.Obsah />
             </div>
@@ -90,7 +93,15 @@ const sObsahem = await Promise.all(
     gap: 0;
   }
 
+  /* Odsazení textu pod nadpisem = šířka kolečka s číslem plus mezera vedle
+     něj. Drží ho shrnutí i odrážky, aby obojí licovalo s nadpisem; kdyby si
+     to každý počítal sám, rozejde se to při první změně kolečka. */
   .oblast {
+    --odsazeni-textu: calc(2.75rem + clamp(0.9rem, 2vw, 1.5rem));
+    /* Odsazení textu odrážky od jejího puntíku. V rem, ne v em: shrnutí je
+       o stupeň menší než odrážky, takže by se v em obojí odsadilo jinak
+       a lícování by se rozešlo právě tam, kde má platit. */
+    --odsazeni-odrazky: 1.2rem;
     padding-block: clamp(1.75rem, 3.5vw, 2.75rem);
     border-top: 1px solid var(--linka);
     scroll-margin-top: 6rem;
@@ -123,9 +134,12 @@ const sObsahem = await Promise.all(
     letter-spacing: -0.02em;
   }
 
+  /* Zalícované s textem odrážek pod sebou, ne s jejich puntíky — proto
+     k odsazení textu přibývá ještě odsazení uvnitř seznamu. */
   .oblast-shrnuti {
     max-width: 48ch;
-    margin: 0.45rem 0 0;
+    margin: 0.45rem 0 0 var(--odsazeni-textu);
+    padding-left: var(--odsazeni-odrazky);
     font-size: var(--text-maly);
     color: var(--inkoust-tlum);
   }
@@ -146,12 +160,12 @@ const sObsahem = await Promise.all(
   .oblast-obsah {
     max-width: var(--sirka-textu);
     margin-top: 1.1rem;
-    margin-left: calc(2.75rem + clamp(0.9rem, 2vw, 1.5rem));
+    margin-left: var(--odsazeni-textu);
   }
 
   .oblast-obsah :global(ul) {
     margin: 0;
-    padding-left: 1.15em;
+    padding-left: var(--odsazeni-odrazky);
   }
 
   .oblast-obsah :global(li) {
@@ -170,6 +184,12 @@ const sObsahem = await Promise.all(
     .oblast-obsah {
       margin-left: 0;
       font-size: var(--text-maly);
+    }
+
+    /* Na mobilu jdou obojí k levému okraji — shrnutí se tím zalícuje
+       s odrážkami pod ním. */
+    .oblast-shrnuti {
+      margin-left: 0;
     }
   }
 </style>
