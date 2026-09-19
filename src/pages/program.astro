@@ -163,8 +163,13 @@ const sObsahem = await Promise.all(
   }
 
   @media (max-width: 560px) {
+    /* Odrážky jsou dlouhé věty a v základní velikosti z nich byla na mobilu
+       zeď textu. O stupeň menší písmo dá na řádek víc slov — stejný krok jako
+       u odpovědí na /otazky/, aby se obě stránky na telefonu četly stejně.
+       Nadpis oblasti i shrnutí zůstávají, ty mají nad odrážkami vyčnívat. */
     .oblast-obsah {
       margin-left: 0;
+      font-size: var(--text-maly);
     }
   }
 </style>
