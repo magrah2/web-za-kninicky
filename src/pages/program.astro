@@ -111,9 +111,12 @@ const sObsahem = await Promise.all(
     border-bottom: 1px solid var(--linka);
   }
 
+  /* Kolečko s číslem a nadpis se srovnávají na střed. Nahoře (`start`) seděl
+     nadpis o pár pixelů výš než střed kolečka, protože kolečko je vyšší než
+     řádek nadpisu — a ta dvojice pak vypadala rozhozeně. */
   .oblast-hlava {
     display: flex;
-    align-items: start;
+    align-items: center;
     gap: clamp(0.9rem, 2vw, 1.5rem);
   }
 
@@ -144,16 +147,19 @@ const sObsahem = await Promise.all(
     color: var(--inkoust-tlum);
   }
 
+  /* Ikona i text nadpisu se srovnávají na střed — stejně jako kolečko s číslem
+     vedle nich. Dřív visela ikona nahoře (`start`) a dorovnávala se odsazením
+     o 0,3 rem; to platilo pro jednu velikost písma a při každé změně nadpisu
+     se muselo přeměřovat. */
   .oblast-nadpis {
     display: flex;
-    align-items: start;
+    align-items: center;
     gap: 0.6rem;
   }
 
   /* Barvu bere z kolečka s číslem, které stojí vedle — stejný odstín jako
      ta oblast na úvodní stránce a její body na mapě záměrů. */
   .oblast-nadpis :global(.oblast-ikona) {
-    margin-top: 0.3rem;
     color: var(--barva);
   }
 
@@ -202,14 +208,6 @@ const sObsahem = await Promise.all(
        neztrácí — na počítači, na úvodní stránce a na mapě zůstává. */
     .oblast-nadpis :global(.oblast-ikona) {
       display: none;
-    }
-
-    /* Nadpis se s kolečkem čísla srovná na střed. Nahoře (`start`, jako na
-       počítači) seděl jednořádkový nadpis o 10 px výš než střed
-       kolečka a dvojice vypadala rozhozeně — na počítači to nevadí, protože
-       nadpis je tam o dost vyšší. */
-    .oblast-hlava {
-      align-items: center;
     }
   }
 </style>
