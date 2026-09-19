@@ -191,5 +191,13 @@ const sObsahem = await Promise.all(
     .oblast-shrnuti {
       margin-left: 0;
     }
+
+    /* Ikona oblasti se na úzkém displeji na přání týmu neukazuje: vedle
+       kolečka s číslem byly na řádku dvě značky a nadpis se kvůli nim lámal
+       na dva řádky. Je jen ozdobná (`aria-hidden`), takže skrytím se nic
+       neztrácí — na počítači, na úvodní stránce a na mapě zůstává. */
+    .oblast-nadpis :global(.oblast-ikona) {
+      display: none;
+    }
   }
 </style>
