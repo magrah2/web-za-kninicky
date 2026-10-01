@@ -158,8 +158,15 @@ const otazky = defineCollection({
      * prázdný.
      */
     na_uvod: z.boolean().default(false),
-    /** Odkud přišla: `debata` = volební debata, `mail` = e-mail od občana. */
-    puvod: z.enum(['debata', 'mail']),
+    /**
+     * Odkud přišla: `debata` = volební debata, `mail` = e-mail od občana,
+     * `nase` = nikdo se neptal, informaci dáváme sami (uzavírka, semafory).
+     *
+     * Na stránce se původ nevypisuje, ale v datech má sedět: napsat
+     * u vlastního oznámení „přišlo e-mailem" by nebyla pravda a za rok
+     * už nikdo nepozná, co se lidé skutečně ptali.
+     */
+    puvod: z.enum(['debata', 'mail', 'nase']),
     /**
      * Programová oblast, které se otázka týká. Nepovinné — ne každý dotaz
      * do některé spadá. Když se vyplní, dostane otázka barevný štítek
