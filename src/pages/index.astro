@@ -140,8 +140,8 @@ const prvni = kandidati.slice(0, 6);
           až pod ně a musela by se víc ořezat. Na mřížce sedí v druhém řádku
           prvního sloupce, tedy přesně pod textem. */}
       <div class="hero-tlacitka">
-        <a class="tlacitko tlacitko-hlavni" href={odkaz('/program/')}>Náš program</a>
-        <a class="tlacitko tlacitko-vedlejsi" href={odkaz('/aktuality/')}>Aktuality →</a>
+        <a class="tlacitko tlacitko-hlavni" href={odkaz('/aktuality/')}>Aktuality</a>
+        <a class="tlacitko tlacitko-vedlejsi" href={odkaz('/program/')}>Náš program →</a>
       </div>
     </div>
 
@@ -291,7 +291,7 @@ const prvni = kandidati.slice(0, 6);
     <div class="pruh">
       <div class="lide-hlava">
         <div>
-          <p class="nadtitulek">Komu dáte hlas</p>
+          <p class="nadtitulek">Náš tým</p>
           <h2>Naši kandidáti</h2>
         </div>
         <a class="tlacitko tlacitko-vedlejsi" href={odkaz('/lide/')}>Všech {POCET_ZASTUPITELU} →</a>
@@ -306,6 +306,8 @@ const prvni = kandidati.slice(0, 6);
               vek={clovek.data.vek}
               povolani={clovek.data.povolani}
               foto={fotkaKandidata(clovek.id)}
+              zvolen={clovek.data.zvolen}
+              funkce={clovek.data.funkce}
             />
           ))
         }
@@ -747,7 +749,7 @@ const prvni = kandidati.slice(0, 6);
     place-items: center;
     width: 2.2rem;
     height: 2.2rem;
-    border-radius: 999px;
+    border-radius: var(--radius-maly);
     background: var(--papir);
     color: var(--inkoust);
     font-size: 1.3rem;

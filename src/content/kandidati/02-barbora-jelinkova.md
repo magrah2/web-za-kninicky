@@ -5,6 +5,7 @@ vek: 38
 povolani: architektka
 pusobeni:   # zapojení mimo práci — spolky, sdružení
 rozena: "Lišková"
+zvolen: true   # zvolen do zastupitelstva ve volbách 2026
 citace:     # jedna věta, která se na medailonku vytáhne velkým písmem
 ---
 

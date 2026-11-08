@@ -18,9 +18,13 @@ interface Props {
   vek?: number;
   povolani: string;
   foto?: ImageMetadata;
+  /** Zvolen do zastupitelstva — na fotce se ukáže štítek. */
+  zvolen?: boolean;
+  /** Funkce ve výboru nebo komisi — bílý štítek na fotce. */
+  funkce?: string | null;
 }
 
-const { poradi, jmeno, rozena, vek, povolani, foto } = Astro.props;
+const { poradi, jmeno, rozena, vek, povolani, foto, zvolen = false, funkce } = Astro.props;
 
 const cil = `${odkaz('/lide/')}#medailonek-${poradi}`;
 ---
@@ -32,6 +36,12 @@ const cil = `${odkaz('/lide/')}#medailonek-${poradi}`;
     <div class="karta-portret">
       <Portret foto={foto} jmeno={jmeno} velikost="karta" />
       <span class="karta-cislo" aria-hidden="true">{poradi}</span>
+      {(zvolen || funkce) && (
+        <span class="stitky-na-fotce">
+          {zvolen && <span class="stitek-zvolen">V zastupitelstvu</span>}
+          {funkce && <span class="stitek-funkce">{funkce}</span>}
+        </span>
+      )}
     </div>
 
     <span class="karta-text">
@@ -91,6 +101,48 @@ const cil = `${odkaz('/lide/')}#medailonek-${poradi}`;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
+  }
+
+  /* Štítky na fotce: dole vlevo, naproti číslu nahoře — v rozích
+     nepřekrývají obličej. Nahoře zelený „V zastupitelstvu" (text bez rodu,
+     aby se nemusel u každého řešit zvlášť), pod ním poloprůhledný s funkcí ve
+     výboru. Funkce je doplněk, proto je tlumená a tenčím písmem: zelený štítek má zůstat
+     to první, čeho si člověk všimne. Stejné štítky jsou v medailonku
+     na /lide/ — při změně upravit obojí. */
+  .stitky-na-fotce {
+    position: absolute;
+    left: 0.6rem;
+    right: 0.6rem;
+    bottom: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+
+  .stitek-zvolen,
+  .stitek-funkce {
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-maly);
+    font-size: var(--text-drobny);
+    line-height: 1.3;
+  }
+
+  .stitek-zvolen {
+    background: var(--sedozelena);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  /* Podklad bílý průhledný na 40 % (tedy 60 % bílé), na přání týmu: plná bílá na tmavé
+     fotce svítila víc než zelený štítek nad ním. Písmo o stupeň menší
+     než u zeleného štítku. */
+  .stitek-funkce {
+    padding-block: 0.2rem;
+    background: color-mix(in srgb, var(--plocha) 60%, transparent);
+    color: var(--inkoust);
+    font-size: var(--text-mini);
+    font-weight: 500;
   }
 
   .karta-text {

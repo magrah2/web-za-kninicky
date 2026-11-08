@@ -5,6 +5,8 @@ vek: 64
 povolani: zastupitel města Brna, obchodně-technický ředitel
 prislusnost: ODS
 pusobeni:   # zapojení mimo práci — spolky, sdružení
+zvolen: true   # zvolen do zastupitelstva ve volbách 2026
+funkce: předseda kontrolního výboru
 citace:     # jedna věta, která se na medailonku vytáhne velkým písmem
 ---
 

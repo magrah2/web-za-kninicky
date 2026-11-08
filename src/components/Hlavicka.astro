@@ -29,7 +29,7 @@ const POLOZKY = [
   { text: 'Aktuality', cil: '/aktuality/', zvyraznena: true },
   { text: 'Program', cil: '/program/' },
   { text: 'Mapa', cil: '/mapa/' },
-  { text: 'Kandidáti', cil: '/lide/' },
+  { text: 'Náš tým', cil: '/lide/' },
   { text: 'Vaše dotazy', cil: '/otazky/' },
   { text: 'Kontakt', cil: '/kontakt/' },
 ];
@@ -284,7 +284,7 @@ const jeAktivni = (cil: string) => zdeCesta.endsWith(cil.replace(/\/+$/, ''));
     gap: 0.5rem;
     padding: 0.5rem 0.9rem;
     border: 1px solid var(--linka-vyrazna);
-    border-radius: 999px;
+    border-radius: var(--radius-maly);
     font-size: var(--text-maly);
     font-weight: 600;
     cursor: pointer;

@@ -25,6 +25,19 @@ const kandidati = defineCollection({
     povolani: z.string(),
     prislusnost: z.string().optional(),
     /**
+     * Byl člověk zvolen do zastupitelstva? Vypíše se u něj štítek
+     * „V zastupitelstvu" na kartě i v medailonku. Zapisuje se ručně podle
+     * výsledků voleb, ne podle pořadí na listině — přednostní hlasy můžou
+     * pořadí zamíchat.
+     */
+    zvolen: z.boolean().default(false),
+    /**
+     * Funkce v orgánech městské části — výbor, komise. Vypisuje se menším
+     * písmem pod povoláním, na kartě i v medailonku. Píše se celé, jak se
+     * má vypsat, včetně rodu („předseda", „členka").
+     */
+    funkce: z.string().nullish(),
+    /**
      * Rodné příjmení, bez slova „roz.". Vypisuje se jen tam, kde má pomoct
      * poznat člověka podle jména z dřívějška — dnes na inzerci ve zpravodaji.
      *

@@ -183,7 +183,7 @@ ol {
   gap: 0.5rem;
   padding: 0.8rem 1.5rem;
   border: 1px solid transparent;
-  border-radius: 999px;
+  border-radius: var(--radius-maly);
   font-size: var(--text-maly);
   font-weight: 600;
   letter-spacing: -0.005em;
@@ -233,7 +233,7 @@ ol {
 .stitek {
   display: inline-block;
   padding: 0.2rem 0.6rem;
-  border-radius: 999px;
+  border-radius: var(--radius-maly);
   background: var(--sedozelena-jemna);
   color: var(--sedozelena-text);
   font-size: var(--text-drobny);

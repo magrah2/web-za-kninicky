@@ -4,6 +4,8 @@ jmeno: Ing. Petr Krejčí
 vek: 36
 povolani: jednatel společnosti
 pusobeni:   # zapojení mimo práci — spolky, sdružení
+zvolen: true   # zvolen do zastupitelstva ve volbách 2026
+funkce: člen kontrolního výboru
 citace:     # jedna věta, která se na medailonku vytáhne velkým písmem
 ---
 

@@ -4,6 +4,7 @@ jmeno: Ing. Naďa Pokorná
 vek: 49
 povolani: odborná ekonomka
 pusobeni:   # zapojení mimo práci — spolky, sdružení
+funkce: členka finančního výboru
 citace:     # jedna věta, která se na medailonku vytáhne velkým písmem
 ---
 

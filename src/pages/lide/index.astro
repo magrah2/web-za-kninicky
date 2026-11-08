@@ -24,11 +24,11 @@ const sObsahem = await Promise.all(
 ---
 
 <Zaklad
-  titulek="Naši kandidáti"
+  titulek="Náš tým"
   popis={`Lidé ${OBEC_Z}, kteří kandidují do ${ZASTUPITELSTVO}. Architektka, lékař, ekonomka, technik, studentka i jednatelé firem.`}
 >
   <div class="pruh">
-    <p class="nadtitulek">Naši kandidáti</p>
+    <p class="nadtitulek">Náš tým</p>
     <h1>{POCET_SLOVY.charAt(0).toUpperCase() + POCET_SLOVY.slice(1)} lidí, kteří tady žijí</h1>
     <p class="perex uvod">
       Kliknutím na kohokoliv se dozvíte víc.
@@ -45,6 +45,8 @@ const sObsahem = await Promise.all(
             vek={clovek.data.vek}
             povolani={clovek.data.povolani}
             foto={fotkaKandidata(clovek.id)}
+            zvolen={clovek.data.zvolen}
+            funkce={clovek.data.funkce}
           />
         ))
       }
@@ -76,6 +78,12 @@ const sObsahem = await Promise.all(
                 <div class="medailonek-portret">
                   <Portret foto={foto} jmeno={clovek.data.jmeno} velikost="detail" />
                   <span class="medailonek-cislo">{clovek.data.poradi}</span>
+                  {(clovek.data.zvolen || clovek.data.funkce) && (
+                    <span class="stitky-na-fotce">
+                      {clovek.data.zvolen && <span class="stitek-zvolen">V zastupitelstvu</span>}
+                      {clovek.data.funkce && <span class="stitek-funkce">{clovek.data.funkce}</span>}
+                    </span>
+                  )}
                 </div>
 
                 <div class="medailonek-text">
@@ -213,7 +221,7 @@ const sObsahem = await Promise.all(
     place-items: center;
     width: 2.4rem;
     height: 2.4rem;
-    border-radius: 999px;
+    border-radius: var(--radius-maly);
     background: var(--papir);
     color: var(--inkoust);
     font-size: 1.4rem;
@@ -276,6 +284,49 @@ const sObsahem = await Promise.all(
   /* Netučně, ze stejného důvodu jako na kartě — viz `.karta-rozena`. */
   .medailonek-rozena {
     font-weight: 400;
+  }
+
+  /* Štítky na fotce: dole vlevo, naproti číslu nahoře — v rozích
+     nepřekrývají obličej. Nahoře zelený „V zastupitelstvu" (text bez rodu,
+     aby se nemusel u každého řešit zvlášť), pod ním poloprůhledný s funkcí ve
+     výboru. Funkce je doplněk, proto je tlumená a tenčím písmem: zelený štítek má zůstat
+     to první, čeho si člověk všimne. Stejné jako na kartě
+     (`KartaKandidata.astro`) a na stejném místě — po rozkliknutí je to táž
+     fotka, značky nemají poskočit. */
+  .stitky-na-fotce {
+    position: absolute;
+    left: 0.6rem;
+    right: 0.6rem;
+    bottom: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+
+  .stitek-zvolen,
+  .stitek-funkce {
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-maly);
+    font-size: var(--text-drobny);
+    line-height: 1.3;
+  }
+
+  .stitek-zvolen {
+    background: var(--sedozelena);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  /* Podklad bílý průhledný na 40 % (tedy 60 % bílé), na přání týmu: plná bílá na tmavé
+     fotce svítila víc než zelený štítek nad ním. Písmo o stupeň menší
+     než u zeleného štítku. */
+  .stitek-funkce {
+    padding-block: 0.2rem;
+    background: color-mix(in srgb, var(--plocha) 60%, transparent);
+    color: var(--inkoust);
+    font-size: var(--text-mini);
+    font-weight: 500;
   }
 
   .medailonek-meta {

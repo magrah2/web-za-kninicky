@@ -38,7 +38,7 @@ const rok = new Date().getFullYear();
         <li><a href={odkaz('/aktuality/')}>Aktuality</a></li>
         <li><a href={odkaz('/program/')}>Náš program</a></li>
         <li><a href={odkaz('/mapa/')}>Mapa záměrů</a></li>
-        <li><a href={odkaz('/lide/')}>Naši kandidáti</a></li>
+        <li><a href={odkaz('/lide/')}>Náš tým</a></li>
         <li><a href={odkaz('/otazky/')}>Otázky a odpovědi</a></li>
         <li><a href={odkaz('/kontakt/')}>Kontakt</a></li>
         <li><a href={odkaz('/soukromi/')}>Ochrana osobních údajů</a></li>
@@ -156,7 +156,7 @@ const rok = new Date().getFullYear();
   .pata-kopirovat {
     padding: 0.1rem 0.45rem;
     border: 1px solid var(--linka-vyrazna);
-    border-radius: 999px;
+    border-radius: var(--radius-maly);
     font-size: var(--text-drobny);
     font-weight: 500;
     color: var(--inkoust-tlum);

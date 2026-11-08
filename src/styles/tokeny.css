@@ -95,8 +95,10 @@
      pravidel `border-radius` smazal, návrat by znamenal projít je znovu
      a část by se určitě zapomněla.
 
-     Kruhy a pilulky (`999px`, `50%`) se tím neřídí a zůstávají: odznak na mapě
-     ani tlačítko nejsou zaoblený roh, ale tvar. */
+     Tlačítka, odkazy „Zkopírovat" a zavírací křížky byly dřív pilulky
+     a kruhy (`999px`); na přání týmu jsou taky hranaté a řídí se
+     `--radius-maly`. Kruhy zůstávají jen u čísel a odznaků (číslo kandidáta,
+     bod na mapě) — tam to není zaoblený roh, ale tvar. */
   --radius: 0;
   --radius-maly: 0;
 
@@ -124,4 +126,5 @@
   --text-zakladni: 1.0625rem;
   --text-maly: 0.9375rem;
   --text-drobny: 0.8125rem;
+  --text-mini: 0.6875rem;     /* nejmenší: doplňky přímo na fotce (funkce ve výboru) */
 }

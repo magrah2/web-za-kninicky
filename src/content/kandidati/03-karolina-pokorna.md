@@ -4,6 +4,7 @@ jmeno: Bc. Karolína Pokorná
 vek: 22
 povolani: studentka
 pusobeni:   # zapojení mimo práci — spolky, sdružení
+zvolen: true   # zvolen do zastupitelstva ve volbách 2026
 citace:     # jedna věta, která se na medailonku vytáhne velkým písmem
 ---
 
