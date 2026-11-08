@@ -92,7 +92,7 @@ export function pripravPrilohu(priloha: {
     throw new Error(
       `Priloha "${priloha.soubor}" v ${SLOZKA}/ neexistuje. ` +
         `Nahrajte soubor do slozky ${SLOZKA}/ pod presne timto nazvem, ` +
-        'nebo opravte nazev v souboru s otazkou.',
+        'nebo opravte nazev v souboru s otazkou nebo aktualitou.',
     );
   }
 

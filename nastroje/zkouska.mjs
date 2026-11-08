@@ -133,56 +133,6 @@ try {
   await stranka.waitForTimeout(300);
   overit('Escape po prichodu s kotvou', null, await otevreny());
 
-  // --- Odpocet do voleb ---------------------------------------------------
-  // Odpocet uz jednou mlcky lhal: mirilo se na KONEC voleb misto na zacatek
-  // a k tomu se zaokrouhloval nacaty den nahoru, takze misto 35 dnu svitilo
-  // 37. Chyba, kterou nikdo nepozna, dokud si to nespocita. Tady se to
-  // spocita znovu ze dvou casu, ktere si stranka nese v datech.
-  await stranka.goto(ADRESA, { waitUntil: 'networkidle' });
-  await stranka.waitForTimeout(300);
-
-  const odpocet = await stranka.evaluate(() => {
-    const p = document.querySelector('[data-odpocet-od]');
-    return p
-      ? { text: p.textContent.trim(), od: p.dataset.odpocetOd, doKdy: p.dataset.odpocetDo }
-      : null;
-  });
-
-  overit('odpocet je na strance', true, odpocet !== null);
-
-  if (odpocet) {
-    overit(
-      'odpocet ma smysluplny tvar',
-      true,
-      /^zbývá \d+ (dny|dní)$|^volby (jsou dnes|jsou zítra|probíhají)$|^po volbách$/.test(odpocet.text),
-    );
-
-    // Kalendarni dny v Praze, stejne jako to pocita src/lib/odpocet.ts.
-    const den = (d) => {
-      const f = new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Europe/Prague', year: 'numeric', month: '2-digit', day: '2-digit',
-      });
-      const [r, m, dd] = f.format(d).split('-').map(Number);
-      return Date.UTC(r, m - 1, dd) / 86400000;
-    };
-    const ted = new Date();
-    const od = new Date(odpocet.od);
-    const doKdy = new Date(odpocet.doKdy);
-
-    overit('odpocet miri na zacatek voleb, ne na konec', true, od.getTime() < doKdy.getTime());
-
-    let cekano;
-    if (ted >= doKdy) cekano = 'po volbách';
-    else if (ted >= od) cekano = 'volby probíhají';
-    else {
-      const dnu = den(od) - den(ted);
-      if (dnu <= 0) cekano = 'volby jsou dnes';
-      else if (dnu === 1) cekano = 'volby jsou zítra';
-      else cekano = `zbývá ${dnu} ${dnu >= 5 ? 'dní' : 'dny'}`;
-    }
-    overit('odpocet ukazuje spravny pocet dnu', cekano, odpocet.text);
-  }
-
   // --- Program ------------------------------------------------------------
   // Podrobne rozpisy za tlacitkem "Chci vedet vic" na prani tymu zmizely,
   // vcetne stranek /program/<oblast>/. Zbyva zkontrolovat, ze na /program/

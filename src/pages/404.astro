@@ -10,13 +10,12 @@
 
 import Zaklad from '../layouts/Zaklad.astro';
 import { odkaz } from '../lib/odkaz';
-import { POCET_ZASTUPITELU, POCET_SLOVY } from '../lib/strana';
+import { POCET_SLOVY } from '../lib/strana';
 
 const KAM_DAL = [
   { text: 'Náš program', cil: '/program/', popis: 'Co chceme v Kníničkách změnit' },
   { text: 'Mapa záměrů', cil: '/mapa/', popis: 'Konkrétní místa a co tam chceme udělat' },
   { text: 'Naši kandidáti', cil: '/lide/', popis: `${POCET_SLOVY.charAt(0).toUpperCase() + POCET_SLOVY.slice(1)} lidí, kteří tady žijí` },
-  { text: 'Jak volit', cil: '/jak-volit/', popis: `Máte ${POCET_ZASTUPITELU} křížků — ukážeme vám, jak s nimi naložit` },
 ];
 ---
 

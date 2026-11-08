@@ -4,9 +4,6 @@ import {
   NAZEV,
   EMAIL,
   ZASTUPITELSTVO,
-  POCET_ZASTUPITELU,
-  DATUM_VOLEB,
-  HODINY_VOLEB,
 } from '../lib/strana';
 
 /**
@@ -76,21 +73,6 @@ const SITE = [
         )
       }
     </div>
-
-    {/* Bez značky: samotná zelená stopa z loga tu působila jako utržený
-        kousek a celé logo by se pár centimetrů pod hlavičkou opakovalo.
-        Okénko má říct datum a hodiny, na to značku nepotřebuje. */}
-    <aside class="volby">
-      <h2>Volby do zastupitelstva</h2>
-      <p class="volby-datum">{DATUM_VOLEB}</p>
-      <p class="volby-hodiny">
-        pátek {HODINY_VOLEB.patek}<br />
-        sobota {HODINY_VOLEB.sobota}
-      </p>
-      <p class="volby-pozn">
-        Volí se {POCET_ZASTUPITELU} zastupitelů Kníniček, takže máte {POCET_ZASTUPITELU} hlasů.
-      </p>
-    </aside>
   </div>
 </Zaklad>
 
@@ -197,40 +179,6 @@ const SITE = [
     letter-spacing: 0;
   }
 
-  .volby {
-    position: relative;
-    overflow: hidden;
-    padding: clamp(1.5rem, 3vw, 2rem);
-    background: var(--plocha);
-    border: 1px solid var(--linka);
-    border-radius: var(--radius);
-    box-shadow: var(--stin);
-  }
-
-  .volby h2 {
-    font-size: var(--text-nadpis-3);
-  }
-
-  .volby-datum {
-    margin: 0.35rem 0 0;
-    font-size: var(--text-nadpis-2);
-    font-weight: 600;
-    letter-spacing: -0.025em;
-  }
-
-  .volby-hodiny {
-    margin: 0.75rem 0 0;
-    font-size: var(--text-maly);
-    color: var(--inkoust-tlum);
-  }
-
-  .volby-pozn {
-    margin: 1.1rem 0 0;
-    padding-top: 1.1rem;
-    border-top: 1px solid var(--linka);
-    font-size: var(--text-drobny);
-    color: var(--inkoust-tlum);
-  }
 </style>
 
 <script>

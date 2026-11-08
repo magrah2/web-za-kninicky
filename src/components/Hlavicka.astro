@@ -19,15 +19,18 @@ import { NAZEV, NAZEV_DOPLNEK } from '../lib/strana';
 // „Kde volit" tu schválně není: Kníničky mají jediný volební okrsek, takže
 // vyhledávač volební místnosti by odpovídal všem stejně. Adresa místnosti
 // patří na /jak-volit/, ne na vlastní stránku.
-// „Vaše dotazy" jsou jako jediná položka v zeleném obdélníčku — na přání
-// týmu: otázky z debaty přibývají a mají být v hlavičce vidět. Zvýrazněná je
-// schválně jen jedna; kdyby jich bylo víc, nezvýrazňovala by se žádná.
+// „Jak volit" z hlavičky po volbách zmizel na přání týmu; stránka sama
+// zůstává, jen na ni z webu nic neodkazuje.
+// „Aktuality" jsou jako jediná položka v zeleném obdélníčku a stojí první —
+// na přání týmu po volbách, kdy web přestal být volební a začal hlásit, co
+// se v Kníničkách děje. Do té doby bylo zvýrazněné „Vaše dotazy". Zvýrazněná
+// je schválně jen jedna; kdyby jich bylo víc, nezvýrazňovala by se žádná.
 const POLOZKY = [
+  { text: 'Aktuality', cil: '/aktuality/', zvyraznena: true },
   { text: 'Program', cil: '/program/' },
   { text: 'Mapa', cil: '/mapa/' },
   { text: 'Kandidáti', cil: '/lide/' },
-  { text: 'Jak volit', cil: '/jak-volit/' },
-  { text: 'Vaše dotazy', cil: '/otazky/', zvyraznena: true },
+  { text: 'Vaše dotazy', cil: '/otazky/' },
   { text: 'Kontakt', cil: '/kontakt/' },
 ];
 

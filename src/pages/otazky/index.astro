@@ -13,8 +13,8 @@
 
 import { getCollection, render } from 'astro:content';
 import Zaklad from '../../layouts/Zaklad.astro';
+import Prilohy from '../../components/Prilohy.astro';
 import { pripravPrilohu } from '../../lib/prilohy';
-import { odkaz } from '../../lib/odkaz';
 import { EMAIL } from '../../lib/strana';
 
 /*
@@ -90,35 +90,7 @@ const pripravene = await Promise.all(
                 <o.Odpoved />
               </div>
 
-              {o.prilohy.length > 0 && (
-                <div class="prilohy">
-                  {/* Nadpis se na přání týmu netiskne na stránku — štítek PDF
-                      u každého odkazu mluví sám za sebe. Pro čtečky obrazovky
-                      ale zůstává: bez něj by byl seznam odkazů bez uvození. */}
-                  <h3 class="prilohy-nadpis jen-pro-ctecky">Ke stažení</h3>
-                  <ul>
-                    {o.prilohy.map((p) => (
-                      <li>
-                        <a
-                          class="priloha"
-                          href={p.externi ? p.cesta : odkaz(p.cesta)}
-                          download={p.externi ? undefined : true}
-                          target={p.externi ? '_blank' : undefined}
-                          rel={p.externi ? 'noopener' : undefined}
-                        >
-                          <span class="priloha-typ" aria-hidden="true">
-                            {p.typ}
-                          </span>
-                          <span class="priloha-text">
-                            <span class="priloha-nazev">{p.nazev}</span>
-                            {p.popis && <span class="priloha-popis">{p.popis}</span>}
-                          </span>
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              <Prilohy prilohy={o.prilohy} />
             </li>
           ))}
         </ol>
@@ -217,87 +189,12 @@ const pripravene = await Promise.all(
   /* Na úzkém displeji je odpověď o stupeň menší než jinde na webu. Odpovědi
      jsou dlouhé a v základní velikosti z nich na mobilu byla zeď textu; menší
      písmo dá na řádek víc slov a odstavec se čte líp. Nadpis otázky zůstává,
-     jaký byl — ten má nad odpovědí vyčnívat. */
+     jaký byl — ten má nad odpovědí vyčnívat. Názvy dokumentů se zmenšují
+     spolu s odpovědí, to řeší komponenta Prilohy. */
   @media (max-width: 560px) {
-    .otazka-odpoved,
-    /* Názvy dokumentů se zmenšují spolu s odpovědí: dlouhé názvy se na mobilu
-       lámaly na tři řádky a v původní velikosti by teď byly nápadnější než
-       text, ke kterému patří. Štítek PDF zůstává — je už o dva stupně menší. */
-    .priloha {
+    .otazka-odpoved {
       font-size: var(--text-maly);
     }
-  }
-
-  /* ---------- Přílohy ---------- */
-
-  .prilohy {
-    margin-top: 1.25rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--linka);
-  }
-
-  .prilohy-nadpis {
-    margin: 0 0 0.6rem;
-    font-size: var(--text-drobny);
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--inkoust-tlum);
-  }
-
-  .prilohy ul {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: grid;
-    gap: 0.6rem;
-  }
-
-  .priloha {
-    display: flex;
-    align-items: center;
-    gap: 0.9rem;
-    padding: 0.7rem 0.9rem;
-    border: 1px solid var(--linka);
-    border-radius: var(--radius);
-    color: var(--inkoust);
-    text-decoration: none;
-  }
-
-  .priloha:hover {
-    border-color: var(--sedozelena);
-    background: var(--sedozelena-jemna);
-  }
-
-  /* Přípona místo ikony: řekne rovnou, co se stáhne, a nepotřebuje obrázek. */
-  .priloha-typ {
-    flex: none;
-    display: grid;
-    place-items: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    border-radius: var(--radius);
-    background: var(--sedozelena);
-    color: #fff;
-    font-size: var(--text-drobny);
-    font-weight: 700;
-  }
-
-  .priloha-text {
-    display: grid;
-    gap: 0.15rem;
-  }
-
-  /* Kurzíva a běžný řez místo tučného, na přání týmu: název dokumentu se
-     tak odliší od nadpisů kolem, aniž by přetahoval pozornost. */
-  .priloha-nazev {
-    font-style: italic;
-  }
-
-  .priloha-popis,
-  .priloha-udaje {
-    font-size: var(--text-drobny);
-    color: var(--inkoust-tlum);
   }
 
   /* ---------- Výzva na konci ---------- */

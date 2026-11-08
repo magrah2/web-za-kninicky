@@ -124,6 +124,41 @@ const zamery = defineCollection({
 });
 
 /**
+ * Dokumenty ke stažení — projektová dokumentace, zápis, studie. Mají je
+ * otázky i aktuality, proto jsou popsané jen jednou.
+ *
+ * Soubor se nahraje do `public/dokumenty/` a sem se napíše jen jeho
+ * název; velikost a typ si web dopočítá sám (src/lib/prilohy.ts).
+ * Když soubor chybí, sestavení spadne — odkaz na nic je horší než
+ * žádný odkaz.
+ */
+const prilohy = z
+  .array(
+    z
+      .object({
+        /** Název, který uvidí člověk — ne název souboru. */
+        nazev: z.string(),
+        /** Přesný název souboru ve složce `public/dokumenty/`. */
+        soubor: z.string().nullish(),
+        /**
+         * Adresa dokumentu, který leží jinde na internetu — třeba na webu
+         * města. Používá se u velkých souborů: strategie cyklodopravy má
+         * 100 MB a takový soubor do repozitáře nepatří. Navíc na cizím
+         * webu je vždycky poslední verze.
+         */
+        odkaz: z.string().url().nullish(),
+        /** Doplňující věta pod názvem, třeba čím dokument je. */
+        popis: z.string().nullish(),
+      })
+      /* Buď soubor u nás, nebo odkaz jinam — obojí naráz nedává smysl
+         a ani jedno by byl odkaz, který nikam nevede. */
+      .refine((p) => Boolean(p.soubor) !== Boolean(p.odkaz), {
+        message: 'Priloha musi mit bud soubor, nebo odkaz — prave jedno z toho.',
+      }),
+  )
+  .nullish();
+
+/**
  * Otázky od lidí a naše odpovědi.
  *
  * Jeden soubor = jedna otázka. Text souboru (pod čárou) je odpověď, takže
@@ -179,40 +214,29 @@ const otazky = defineCollection({
      * Po potvrzení se přepíše na `overeno` a značka zmizí.
      */
     stav: z.enum(['navrh', 'overeno']).default('navrh'),
-    /**
-     * Dokumenty ke stažení — projektová dokumentace, zápis, studie.
-     *
-     * Soubor se nahraje do `public/dokumenty/` a sem se napíše jen jeho
-     * název; velikost a typ si web dopočítá sám (src/lib/prilohy.ts).
-     * Když soubor chybí, sestavení spadne — odkaz na nic je horší než
-     * žádný odkaz.
-     */
-    prilohy: z
-      .array(
-        z
-          .object({
-            /** Název, který uvidí člověk — ne název souboru. */
-            nazev: z.string(),
-            /** Přesný název souboru ve složce `public/dokumenty/`. */
-            soubor: z.string().nullish(),
-            /**
-             * Adresa dokumentu, který leží jinde na internetu — třeba na webu
-             * města. Používá se u velkých souborů: strategie cyklodopravy má
-             * 100 MB a takový soubor do repozitáře nepatří. Navíc na cizím
-             * webu je vždycky poslední verze.
-             */
-            odkaz: z.string().url().nullish(),
-            /** Doplňující věta pod názvem, třeba čím dokument je. */
-            popis: z.string().nullish(),
-          })
-          /* Buď soubor u nás, nebo odkaz jinam — obojí naráz nedává smysl
-             a ani jedno by byl odkaz, který nikam nevede. */
-          .refine((p) => Boolean(p.soubor) !== Boolean(p.odkaz), {
-            message: 'Priloha musi mit bud soubor, nebo odkaz — prave jedno z toho.',
-          }),
-      )
-      .nullish(),
+    prilohy,
   }),
 });
 
-export const collections = { kandidati, program, zamery, otazky };
+/**
+ * Aktuality — co se v Kníničkách děje a co děláme my.
+ *
+ * Jeden soubor = jedna zpráva, text souboru (pod čárou) je její obsah.
+ * Stejně jako u otázek jde na web jen to, co má `stav: overeno`: zpráva
+ * pod jménem sdružení je veřejné prohlášení a rozepsaný koncept se nesmí
+ * dostat ven jen proto, že ho někdo uložil do repozitáře.
+ */
+const aktuality = defineCollection({
+  loader: glob({ pattern: ['**/*.md', '!_*.md'], base: './src/content/aktuality' }),
+  schema: z.object({
+    /** Nadpis zprávy. */
+    titulek: z.string(),
+    /** Datum zprávy. Řadí se podle něj, od nejnovější, a vypisuje se u ní. */
+    datum: z.date(),
+    /** `navrh` = rozepsané, na web se nedostane. `overeno` = zveřejnit. */
+    stav: z.enum(['navrh', 'overeno']).default('navrh'),
+    prilohy,
+  }),
+});
+
+export const collections = { kandidati, program, zamery, otazky, aktuality };

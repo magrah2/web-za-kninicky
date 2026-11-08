@@ -9,8 +9,6 @@ import {
   HESLO_ZACATEK,
   HESLO_KONEC,
   EMAIL,
-  ZASTUPITELSTVO,
-  DATUM_VOLEB,
 } from '../lib/strana';
 
 const rok = new Date().getFullYear();
@@ -37,11 +35,11 @@ const rok = new Date().getFullYear();
     <nav class="pata-navigace" aria-label="Patička">
       <h2 class="jen-pro-ctecky">{typo('Odkazy v patičce')}</h2>
       <ul>
+        <li><a href={odkaz('/aktuality/')}>Aktuality</a></li>
         <li><a href={odkaz('/program/')}>Náš program</a></li>
         <li><a href={odkaz('/mapa/')}>Mapa záměrů</a></li>
         <li><a href={odkaz('/lide/')}>Naši kandidáti</a></li>
         <li><a href={odkaz('/otazky/')}>Otázky a odpovědi</a></li>
-        <li><a href={odkaz('/jak-volit/')}>Jak volit</a></li>
         <li><a href={odkaz('/kontakt/')}>Kontakt</a></li>
         <li><a href={odkaz('/soukromi/')}>Ochrana osobních údajů</a></li>
       </ul>
@@ -53,7 +51,6 @@ const rok = new Date().getFullYear();
         {EMAIL}
         <span class="pata-kopirovat" hidden>Zkopírovat</span>
       </a>
-      <p class="pata-volby">{typo(`Volby do ${ZASTUPITELSTVO}`)}<br />{DATUM_VOLEB}</p>
     </div>
   </div>
 
@@ -162,12 +159,6 @@ const rok = new Date().getFullYear();
     border-radius: 999px;
     font-size: var(--text-drobny);
     font-weight: 500;
-    color: var(--inkoust-tlum);
-  }
-
-  .pata-volby {
-    margin: 0.9rem 0 0;
-    font-size: var(--text-maly);
     color: var(--inkoust-tlum);
   }
 

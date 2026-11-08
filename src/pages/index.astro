@@ -16,16 +16,7 @@ import {
   ZASTUPITELSTVO,
   POCET_ZASTUPITELU,
   POCET_SLOVY,
-  DATUM_VOLEB,
-  VOLEBNI_MISTNOST,
-  ZACATEK_VOLEB,
-  KONEC_VOLEB,
 } from '../lib/strana';
-import { odpocet } from '../lib/odpocet';
-
-/** Spočítá se při sestavení, aby stránka měla správný text i bez JavaScriptu.
-    Skript na stránce si to pak přepočítá, aby číslo nezestárlo mezi nasazeními. */
-const stavVoleb = odpocet(ZACATEK_VOLEB, KONEC_VOLEB);
 
 const program = (await getCollection('program')).sort((a, b) => a.data.poradi - b.data.poradi);
 
@@ -52,6 +43,26 @@ const posledniOtazky = (vybrane.length > 0 ? vybrane : zverejneneOtazky).slice(0
 /* Datum ani původ dotazu se nevypisují — stejně jako na stránce /otazky/. */
 
 /*
+ * Nejnovější aktuality — dvě, jen nadpis a datum. Celá zpráva patří
+ * na /aktuality/, tady by z ní byla zeď textu. Pás stojí hned pod úvodem:
+ * po volbách je to to nejčerstvější, co web má. Když ještě nic zveřejněné
+ * není, pás se nevykreslí — prázdný nadpis by vypadal jako chyba.
+ */
+const posledniAktuality = (await getCollection('aktuality'))
+  .filter((z) => z.data.stav === 'overeno')
+  .sort((a, b) => b.data.datum.getTime() - a.data.datum.getTime())
+  .slice(0, 2);
+
+/* UTC natvrdo: datum z YAML je půlnoc UTC a v zóně za UTC by vyšlo o den
+   dřív. Stejně jako na stránce /aktuality/. */
+const formatDatum = new Intl.DateTimeFormat('cs-CZ', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+/*
  * V dlaždicích „Co chceme v Kníničkách změnit" se „mateřská škola" krátí na
  * „MŠ" — na přání týmu a jen tady. Dlaždice jsou úzké a pět vedle sebe musí
  * držet stejnou výšku. Data zůstávají s plným tvarem: stránka Program, leták
@@ -73,7 +84,7 @@ const prvni = kandidati.slice(0, 6);
 
 <Zaklad
   titulek={NAZEV}
-  popis={`Nezávislí kandidáti do ${ZASTUPITELSTVO}. Volby ${DATUM_VOLEB}.`}
+  popis={`Nezávislí kandidáti do ${ZASTUPITELSTVO}.`}
   bezOdsazeni
 >
   {/* ---------- Hero ---------- */}
@@ -130,25 +141,41 @@ const prvni = kandidati.slice(0, 6);
           prvního sloupce, tedy přesně pod textem. */}
       <div class="hero-tlacitka">
         <a class="tlacitko tlacitko-hlavni" href={odkaz('/program/')}>Náš program</a>
-        <a class="tlacitko tlacitko-vedlejsi" href={odkaz('/jak-volit/')}>Jak volit →</a>
+        <a class="tlacitko tlacitko-vedlejsi" href={odkaz('/aktuality/')}>Aktuality →</a>
       </div>
     </div>
 
-    <p class="pruh hero-volby">
-      <span class="hero-volby-datum">Volby do {ZASTUPITELSTVO}</span>
-      <span class="hero-volby-oddel" aria-hidden="true">·</span>
-      <span>{DATUM_VOLEB}</span>
-      <span class="hero-volby-oddel" aria-hidden="true">·</span>
-      {/* Adresa bez upřesnění vchodu — v pruhu je na to málo místa a člověk,
-          který řeší, kudy dovnitř, se stejně proklikne na „Jak volit". */}
-      <span>Volební místnost {VOLEBNI_MISTNOST.adresa}</span>
-      <span class="hero-volby-oddel" aria-hidden="true">·</span>
-      <span data-odpocet-od={ZACATEK_VOLEB} data-odpocet-do={KONEC_VOLEB}>
-        {stavVoleb.text}
-      </span>
-    </p>
-
   </section>
+
+  {/* ---------- Aktuality ---------- */}
+  {posledniAktuality.length > 0 && (
+    <section class="sekce aktuality">
+      <div class="pruh">
+        <div class="otazky-hlava">
+          <div>
+            <p class="nadtitulek">Co je nového</p>
+            <h2>Aktuality</h2>
+          </div>
+          <a class="tlacitko tlacitko-vedlejsi" href={odkaz('/aktuality/')}>
+            Všechny aktuality →
+          </a>
+        </div>
+
+        <ul class="otazky-seznam">
+          {posledniAktuality.map((z) => (
+            <li>
+              <a href={odkaz(`/aktuality/#aktualita-${z.id}`)}>
+                <time class="aktuality-datum" datetime={z.data.datum.toISOString().slice(0, 10)}>
+                  {formatDatum.format(z.data.datum)}
+                </time>
+                <span class="otazky-text">{z.data.titulek}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )}
 
   {/* ---------- Kdo jsme ---------- */}
   <section class="sekce">
@@ -286,24 +313,6 @@ const prvni = kandidati.slice(0, 6);
     </div>
   </section>
 
-  {/* ---------- Jak volit ---------- */}
-  <section class="sekce pas-noc jak-volit">
-    <div class="pruh jak-volit-vnitrek">
-      <div>
-        <p class="nadtitulek">Jak volit</p>
-        <h2>Do zastupitelstva máte {POCET_ZASTUPITELU} křížků. Věděli jste to?</h2>
-        <p class="perex">
-          Komunální volby fungují jinak než všechny ostatní a většina lidí to neví.
-          Můžete dát hlas celé kandidátce, vybírat jednotlivce napříč stranami, nebo obojí
-          zkombinovat. Ukážeme vám to na hlasovacím lístku, který si můžete vyzkoušet.
-        </p>
-        <p class="jak-volit-tlacitko">
-          <a class="tlacitko tlacitko-hlavni" href={odkaz('/jak-volit/')}>Vyzkoušet lístek</a>
-        </p>
-      </div>
-    </div>
-  </section>
-
   {/* ---------- Otázky a odpovědi ---------- */}
   {posledniOtazky.length > 0 && (
     <section class="sekce otazky">
@@ -339,6 +348,18 @@ const prvni = kandidati.slice(0, 6);
 </Zaklad>
 
 <style>
+  /* ---------- Aktuality ---------- */
+
+  /* Hlavička pásu a karty jsou stejné jako u otázek níž (třídy `otazky-*`),
+     aby úvodní stránka neměla dva různé vzhledy pro totéž. Navíc je jen
+     datum nad nadpisem. */
+  .aktuality-datum {
+    font-size: var(--text-drobny);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--inkoust-tlum);
+  }
+
   /* ---------- Otázky a odpovědi ---------- */
 
   .otazky-hlava {
@@ -530,42 +551,6 @@ const prvni = kandidati.slice(0, 6);
     flex-wrap: wrap;
     gap: 0.7rem;
     margin-top: clamp(1.6rem, 3vw, 2.2rem);
-  }
-
-  .hero-volby {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem 0.6rem;
-    /* Jen margin-top, ne zkrácený zápis: `margin: X 0 0` by přebilo
-       `margin-inline: auto` ze třídy `.pruh` a pruh by se přestal zarovnávat. */
-    margin-top: clamp(2.5rem, 5vw, 3.5rem);
-    padding-top: 1.1rem;
-    border-top: 1px solid var(--linka);
-    font-size: var(--text-maly);
-    color: var(--inkoust-tlum);
-  }
-
-  .hero-volby-datum {
-    font-weight: 600;
-    color: var(--inkoust);
-  }
-
-  .hero-volby-oddel {
-    color: var(--linka-vyrazna);
-  }
-
-
-  /* Na mobilu se řádek stejně zalomí a oddělovač by zůstal viset
-     na konci řádku jako překlep. Radši ho schováme a dáme řádkům odstup. */
-  @media (max-width: 620px) {
-    .hero-volby {
-      display: grid;
-      gap: 0.15rem;
-      justify-items: start;
-    }
-    .hero-volby-oddel {
-      display: none;
-    }
   }
 
   /* ---------- Dvousloupcová sekce ---------- */
@@ -849,33 +834,7 @@ const prvni = kandidati.slice(0, 6);
     margin: 1.75rem 0 0;
   }
 
-  /* ---------- Jak volit ---------- */
-
-  .jak-volit h2 {
-    max-width: 20ch;
-    margin-bottom: 1.1rem;
-  }
-
-  .jak-volit-tlacitko {
-    margin: 1.75rem 0 0;
-  }
 </style>
-
-<script>
-  // Odpočet se přepočítá v prohlížeči. Kdyby se počítal jen při sestavení,
-  // po týdnu bez nasazení by na webu svítilo staré číslo.
-  //
-  // Text skládá `odpocet()` ze `src/lib/odpocet.ts` — tentýž kód, jaký běží
-  // při sestavení. Opsaný na dvou místech by se rozešel.
-  import { odpocet } from '../lib/odpocet';
-
-  const prvek = document.querySelector<HTMLElement>('[data-odpocet-od]');
-  const od = prvek?.dataset.odpocetOd;
-  const doKdy = prvek?.dataset.odpocetDo;
-  if (prvek && od && doKdy) {
-    prvek.textContent = odpocet(od, doKdy).text;
-  }
-</script>
 
 <script>
   // Zvýraznění dlaždice, jejíž panel je zrovna otevřený. Čistě kosmetické —

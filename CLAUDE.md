@@ -296,31 +296,17 @@ prázdnou kolekci, a ta hlásí varování.
   stejného důvodu importují přes `?url` — jinak by preload stahoval jiný
   soubor, než jaký si pak vyžádá CSS.
 
-## Odpočet do voleb
+## Odpočet do voleb je smazaný
 
-`src/lib/odpocet.ts` skládá text „zbývá N dní / volby probíhají / po volbách".
-Počítá se **dvakrát** — při sestavení (aby stránka měla správný text i bez
-JavaScriptu) a pak znovu v prohlížeči, aby číslo nezestárlo mezi nasazeními.
-Proto je to samostatný soubor, který si importuje frontmatter i klientský
-skript: opsané na dvou místech by se to rozešlo, a nejspíš by se rozešla ta
-větev, kterou vidí jen návštěvník bez skriptu.
+Po volbách tým chtěl z webu pryč údaje o volbách: pruh s datem, místností
+a odpočtem z úvodní stránky, okénko na `/kontakt/` i řádek v patičce.
+S nimi zmizel i `src/lib/odpocet.ts` a jeho kontrola ve zkoušce. Konstanty
+o volbách ve `strana.ts` zůstaly — používají je leták, inzerce
+a `/jak-volit/`.
 
-Dvě věci, na kterých to už jednou selhalo:
-
-- **Odpočet míří na `ZACATEK_VOLEB`, ne na konec.** Když mířil na konec,
-  v pátek odpoledne — kdy už se hodinu volilo — svítilo na webu „zbývá
-  1 den". Mezi začátkem a koncem se ukazuje „volby probíhají"; kdyby byl
-  v datech jen jeden čas, jeden ze dvou volebních dnů by se do odpočtu
-  nevešel.
-- **Počítají se kalendářní dny v Praze, ne hodiny.** „Zbývá 5 dní" má
-  znamenat pět přespání. Na rozdílu hodin se to pletlo dvakrát: `Math.ceil`
-  zaokrouhlil načatý den nahoru (z 35 dnů bylo 37) a v pátek půl hodiny před
-  otevřením místností z toho vyšlo „volby jsou zítra". Zóna je natvrdo
-  `Europe/Prague`, ne zóna prohlížeče — datum se má počítat podle Kníniček
-  i tomu, kdo se dívá z Kanady.
-
-Hlídá to `npm run zkouska`: přepočítá si počet dnů z časů, které si stránka
-nese v `data-odpocet-od` a `data-odpocet-do`.
+Kdyby se odpočet vracel, je v historii gitu. Dvě věci, na kterých dřív
+selhal: musí mířit na `ZACATEK_VOLEB`, ne na konec, a počítat kalendářní
+dny v zóně `Europe/Prague`, ne rozdíl hodin.
 
 ## Mapa záměrů
 

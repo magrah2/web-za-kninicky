@@ -1,0 +1,202 @@
+---
+/**
+ * Aktuality — co se v Kníničkách děje a co děláme my.
+ *
+ * Jedna zpráva = jeden soubor v `src/content/aktuality/`, takže přidání
+ * zprávy je stejná práce jako přidání otázky a nikdo kvůli tomu nemusí
+ * sahat do téhle stránky. Vzor je v `_SABLONA.md`.
+ */
+
+import { getCollection, render } from 'astro:content';
+import Zaklad from '../layouts/Zaklad.astro';
+import Prilohy from '../components/Prilohy.astro';
+import { pripravPrilohu } from '../lib/prilohy';
+import { EMAIL } from '../lib/strana';
+
+/* Na web jdou jen potvrzené zprávy, od nejnovější. Proč, viz schéma
+   v `src/content.config.ts`. */
+const zpravy = (await getCollection('aktuality'))
+  .filter((z) => z.data.stav === 'overeno')
+  .sort((a, b) => b.data.datum.getTime() - a.data.datum.getTime());
+
+const pripravene = await Promise.all(
+  zpravy.map(async (z) => ({
+    ...z,
+    Text: (await render(z)).Content,
+    prilohy: (z.data.prilohy ?? []).map(pripravPrilohu),
+  })),
+);
+
+/* Zóna natvrdo: datum z YAML je půlnoc UTC a v zóně, která je za UTC,
+   by se ukázalo o den dřív. */
+const formatDatum = new Intl.DateTimeFormat('cs-CZ', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+---
+
+<Zaklad
+  titulek="Aktuality"
+  popis="Co se v Kníničkách děje a na čem pracujeme."
+>
+  <div class="pruh">
+    <p class="nadtitulek">Co je nového</p>
+    <h1>Aktuality</h1>
+    <p class="perex uvod">
+      Co se v Kníničkách děje a na čem pracujeme.
+    </p>
+
+    {
+      pripravene.length === 0 ? (
+        /* Prázdná kolekce není chyba — jen ještě nikdo nic nezveřejnil. */
+        <p class="perex prazdne">
+          Zatím tu nic není. První zprávy se tu objeví brzy.
+        </p>
+      ) : (
+        <ol class="zpravy">
+          {pripravene.map((z) => (
+            <li class="zprava" id={`aktualita-${z.id}`}>
+              <time class="zprava-datum" datetime={z.data.datum.toISOString().slice(0, 10)}>
+                {formatDatum.format(z.data.datum)}
+              </time>
+              <h2 class="zprava-titulek">
+                {/* Odkaz sám na sebe: zprávu jde poslat dál přímo. */}
+                <a href={`#aktualita-${z.id}`}>{z.data.titulek}</a>
+              </h2>
+              <div class="zprava-text">
+                <z.Text />
+              </div>
+              <Prilohy prilohy={z.prilohy} />
+            </li>
+          ))}
+        </ol>
+      )
+    }
+
+    <aside class="napiste">
+      <h2>Chcete nám něco říct?</h2>
+      <p>Napište nám — ozveme se vám e-mailem.</p>
+      <p class="napiste-mail">
+        <a class="tlacitko tlacitko-hlavni" href={`mailto:${EMAIL}`}>{EMAIL}</a>
+      </p>
+    </aside>
+  </div>
+</Zaklad>
+
+<style>
+  /* Perex má nad sebou vlastní mezeru: `.perex` ji globálně nemá a nadpis
+     s ním jinak splývá do jednoho bloku. */
+  .uvod {
+    margin-top: clamp(1rem, 2.5vw, 1.6rem);
+    max-width: 60ch;
+  }
+
+  .prazdne {
+    margin-top: clamp(1.5rem, 4vw, 2.5rem);
+  }
+
+  .zpravy {
+    margin: clamp(2rem, 5vw, 3rem) 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.25rem);
+  }
+
+  /* Stejná karta jako u otázek, aby obě stránky vypadaly jako jeden web. */
+  .zprava {
+    padding: clamp(1.25rem, 3vw, 1.75rem);
+    border: 1px solid var(--linka);
+    border-left: 4px solid var(--sedozelena);
+    border-radius: var(--radius);
+    background: var(--plocha);
+  }
+
+  .zprava-datum {
+    font-size: var(--text-drobny);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--inkoust-tlum);
+  }
+
+  .zprava-titulek {
+    margin: 0.3rem 0 0;
+    font-size: var(--text-nadpis-3);
+    line-height: 1.3;
+  }
+
+  .zprava-titulek a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .zprava-titulek a:hover {
+    text-decoration: underline;
+  }
+
+  /* Šířka řádku omezená: dlouhá zpráva přes celou kartu měla na počítači
+     kolem 140 znaků na řádek a oko se při návratu na další řádek ztrácelo. */
+  .zprava-text {
+    margin-top: 0.9rem;
+    max-width: 70ch;
+    color: var(--inkoust-tlum);
+  }
+
+  .zprava-text :global(p) {
+    margin: 0.7rem 0 0;
+  }
+
+  .zprava-text :global(p:first-child) {
+    margin-top: 0;
+  }
+
+  /* Mezititulky uvnitř zprávy: o stupeň menší než nadpis zprávy a tmavší
+     než text, aby se v dlouhé zprávě dalo zorientovat. */
+  .zprava-text :global(h3) {
+    margin: 1.6rem 0 0;
+    font-size: var(--text-zakladni);
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--inkoust);
+  }
+
+  .zprava-text :global(h3 + p) {
+    margin-top: 0.5rem;
+  }
+
+  .zprava-text :global(ul),
+  .zprava-text :global(ol) {
+    margin: 0.7rem 0 0;
+    padding-left: 1.2rem;
+  }
+
+  .zprava-text :global(li + li) {
+    margin-top: 0.35rem;
+  }
+
+  /* ---------- Výzva na konci ---------- */
+
+  .napiste {
+    margin-top: clamp(2.5rem, 6vw, 4rem);
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    border-radius: var(--radius);
+    background: var(--sedozelena-jemna);
+  }
+
+  .napiste h2 {
+    margin: 0;
+    font-size: var(--text-nadpis-3);
+  }
+
+  .napiste p {
+    margin: 0.6rem 0 0;
+    max-width: 55ch;
+    color: var(--inkoust-tlum);
+  }
+
+  .napiste-mail {
+    margin-top: 1.1rem;
+  }
+</style>
